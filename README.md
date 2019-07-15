@@ -31,6 +31,23 @@ For an overview of everything that's supported, see the `tests/` for this librar
 
 ## Usage
 
+### Requirements
+
+SQL Fake requires:
+
+- HHVM
+- Composer
+
+### Installing
+
+This package can be installed via composer:
+
+```
+composer require slack/hack-sql-fake
+```
+
+### How it works
+
 SQL Fake works by providing a subclass of [AsyncMysqlConnectionPool](https://docs.hhvm.com/hack/reference/class/AsyncMysqlConnectionPool/), the recommended method of querying MySQL built-in to Hack. A subclass for `AsyncMysqlClient` is provided as well.
 
 This library assumes you currently have some form of establishing a database connection using `AsyncMysqlConnectionPool`. The best way to use SQLFake will depend on your code, but you can use dependency injection or [`fb_intercept()`](https://docs.hhvm.com/hack/reference/function/fb_intercept/) to instantiate a `Slack\SQLFake\AsyncMysqlConnectionPool` when testing. This will behave like a database for the rest of your test run.
