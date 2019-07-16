@@ -8,7 +8,11 @@ this project. If you use this package within your own software as is but don't p
 
 ### Testing
 
-Run unit tests locally using `vendor/bin/hacktest tests/`. Tests are also run automatically on all branches using [Travis CI](https://travis-ci.org/slackhq/vscode-hack).
+Run unit tests locally using `vendor/bin/hacktest tests/`. Tests are also run automatically on all branches using [Travis CI](https://travis-ci.org/slackhq/hack-sql-fake).
+
+### Linting
+
+Run the linter using `vendor/bin/hhast-lint`. The linter is automatically run on all branches using [Travis CI](https://travis-ci.org/slackhq/hack-sql-fake).
 
 ### Releasing
 
