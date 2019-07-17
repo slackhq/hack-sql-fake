@@ -45,34 +45,34 @@ final class InsertQuery extends Query {
       // throw for nonexistent fields
       $row = DataIntegrity::coerceToSchema($row, $schema);
 
-      // check for unique key violations unless INSERT IGNORE was specified
-      if (!$this->ignoreDupes) {
-
-        $unique_key_violation = DataIntegrity::checkUniqueConstraints($table, $row, $schema);
-        if ($unique_key_violation is nonnull) {
-          list($msg, $row_id) = $unique_key_violation;
-          // is this an "INSERT ... ON DUPLICATE KEY UPDATE?"
-          // if so, this is where we apply the updates
-          if (!C\is_empty($this->updateExpressions)) {
-            $existing_row = $table[$row_id];
-            list($affected, $table) = $this->applySet(
-              $conn,
-              $database,
-              $table_name,
-              dict[$row_id => $existing_row],
-              $table,
-              $this->updateExpressions,
-              $schema,
-              $row,
-            );
-            // MySQL always counts dupe inserts twice intentionally
-						$rows_affected += $affected * 2;
-            continue;
-          } else if (!QueryContext::$relaxUniqueConstraints) {
-            throw new SQLFakeUniqueKeyViolation($msg);
-          } else {
-            continue;
-          }
+      // check for unique key violations
+      $unique_key_violation = DataIntegrity::checkUniqueConstraints($table, $row, $schema);
+      if ($unique_key_violation is nonnull) {
+        list($msg, $row_id) = $unique_key_violation;
+        // is this an "INSERT ... ON DUPLICATE KEY UPDATE?"
+        // if so, this is where we apply the updates
+        if (!C\is_empty($this->updateExpressions)) {
+          $existing_row = $table[$row_id];
+          list($affected, $table) = $this->applySet(
+            $conn,
+            $database,
+            $table_name,
+            dict[$row_id => $existing_row],
+            $table,
+            $this->updateExpressions,
+            $schema,
+            $row,
+          );
+          // MySQL always counts dupe inserts twice intentionally
+          $rows_affected += $affected * 2;
+          continue;
+        } elseif ($this->ignoreDupes) {
+          // silently continue if INSERT IGNORE was specified
+          continue;
+        } elseif (!QueryContext::$relaxUniqueConstraints) {
+          throw new SQLFakeUniqueKeyViolation($msg);
+        } else {
+          continue;
         }
       }
       $table[] = $row;
