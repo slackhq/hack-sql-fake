@@ -61,6 +61,13 @@ final class InsertQueryTest extends HackTest {
     expect(() ==> $conn->query("INSERT IGNORE INTO table1 (id, name) VALUES (1, 'test2')"))->notToThrow(
       SQLFakeUniqueKeyViolation::class,
     );
+    $results = await $conn->query("SELECT * FROM table1");
+    expect($results->rows())->toBeSame(
+      vec[dict[
+        'id' => 1,
+        'name' => 'test',
+      ]],
+    );
   }
 
   public async function testPKViolationWithinMultiInsert(): Awaitable<void> {
@@ -85,6 +92,13 @@ final class InsertQueryTest extends HackTest {
     await $conn->query("INSERT INTO table1 (id, name) VALUES (1, 'test')");
     expect(() ==> $conn->query("INSERT IGNORE INTO table1 (id, name) VALUES (2, 'test')"))->notToThrow(
       SQLFakeUniqueKeyViolation::class,
+    );
+    $results = await $conn->query("SELECT * FROM table1");
+    expect($results->rows())->toBeSame(
+      vec[dict[
+        'id' => 1,
+        'name' => 'test',
+      ]],
     );
   }
 
