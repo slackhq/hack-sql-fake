@@ -202,7 +202,8 @@ final class BinaryOperatorExpression extends Expression {
             return (int)$left_number << (int)$right_number;
           case '>>':
             return (int)$left_number >> (int)$right_number;
-
+          default:
+            throw new SQLFakeRuntimeException("Operator recognized but not implemented");
         }
       case 'LIKE':
         $left_string = (string)$left->evaluate($row, $conn);
