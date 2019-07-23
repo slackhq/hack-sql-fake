@@ -1,0 +1,9 @@
+sudo: required
+language: generic
+services: docker
+env:
+  - HHVM_VERSION=4.0.4
+install:
+- docker pull hhvm/hhvm:$HHVM_VERSION
+script:
+- docker run --rm -w /var/source -v $(pwd):/var/source hhvm/hhvm:$HHVM_VERSION ./.travis.sh
