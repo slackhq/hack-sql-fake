@@ -395,7 +395,7 @@ final class SelectExpressionTest extends HackTest {
 		]);
 
 		$results = await $conn->query("SELECT 9 / (3 * 5)");
-		expect($results->rows()[0]['9 / (3 * 5)'])->toAlmostEqual(9 / 15.0, 'parens change results');
+		expect((float)$results->rows()[0]['9 / (3 * 5)'])->toAlmostEqual(9 / 15.0, 'parens change results');
 	}
 
 	public async function testBinaryExpressions(): Awaitable<void> {

@@ -31,8 +31,8 @@ final class GenerateSchemaTest extends HackTest {
 					shape(
 						'name' => 'PRIMARY',
 						'type' => 'PRIMARY',
-						'fields' => vec[
-							'id',
+						'fields' => dict[
+							'id' => 'id',
 						],
 					),
 				],
@@ -59,16 +59,16 @@ final class GenerateSchemaTest extends HackTest {
 					shape(
 						'name' => 'PRIMARY',
 						'type' => 'PRIMARY',
-						'fields' => vec[
-							'id',
-							'name',
+						'fields' => dict[
+							'id' => 'id',
+							'name' => 'name',
 						],
 					),
 					shape(
 						'name' => 'name',
 						'type' => 'INDEX',
-						'fields' => vec[
-							'name',
+						'fields' => dict[
+							'name' => 'name',
 						],
 					),
 				],
@@ -110,15 +110,15 @@ final class GenerateSchemaTest extends HackTest {
 					shape(
 						'name' => 'PRIMARY',
 						'type' => 'PRIMARY',
-						'fields' => vec[
-							'id',
+						'fields' => dict[
+							'id' => 'id',
 						],
 					),
 					shape(
 						'name' => 'name',
 						'type' => 'UNIQUE',
-						'fields' => vec[
-							'name',
+						'fields' => dict[
+							'name' => 'name',
 						],
 					),
 				],
