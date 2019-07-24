@@ -186,13 +186,15 @@ final class SelectQuery extends Query {
               }
             } else {
               $col = C\last($parts);
-              // Warning for future reader. This expression assigns to a `?string` key.
-              $formatted_row[$col] ??= $val;
+              if ($col is nonnull) {
+                $formatted_row[$col] ??= $val;
+              }
             }
 
           }
           continue;
         }
+
 
         list($name, $val) = $expr->evaluateWithName($row, $conn);
 

@@ -106,8 +106,9 @@ final class FunctionExpression extends Expression {
       foreach ($rows as $row) {
         $row as dict<_, _>;
         $val = $expr->evaluate(/* HH_FIXME[4110] generics */ $row, $conn);
-        // Warning for future reader. This expression assigns to a `mixed` key.
-        $buckets[$val] = 1;
+        if ($val is arraykey) {
+          $buckets[$val] = 1;
+        }
       }
 
       return C\count($buckets);
