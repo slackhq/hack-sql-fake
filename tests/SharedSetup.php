@@ -4,9 +4,9 @@ namespace Slack\SQLFake;
 use namespace HH\Lib\Dict;
 
 final class SharedSetup {
-	public static async function initAsync(bool $add_vitess_dbs = false): Awaitable<AsyncMysqlConnection> {
+	public static async function initAsync(bool $is_vitess_conn = false): Awaitable<AsyncMysqlConnection> {
 		$schema = TEST_SCHEMA;
-		if ($add_vitess_dbs) {
+		if ($is_vitess_conn) {
 			$schema = Dict\merge($schema, VITESS_TEST_SCHEMA);
 		}
 
@@ -40,8 +40,9 @@ final class SharedSetup {
 
 		$conn->getServer()->databases['db2'] = $database;
 
-		if ($add_vitess_dbs) {
-			$vitess_conn = await $pool->connect("example", 2, 'vitess', '', '');
+		$vitess_conn = null;
+		if ($is_vitess_conn) {
+			$vitess_conn = await $pool->connect("example2", 2, 'vitess', '', '');
 
 			$vitess_dbs = dict[
 				'vt_table1' => vec[
@@ -68,7 +69,8 @@ final class SharedSetup {
 			));
 		}
 		snapshot('setup');
-		return $conn;
+		// if we wanted to create a vitess connection, return that
+		return $vitess_conn ?? $conn;
 	}
 }
 
