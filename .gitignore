@@ -5,3 +5,4 @@ www.pid
 *~
 composer.lock
 .vscode
+**/*hhast.parser-cache
