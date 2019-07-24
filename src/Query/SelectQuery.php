@@ -138,8 +138,9 @@ final class SelectQuery extends Query {
    * Apply the HAVING clause to every (maybe grouped) row in the data set. Only return truthy results.
    */
   protected function applyHaving(AsyncMysqlConnection $conn, dataset $data): dataset {
-    if ($this->havingClause is nonnull) {
-      return Vec\filter($data, $row ==> (bool)$this->havingClause->evaluate($row, $conn));
+    $havingClause = $this->havingClause;
+    if ($havingClause is nonnull) {
+      return Vec\filter($data, $row ==> (bool)$havingClause->evaluate($row, $conn));
     }
 
     return $data;
@@ -185,9 +186,8 @@ final class SelectQuery extends Query {
               }
             } else {
               $col = C\last($parts);
-              if (!C\contains_key($formatted_row, $col)) {
-                $formatted_row[$col] = $val;
-              }
+              // Warning for future reader. This expression assigns to a `?string` key.
+              $formatted_row[$col] ??= $val;
             }
 
           }
@@ -221,9 +221,7 @@ final class SelectQuery extends Query {
       foreach ($order_by_expressions as $order_by) {
         $row as dict<_, _>;
         list($name, $val) = $order_by['expression']->evaluateWithName(/* HH_FIXME[4110] generics */ $row, $conn);
-        if (!C\contains_key($formatted_row, $name)) {
-          $formatted_row[$name] = $val;
-        }
+        $formatted_row[$name] ??= $val;
       }
 
       $out[] = $formatted_row;

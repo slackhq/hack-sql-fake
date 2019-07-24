@@ -106,9 +106,8 @@ final class FunctionExpression extends Expression {
       foreach ($rows as $row) {
         $row as dict<_, _>;
         $val = $expr->evaluate(/* HH_FIXME[4110] generics */ $row, $conn);
-        if (!C\contains_key($buckets, $val)) {
-          $buckets[$val] = 1;
-        }
+        // Warning for future reader. This expression assigns to a `mixed` key.
+        $buckets[$val] = 1;
       }
 
       return C\count($buckets);
@@ -260,10 +259,10 @@ final class FunctionExpression extends Expression {
 
     // MySQL string positions 1-indexed, PHP strings are 0-indexed. So substract one from pos
     $pos = $args[2];
-    if ($pos is nonnull){
+    if ($pos is nonnull) {
       $count = (int)$pos->evaluate($row, $conn);
       $parts = Str\split($string, $delim);
-      if ($count < 0){
+      if ($count < 0) {
         $slice = \array_slice($parts, $count);
       } else {
         $slice = \array_slice($parts, 0, $count);
