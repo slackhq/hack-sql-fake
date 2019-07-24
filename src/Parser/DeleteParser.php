@@ -2,7 +2,7 @@
 
 namespace Slack\SQLFake;
 
-use namespace HH\Lib\{C, Str};
+use namespace HH\Lib\C;
 
 final class DeleteParser {
 
