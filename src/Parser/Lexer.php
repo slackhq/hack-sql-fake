@@ -61,6 +61,7 @@ final class SQLLexer {
         }
 
         if (!$inline && ($token === "*/")) {
+          /*HH_IGNORE_ERROR[4110] Indexing using comment, which may be null.*/
           unset($tokens[$comment]);
           $comment = null;
         }
