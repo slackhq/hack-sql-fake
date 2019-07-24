@@ -2,8 +2,7 @@
 
 namespace Slack\SQLFake;
 
-use namespace HH\Lib\{C, Vec, Dict, Keyset, Str};
-use namespace Slack\SQLFake\{SelectQuery, Query, Expression};
+use namespace HH\Lib\{C, Vec, Str};
 
 /**
  * Takes a parsed query and tests whether the query will work on vitess.
@@ -19,7 +18,7 @@ enum UnsupportedCases: string as string {
 
 abstract class VitessQueryValidator {
 
-    // runs the query through all the defined processors and 
+    // runs the query through all the defined processors and
     // bubbles up any exceptions
     private async function processHandlers(): Awaitable<void> {
         $awaitables = vec[];
@@ -43,7 +42,7 @@ abstract class VitessQueryValidator {
     public static function extractColumnExprNames(vec<Expression> $selectExpressions): keyset<string> {
         $exprNames = keyset[];
         foreach ($selectExpressions as $expr) {
-            if ($expr is ColumnExpression) $exprNames[] = $expr->name;
+            if ($expr is ColumnExpression) { $exprNames[] = $expr->name; }
         }
         return $exprNames;
     }
@@ -62,20 +61,20 @@ final class SelectQueryValidator extends VitessQueryValidator {
     }
 
     // inspects the where clause of a Query and returns whether it is a cross-sharded query
-    // note: this is only a best effort attempt at figuring out whether vitess can push 
+    // note: this is only a best effort attempt at figuring out whether vitess can push
     // the query down to a single shard. It will fail open and return true if none of the
     // conditions are met.
     private function isCrossShardQuery(): bool {
         // we can't do much without a from clause
         $from = $this->query->fromClause;
-        if ($from === null) return false;
+        if ($from === null) { return false; }
 
         foreach ($from->tables as $table) {
             $where = $this->query->whereClause;
             list($database, $table_name) = Query::parseTableName($this->conn, $table['name']);
             $table_schema = QueryContext::getSchema($database, $table_name);
             $vitess_sharding = $table_schema['vitess_sharding'] ?? null;
-            if ($vitess_sharding === null) continue;
+            if ($vitess_sharding === null) { continue; }
 
             if ($where is BinaryOperatorExpression) {
                 $columns = VitessQueryValidator::extractColumnExprNames($where->traverse());
@@ -97,8 +96,8 @@ final class SelectQueryValidator extends VitessQueryValidator {
 
         // check group by columns
         foreach ($groupByCols ?? vec[] as $col) {
-            if (!$col is ColumnExpression) continue;
-            if (C\contains_key($exprNames, $col->name)) continue;
+            if (!$col is ColumnExpression) { continue; }
+            if (C\contains_key($exprNames, $col->name)) { continue; }
 
             throw new SQLFakeVitessQueryViolation(
                 Str\format("Vitess query validation error: %s", UnsupportedCases::GroupByColumns),
@@ -107,9 +106,9 @@ final class SelectQueryValidator extends VitessQueryValidator {
 
         // check order by columns
         foreach ($orderByCols ?? vec[] as $col) {
-            if (!$col['expression'] is ColumnExpression) continue;
-            if (C\contains_key($exprNames, $col['expression']->name)) continue;
-            if (!$this->isCrossShardQuery()) continue;
+            if (!$col['expression'] is ColumnExpression) { continue; }
+            if (C\contains_key($exprNames, $col['expression']->name)) { continue; }
+            if (!$this->isCrossShardQuery()) { continue; }
 
             throw new SQLFakeVitessQueryViolation(
                 Str\format("Vitess query validation error: %s", UnsupportedCases::OrderByColumns),
@@ -120,7 +119,7 @@ final class SelectQueryValidator extends VitessQueryValidator {
     public async function unionsNotAllowed(): Awaitable<void> {
         $query = $this->query;
         $multiQueries = $query->multiQueries;
-        if (C\is_empty($multiQueries)) return;
+        if (C\is_empty($multiQueries)) { return; }
 
         foreach ($multiQueries as $query) {
             switch ($query['type']) {
