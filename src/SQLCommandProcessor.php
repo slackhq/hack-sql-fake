@@ -3,6 +3,7 @@
 namespace Slack\SQLFake;
 
 use namespace HH\Lib\Str;
+use namespace Slack\SQLFake\VitessQueryValidator;
 
 /**
  * The query running interface
@@ -26,6 +27,10 @@ abstract final class SQLCommandProcessor {
     }
 
     $query = SQLParser::parse($sql);
+
+    if ($conn->getServer()->config['is_vitess'] ?? false) {
+      VitessQueryValidator::validate($query, $conn);
+    }
 
     if ($query is SelectQuery) {
       return tuple($query->execute($conn), 0);

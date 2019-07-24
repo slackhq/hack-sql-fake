@@ -4,7 +4,7 @@
 
 namespace Slack\SQLFake;
 
-use namespace HH\Lib\{C, Regex, Str};
+use namespace HH\Lib\{C, Regex, Str, Vec};
 
 /**
  * any operator that takes arguments on the left and right side, like +, -, *, AND, OR...
@@ -343,6 +343,28 @@ final class BinaryOperatorExpression extends Expression {
       throw new SQLFakeParseException("Parse error: attempted to resolve unbound expression");
     }
     return $this->right;
+  }
+
+  public function traverse(): vec<Expression> {
+    $container = vec[];
+
+    if ($this->left is nonnull) {
+      if ($this->left is BinaryOperatorExpression) {
+        $container = Vec\concat($container, $this->left->traverse());
+      } else {
+        $container[] = $this->left;
+      }
+    }
+
+    if ($this->right is nonnull) {
+      if ($this->right is BinaryOperatorExpression) {
+        $container = Vec\concat($container, $this->right->traverse());
+      } else {
+        $container[] = $this->right;
+      }
+    }
+
+    return $container;
   }
 
   <<__Override>>
