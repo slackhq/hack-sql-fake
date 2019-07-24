@@ -1,16 +1,10 @@
 <?hh // strict
 
 namespace Slack\SQLFake;
-use namespace HH\Lib\Dict;
 
 final class SharedSetup {
-	public static async function initAsync(bool $add_vitess_dbs = false): Awaitable<AsyncMysqlConnection> {
-		$schema = TEST_SCHEMA;
-		if ($add_vitess_dbs) {
-			$schema = Dict\merge($schema, VITESS_TEST_SCHEMA);
-		}
-
-		init($schema, true);
+	public static async function initAsync(): Awaitable<AsyncMysqlConnection> {
+		init(TEST_SCHEMA, true);
 		$pool = new AsyncMysqlConnectionPool(darray[]);
 		$conn = await $pool->connect("example", 1, 'db2', '', '');
 
@@ -37,36 +31,7 @@ final class SharedSetup {
 				dict['table_3_id' => 3, 'table_4_id' => 1003, 'group_id' => 0, 'description' => 'association 4'],
 			],
 		];
-
 		$conn->getServer()->databases['db2'] = $database;
-
-		if ($add_vitess_dbs) {
-			$vitess_conn = await $pool->connect("example", 2, 'vitess', '', '');
-
-			$vitess_dbs = dict[
-				'vt_table1' => vec[
-					dict['id' => 1, 'name' => 'Pallettown Chickenstrips'],
-					dict['id' => 2, 'name' => 'Brewery Cuttlefish'],
-					dict['id' => 3, 'name' => 'Blasphemy Chowderpants'],
-					dict['id' => 4, 'name' => 'Benjamin Ampersand'],
-				],
-				'vt_table2' => vec[
-					dict['id' => 11, 'vt_table1_id' => 1, 'description' => 'no'],
-					dict['id' => 12, 'vt_table1_id' => 2, 'description' => 'no'],
-					dict['id' => 13, 'vt_table1_id' => 3, 'description' => 'no'],
-					dict['id' => 14, 'vt_table1_id' => 4, 'description' => 'no'],
-				],
-			];
-
-			$vitess_conn->getServer()->databases['vitess'] = $vitess_dbs;
-			$vitess_conn->getServer()->setConfig(shape(
-				'mysql_version' => '5.7',
-				'is_vitess' => true,
-				'strict_sql_mode' => false,
-				'strict_schema_mode' => false,
-				'inherit_schema_from' => 'vitess',
-			));
-		}
 		snapshot('setup');
 		return $conn;
 	}
@@ -327,146 +292,4 @@ const dict<string, dict<string, table_schema>> TEST_SCHEMA = dict[
 		),
 	],
 
-];
-
-const dict<string, dict<string, table_schema>> VITESS_TEST_SCHEMA = dict[
-	'vitess' => dict[
-		'vt_table1' => shape(
-			'name' => 'vt_table1',
-			'fields' => vec[
-				shape(
-					'name' => 'id',
-					'type' => DataType::BIGINT,
-					'length' => 20,
-					'null' => false,
-					'hack_type' => 'int',
-				),
-				shape(
-					'name' => 'name',
-					'type' => DataType::VARCHAR,
-					'length' => 255,
-					'null' => false,
-					'hack_type' => 'string',
-				),
-			],
-			'indexes' => vec[
-				shape(
-					'name' => 'PRIMARY',
-					'type' => 'PRIMARY',
-					'fields' => keyset['id'],
-				),
-				shape(
-					'name' => 'name_uniq',
-					'type' => 'UNIQUE',
-					'fields' => keyset['name'],
-				),
-			],
-			'vitess_sharding' => shape(
-				'keyspace' => 'test_keyspace_one',
-				'sharding_key' => 'id',
-			),
-		),
-		'vt_table2' => shape(
-			'name' => 'vt_table2',
-			'fields' => vec[
-				shape(
-					'name' => 'id',
-					'type' => DataType::BIGINT,
-					'length' => 20,
-					'null' => false,
-					'hack_type' => 'int',
-				),
-				shape(
-					'name' => 'vt_table1_id',
-					'type' => DataType::BIGINT,
-					'length' => 20,
-					'null' => false,
-					'hack_type' => 'int',
-				),
-				shape(
-					'name' => 'description',
-					'type' => DataType::VARCHAR,
-					'length' => 255,
-					'null' => false,
-					'hack_type' => 'string',
-				),
-			],
-			'indexes' => vec[
-				shape(
-					'name' => 'PRIMARY',
-					'type' => 'PRIMARY',
-					'fields' => keyset['id'],
-				),
-				shape(
-					'name' => 'table_1_id',
-					'type' => 'INDEX',
-					'fields' => keyset['vt_table1_id'],
-				),
-			],
-			'vitess_sharding' => shape(
-				'keyspace' => 'test_keyspace_one',
-				'sharding_key' => 'vt_table1_id',
-			),
-
-		),
-		'vt_table_with_more_fields' => shape(
-			'name' => 'vt_table_with_more_fields',
-			'fields' => vec[
-				shape(
-					'name' => 'id',
-					'type' => DataType::BIGINT,
-					'length' => 20,
-					'null' => false,
-					'hack_type' => 'int',
-				),
-				shape(
-					'name' => 'name',
-					'type' => DataType::VARCHAR,
-					'length' => 255,
-					'null' => false,
-					'hack_type' => 'string',
-				),
-				shape(
-					'name' => 'nullable_unique',
-					'type' => DataType::VARCHAR,
-					'length' => 255,
-					'null' => true,
-					'hack_type' => 'string',
-				),
-				shape(
-					'name' => 'nullable_default',
-					'type' => DataType::INT,
-					'length' => 20,
-					'null' => true,
-					'hack_type' => 'int',
-					'default' => '1',
-				),
-				shape(
-					'name' => 'not_null_default',
-					'type' => DataType::INT,
-					'length' => 20,
-					'null' => false,
-					'hack_type' => 'int',
-					'default' => '2',
-				),
-			],
-			'indexes' => vec[
-				shape(
-					'name' => 'PRIMARY',
-					'type' => 'PRIMARY',
-					'fields' => keyset['id', 'name'],
-				),
-				shape(
-					'name' => 'nullable_unique',
-					'type' => 'UNIQUE',
-					'fields' => keyset['nullable_unique'],
-				),
-			],
-			'vitess_sharding' => shape(
-				'keyspace' => 'test_keyspace_two',
-				'sharding_key' => 'name',
-			),
-
-		),
-	],
 ];
