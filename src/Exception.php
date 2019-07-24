@@ -7,4 +7,3 @@ final class SQLFakeNotImplementedException extends SQLFakeException {}
 final class SQLFakeParseException extends SQLFakeException {}
 final class SQLFakeRuntimeException extends SQLFakeException {}
 final class SQLFakeUniqueKeyViolation extends SQLFakeException {}
-final class SQLFakeVitessQueryViolation extends SQLFakeException {}

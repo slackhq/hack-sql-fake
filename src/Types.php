@@ -118,10 +118,6 @@ type table_schema = shape(
       'fields' => Container<string>,
     ),
   >,
-  ?"vitess_sharding" => shape(
-    'keyspace' => string,
-    'sharding_key' => string,
-  ),
 );
 
 enum DataType: string {
