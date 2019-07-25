@@ -86,8 +86,8 @@ final class BinaryOperatorExpression extends Expression {
         case Operator::LESS_THAN_EQUALS:
           /* HH_IGNORE_ERROR[4240] assume they have the same types */
           return ($le <= $re);
-        // default:
-        //   throw new SQLFakeRuntimeException("Operand {$this->operator} should contain 1 column(s)");
+        default:
+          throw new SQLFakeRuntimeException("Operand {$this->operator} should contain 1 column(s)");
       }
     }
 
