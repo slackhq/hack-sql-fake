@@ -318,7 +318,8 @@ final class ExpressionParser {
               throw new SQLFakeParseException("Unexpected $operator");
             }
             // tell the case statement we encountered a keyword so it knows where to stuff the next sub-expression
-            $this->expression->setKeyword($operator);
+            // `As` cast not needed under HHVM 4.15
+            $this->expression->setKeyword($operator as Operator);
             if ($operator !== 'END') {
               // after WHEN, THEN, and ELSE there needs to be a well-formed expression that we have to parse
               $this->pointer = $this->expression
@@ -363,7 +364,8 @@ final class ExpressionParser {
               // Otherwise, we take the entire current expression and nest it inside a new one, which we assume to be Binary for now
 
               $current_op_precedence = $this->expression->precedence;
-              $new_op_precedence = $this->getPrecedence($operator);
+              // `As` cast not needed under HHVM 4.15
+              $new_op_precedence = $this->getPrecedence($operator as Operator);
               if ($current_op_precedence < $new_op_precedence) {
                 // example: 5 + 8 * 3
                 // we are at the "*" right now, and have to move "8" out of the "right" from
@@ -405,7 +407,8 @@ final class ExpressionParser {
               $this->expression = new UnaryExpression($operator);
             } else {
               $this->expression as BinaryOperatorExpression;
-              $this->expression->setOperator($operator);
+              // `As` cast not needed under HHVM 4.15
+              $this->expression->setOperator($operator as Operator);
             }
           }
 
