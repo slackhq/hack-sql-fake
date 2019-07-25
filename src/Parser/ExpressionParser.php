@@ -319,7 +319,7 @@ final class ExpressionParser {
             }
             // tell the case statement we encountered a keyword so it knows where to stuff the next sub-expression
             // `As` cast not needed under HHVM 4.15
-            $this->expression->setKeyword($operator as Operator);
+            $this->expression->setKeyword(operator_to_string($operator));
             if ($operator !== 'END') {
               // after WHEN, THEN, and ELSE there needs to be a well-formed expression that we have to parse
               $this->pointer = $this->expression
@@ -365,7 +365,7 @@ final class ExpressionParser {
 
               $current_op_precedence = $this->expression->precedence;
               // `As` cast not needed under HHVM 4.15
-              $new_op_precedence = $this->getPrecedence($operator as Operator);
+              $new_op_precedence = $this->getPrecedence(operator_to_string($operator));
               if ($current_op_precedence < $new_op_precedence) {
                 // example: 5 + 8 * 3
                 // we are at the "*" right now, and have to move "8" out of the "right" from
@@ -408,7 +408,7 @@ final class ExpressionParser {
             } else {
               $this->expression as BinaryOperatorExpression;
               // `As` cast not needed under HHVM 4.15
-              $this->expression->setOperator($operator as Operator);
+              $this->expression->setOperator(operator_to_string($operator));
             }
           }
 
