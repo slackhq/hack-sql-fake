@@ -48,7 +48,7 @@ abstract final class Logger {
 			if ($rows_affected > 0) {
 				self::write("{$rows_affected} rows affected\n");
 				return;
-			} elseif (!$data) {
+			} else if (!$data) {
 				self::write("No results\n");
 				return;
 			}

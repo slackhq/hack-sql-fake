@@ -66,10 +66,10 @@ final class InsertQuery extends Query {
           // MySQL always counts dupe inserts twice intentionally
           $rows_affected += $affected * 2;
           continue;
-        } elseif ($this->ignoreDupes) {
+        } else if ($this->ignoreDupes) {
           // silently continue if INSERT IGNORE was specified
           continue;
-        } elseif (!QueryContext::$relaxUniqueConstraints) {
+        } else if (!QueryContext::$relaxUniqueConstraints) {
           throw new SQLFakeUniqueKeyViolation($msg);
         } else {
           continue;
