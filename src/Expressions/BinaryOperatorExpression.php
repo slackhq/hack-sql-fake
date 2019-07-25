@@ -184,7 +184,7 @@ final class BinaryOperatorExpression extends Expression {
         $left_number = $this->extractNumericValue($l_value);
         $right_number = $this->extractNumericValue($r_value);
 
-        switch ($this->operator) {
+        switch ($op) {
           case Operator::ASTERISK:
             return $left_number * $right_number;
           case Operator::PERCENT:
