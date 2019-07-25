@@ -69,25 +69,25 @@ final class BinaryOperatorExpression extends Expression {
       // as soon as you find any pair of elements that aren't equal, you can return whatever their comparison result is immediately
       // this is why (1, 2, 3) > (1, 1, 4) is true, for example, because the 2nd element comparison returns immediately
       switch ($this->operator) {
-        case '=':
+        case Operator::EQUALS:
           return ($le == $re);
-        case '<>':
-        case '!=':
+        case Operator::LESS_THAN_EQUALS_GREATER_THAN:
+        case Operator::BANG_EQUALS:
           return ($le != $re);
-        case '>':
+        case Operator::GREATER_THAN:
           /* HH_IGNORE_ERROR[4240] assume they have the same types */
           return ($le > $re);
-        case '>=':
+        case Operator::GREATER_THAN_EQUALS:
           /* HH_IGNORE_ERROR[4240] assume they have the same types */
           return ($le >= $re);
-        case '<':
+        case Operator::LESS_THAN:
           /* HH_IGNORE_ERROR[4240] assume they have the same types */
           return ($le < $re);
-        case '<=':
+        case Operator::LESS_THAN_EQUALS:
           /* HH_IGNORE_ERROR[4240] assume they have the same types */
           return ($le <= $re);
-        default:
-          throw new SQLFakeRuntimeException("Operand {$this->operator} should contain 1 column(s)");
+        // default:
+        //   throw new SQLFakeRuntimeException("Operand {$this->operator} should contain 1 column(s)");
       }
     }
 
