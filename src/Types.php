@@ -193,6 +193,9 @@ enum Operator: string {
   REGEXP = 'REGEXP';
   SOME = 'SOME';
   SOUNDS = 'SOUNDS';
+  TILDE = '~';
+  UNARY_MINUS = 'UNARY_MINUS';
+  UNARY_PLUS = 'UNARY_PLUS';
   XOR = 'XOR';
 }
 

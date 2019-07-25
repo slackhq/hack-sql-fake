@@ -25,11 +25,11 @@ final class UnaryExpression extends Expression {
     }
     $val = $this->subject->evaluate($row, $conn);
     switch ($this->operator) {
-      case 'UNARY_MINUS':
+      case Operator::UNARY_MINUS:
         return -1 * (float)$val;
-      case 'UNARY_PLUS':
+      case Operator::UNARY_PLUS:
         return (float)$val;
-      case '~':
+      case Operator::TILDE:
         return ~(int)$val;
       default:
         throw new SQLFakeRuntimeException("Unimplemented unary operand {$this->name}");

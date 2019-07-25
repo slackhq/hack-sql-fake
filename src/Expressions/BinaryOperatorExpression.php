@@ -203,9 +203,7 @@ final class BinaryOperatorExpression extends Expression {
           case Operator::DOUBLE_GREATER_THAN:
             return (int)$left_number >> (int)$right_number;
           default:
-            throw new SQLFakeRuntimeException(
-              Str\format("Operator %s recognized but not implemented", $this->operator),
-            );
+            throw new SQLFakeRuntimeException("Operator {$this->operator} recognized but not implemented");
         }
       case Operator::LIKE:
         $left_string = (string)$left->evaluate($row, $conn);
