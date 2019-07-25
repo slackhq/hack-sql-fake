@@ -2,6 +2,8 @@
 
 namespace Slack\SQLFake;
 
+use namespace HH\Lib\Str;
+
 //
 // Data Storage Types
 //
@@ -158,10 +160,12 @@ enum DataType: string {
 
 enum Operator: string {
   AMPERSAND = '&';
+  AND = 'AND';
   ANY = 'ANY';
   DOUBLE_AMPERSAND = '&&';
   AND = 'AND';
   ASTERISK = '*';
+  BANG = '!';
   BANG_EQUALS = '!=';
   BETWEEN = 'BETWEEN';
   BINARY = 'BINARY';
@@ -172,7 +176,10 @@ enum Operator: string {
   DOUBLE_GREATER_THAN = '>>';
   DOUBLE_LESS_THAN = '<<';
   DOUBLE_PIPE = '||';
+  ELSE = 'ELSE';
+  END = 'END';
   EQUALS = '=';
+  EXISTS = 'EXISTS';
   FORWARD_SLASH = '/';
   GREATER_THAN = '>';
   GREATER_THAN_EQUALS = '>=';
@@ -182,9 +189,11 @@ enum Operator: string {
   LESS_THAN_GREATER_THAN = '<>';
   LIKE = 'LIKE';
   IN = 'IN';
+  INTERVAL = 'INTERVAL';
   IS = 'IS';
   MOD = 'MOD';
   MINUS = '-';
+  NOT = 'NOT';
   OR = 'OR';
   PERCENT = '%';
   PIPE = '|';
@@ -193,7 +202,9 @@ enum Operator: string {
   REGEXP = 'REGEXP';
   SOME = 'SOME';
   SOUNDS = 'SOUNDS';
+  THEN = 'THEN';
   TILDE = '~';
+  WHEN = 'WHEN';
   UNARY_MINUS = 'UNARY_MINUS';
   UNARY_PLUS = 'UNARY_PLUS';
   XOR = 'XOR';
@@ -210,6 +221,16 @@ function operator_to_string(Operator $o): string {
  */
 function operatorn_to_string(?Operator $o): string {
   return $o as ?string ?? '';
+}
+
+function operator_try(?string $operatorish): ?Operator {
+  if ($operatorish is Operator) {
+    return $operatorish;
+  }
+  if (!Str\is_empty($operatorish)) {
+    \trigger_error("Expected to turn {$operatorish} into an operator, but failed. Defaulting to null.");
+  }
+  return null;
 }
 
 
