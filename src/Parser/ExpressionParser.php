@@ -290,7 +290,7 @@ final class ExpressionParser {
           break;
         case TokenType::OPERATOR:
           // mysql is case insensitive, but php is case sensitive so just uppercase operators for comparisons
-          $operator = $token['value'];
+          $operator = $token['value'] as Operator;
 
           if ($operator === Operator::CASE) {
             if (!($this->expression is PlaceholderExpression)) {
@@ -379,8 +379,7 @@ final class ExpressionParser {
                 } elseif ($operator === Operator::IN) {
                   $this->expression = new InOperatorExpression($this->expression, $this->expression->negated);
                 } else {
-                  //@LEXIDOR Unsafe cast
-                  $this->expression = new BinaryOperatorExpression($this->expression, false, $operator as ?Operator);
+                  $this->expression = new BinaryOperatorExpression($this->expression, false, $operator);
                 }
               }
             }
@@ -403,8 +402,7 @@ final class ExpressionParser {
               $operator === Operator::UNARY_MINUS || $operator === Operator::UNARY_PLUS || $operator === Operator::TILDE
             ) {
               $this->expression as PlaceholderExpression;
-              // @LEXIDOR Unsafe cast
-              $this->expression = new UnaryExpression($operator as ?Operator);
+              $this->expression = new UnaryExpression($operator);
             } else {
               $this->expression as BinaryOperatorExpression;
               $this->expression->setOperator($operator);
