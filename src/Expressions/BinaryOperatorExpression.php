@@ -125,7 +125,7 @@ final class BinaryOperatorExpression extends Expression {
       throw new SQLFakeRuntimeException('Attempted to evaluate BinaryOperatorExpression with empty operator');
     }
 
-    switch ($this->operator) {
+    switch ($op) {
       case Operator::AND:
         if ((bool)$l_value && (bool)$r_value) {
           return (int)!$this->negated;
