@@ -25,7 +25,10 @@ final class UnaryExpression extends Expression {
       throw new SQLFakeRuntimeException("Attempted to evaluate unary operation with no operand");
     }
     $val = $this->subject->evaluate($row, $conn);
-    switch ($this->operator) {
+
+    $op = $this->operator;
+    invariant($op is nonnull, 'This case was not considered. The operator is null.');
+    switch ($op) {
       case Operator::UNARY_MINUS:
         return -1 * (float)$val;
       case Operator::UNARY_PLUS:
