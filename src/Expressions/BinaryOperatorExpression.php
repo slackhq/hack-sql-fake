@@ -175,7 +175,6 @@ final class BinaryOperatorExpression extends Expression {
       case Operator::PLUS:
       case Operator::DOUBLE_LESS_THAN:
       case Operator::DOUBLE_GREATER_THAN:
-      case Operator::ASTERISK: // Put in here twice?
       case Operator::FORWARD_SLASH:
       case Operator::DIV:
         // do these things to all numeric operators and then switch again to execute the actual operation
