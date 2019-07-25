@@ -224,7 +224,7 @@ abstract final class QueryFormatter {
 				$out[] = $param[$i];
 			}
 			$out[] = '`';
-		} elseif ($param is Container<_>) {
+		} else if ($param is Container<_>) {
 			switch (C\count($param)) {
 				// qualified column name, possibly with alias
 				case 2:
@@ -235,7 +235,7 @@ abstract final class QueryFormatter {
 						$out = self::appendColumnTableName($out, $val);
 						if ($counter === 0) {
 							$out[] = '.';
-						} elseif ($count > $counter + 1) {
+						} else if ($count > $counter + 1) {
 							$out[] = ' AS ';
 						}
 					}

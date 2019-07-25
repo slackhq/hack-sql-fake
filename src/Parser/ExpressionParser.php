@@ -207,7 +207,7 @@ final class ExpressionParser {
             $parser = new SelectParser(0, $arg_tokens, $subquery_sql);
             list($p, $select) = $parser->parse();
             $expr = new SubqueryExpression($select, '');
-          } elseif ($this->expression is InOperatorExpression) {
+          } else if ($this->expression is InOperatorExpression) {
 
             $pointer = -1;
             $in_list = vec[];
@@ -304,7 +304,7 @@ final class ExpressionParser {
             }
             $this->expression = new CaseOperatorExpression($token);
             break;
-          } elseif (C\contains_key(keyset['WHEN', 'THEN', 'ELSE', 'END'], $operator)) {
+          } else if (C\contains_key(keyset['WHEN', 'THEN', 'ELSE', 'END'], $operator)) {
             if (!($this->expression is CaseOperatorExpression)) {
               if ($this->expression is BinaryOperatorExpression) {
                 // this handles "THEN 1" for example. when we hit token 1 we would have started a binary expression,

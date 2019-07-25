@@ -11,6 +11,9 @@
       "email": "ssandler@slack-corp.com"
     }
   ],
+  "license": [
+    "MIT"
+  ],
   "require": {
     "hhvm/hsl": "^4.0.1",
     "hhvm/hsl-experimental": "^4.0.2",

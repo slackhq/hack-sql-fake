@@ -25,7 +25,7 @@ final class ColumnExpression extends Expression {
       $parts = Str\split($token['value'], '.');
       if (C\count($parts) === 2) {
         list($this->tableName, $this->columnName) = $parts;
-      } elseif (C\count($parts) === 3) {
+      } else if (C\count($parts) === 3) {
         list($this->databaseName, $this->tableName, $this->columnName) = $parts;
       }
     } else {
@@ -53,7 +53,7 @@ final class ColumnExpression extends Expression {
     // otherwise return the column
     if (C\contains_key($row, $this->columnExpression)) {
       return $row[$this->columnExpression];
-    } elseif (($this->tableName === null && $this->columnName is nonnull) || $this->allowFallthrough) {
+    } else if (($this->tableName === null && $this->columnName is nonnull) || $this->allowFallthrough) {
       // didn't find row by alias, so search without alias instead
       // but only if the column expression didn't have an explicit table name on it
       // OR if we are explicitly allowing fallthrough to the full row, which we do in the ORDER BY clause

@@ -29,7 +29,7 @@ final class LimitParser {
           throw new SQLFakeParseException("Expected integer after OFFSET");
         }
         $offset = (int)($next['value']);
-      } elseif ($next['value'] === ',') {
+      } else if ($next['value'] === ',') {
         $this->pointer += 2;
         $next = $this->tokens[$this->pointer] ?? null;
         if ($next === null || $next['type'] !== TokenType::NUMERIC_CONSTANT) {

@@ -80,7 +80,7 @@ final class CaseOperatorExpression extends Expression {
             'value' => 'null',
             'raw' => 'null',
           ));
-        } elseif ($this->lastKeyword !== 'ELSE' || !$this->else) {
+        } else if ($this->lastKeyword !== 'ELSE' || !$this->else) {
           throw new SQLFakeParseException("Unexpected END in CASE statement");
         }
         $this->lastKeyword = 'END';
