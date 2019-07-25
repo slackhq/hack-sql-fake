@@ -207,7 +207,7 @@ final class ExpressionParser {
             $parser = new SelectParser(0, $arg_tokens, $subquery_sql);
             list($p, $select) = $parser->parse();
             $expr = new SubqueryExpression($select, '');
-          } elseif ($this->expression is InOperatorExpression) {
+          } else if ($this->expression is InOperatorExpression) {
 
             $pointer = -1;
             $in_list = vec[];
@@ -274,7 +274,7 @@ final class ExpressionParser {
             // we assume an expression will be a Binary Operator (most common) when we first encounter a token
             // if it's something else like BETWEEN or IN, we convert it to that deliberately when encountering the operand
             $this->expression = new BinaryOperatorExpression($expr);
-          } elseif (
+          } else if (
             Str\is_empty($this->expression->operator) &&
             $this->expression is BinaryOperatorExpression &&
             $token['type'] === TokenType::IDENTIFIER
@@ -304,7 +304,7 @@ final class ExpressionParser {
             }
             $this->expression = new CaseOperatorExpression($token);
             break;
-          } elseif (C\contains_key(keyset['WHEN', 'THEN', 'ELSE', 'END'], $operator)) {
+          } else if (C\contains_key(keyset['WHEN', 'THEN', 'ELSE', 'END'], $operator)) {
             if (!($this->expression is CaseOperatorExpression)) {
               if ($this->expression is BinaryOperatorExpression) {
                 // this handles "THEN 1" for example. when we hit token 1 we would have started a binary expression,
@@ -336,7 +336,7 @@ final class ExpressionParser {
             ) {
               $this->expression as BetweenOperatorExpression;
               $this->expression->foundAnd();
-            } elseif ($operator === 'NOT') {
+            } else if ($operator === 'NOT') {
               if ($this->expression->operator !== 'IS') {
                 $next = $this->peekNext();
                 if (
@@ -374,7 +374,7 @@ final class ExpressionParser {
                 // It's important to nest like this to preserve left-to-right evaluation.
                 if ($operator === 'BETWEEN') {
                   $this->expression = new BetweenOperatorExpression($this->expression);
-                } elseif ($operator === 'IN') {
+                } else if ($operator === 'IN') {
                   $this->expression = new InOperatorExpression($this->expression, $this->expression->negated);
                 } else {
                   $this->expression = new BinaryOperatorExpression($this->expression, false, $operator);
@@ -387,16 +387,16 @@ final class ExpressionParser {
                 throw new SQLFakeParseException('Unexpected keyword BETWEEN');
               }
               $this->expression = new BetweenOperatorExpression($this->expression->left);
-            } elseif ($operator === 'NOT') {
+            } else if ($operator === 'NOT') {
               // this negates another operator like "NOT IN" or "IS NOT NULL"
               // operators would throw an SQLFakeException here if they don't support negation
               $this->expression->negate();
-            } elseif ($operator === 'IN') {
+            } else if ($operator === 'IN') {
               if (!$this->expression is BinaryOperatorExpression) {
                 throw new SQLFakeParseException('Unexpected keyword IN');
               }
               $this->expression = new InOperatorExpression($this->expression->left, $this->expression->negated);
-            } elseif ($operator === 'UNARY_MINUS' || $operator === 'UNARY_PLUS' || $operator === '~') {
+            } else if ($operator === 'UNARY_MINUS' || $operator === 'UNARY_PLUS' || $operator === '~') {
               $this->expression as PlaceholderExpression;
               $this->expression = new UnaryExpression($operator);
             } else {

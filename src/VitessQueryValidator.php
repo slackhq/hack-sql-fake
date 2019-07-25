@@ -2,7 +2,7 @@
 
 namespace Slack\SQLFake;
 
-use namespace HH\Lib\{C, Vec, Str};
+use namespace HH\Lib\{C, Str, Vec};
 
 /**
  * Takes a parsed query and tests whether the query will work on vitess.

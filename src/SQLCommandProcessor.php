@@ -33,11 +33,11 @@ abstract final class SQLCommandProcessor {
 
     if ($query is SelectQuery) {
       return tuple($query->execute($conn), 0);
-    } elseif ($query is UpdateQuery) {
+    } else if ($query is UpdateQuery) {
       return tuple(vec[], $query->execute($conn));
-    } elseif ($query is DeleteQuery) {
+    } else if ($query is DeleteQuery) {
       return tuple(vec[], $query->execute($conn));
-    } elseif ($query is InsertQuery) {
+    } else if ($query is InsertQuery) {
       return tuple(vec[], $query->execute($conn));
     } else {
       throw new SQLFakeNotImplementedException("Unhandled query type: ".\get_class($query));
