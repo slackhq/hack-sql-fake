@@ -547,7 +547,7 @@ final class CreateTableParser {
 				$stack++;
 				$t = $this->vecUnshift(inout $tokens);
 				$out[] = $t;
-			} elseif ($next === ')') {
+			} else if ($next === ')') {
 				if ($stack) {
 					$stack--;
 					$t = $this->vecUnshift(inout $tokens);
@@ -555,7 +555,7 @@ final class CreateTableParser {
 				} else {
 					return $out;
 				}
-			} elseif ($next === ',') {
+			} else if ($next === ',') {
 				if ($stack) {
 					$t = $this->vecUnshift(inout $tokens);
 					$out[] = $t;
@@ -952,7 +952,7 @@ final class CreateTableParser {
 			if (Str\uppercase($tokens[0]) === 'ASC') {
 				$col['direction'] = 'asc';
 				$tokens = Vec\drop($tokens, 1);
-			} elseif (Str\uppercase($tokens[0]) === 'DESC') {
+			} else if (Str\uppercase($tokens[0]) === 'DESC') {
 				$col['direction'] = 'desc';
 				$tokens = Vec\drop($tokens, 1);
 			}

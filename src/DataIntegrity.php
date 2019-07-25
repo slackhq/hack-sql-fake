@@ -200,7 +200,7 @@ abstract final class DataIntegrity {
     foreach ($schema['indexes'] as $index) {
       if ($index['type'] === 'PRIMARY') {
         $unique_keys['PRIMARY'] = keyset($index['fields']);
-      } elseif ($index['type'] === 'UNIQUE') {
+      } else if ($index['type'] === 'UNIQUE') {
         $unique_keys[$index['name']] = keyset($index['fields']);
       }
     }
