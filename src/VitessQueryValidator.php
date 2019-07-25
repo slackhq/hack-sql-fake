@@ -65,27 +65,36 @@ final class SelectQueryValidator extends VitessQueryValidator {
     // the query down to a single shard. It will fail open and return true if none of the
     // conditions are met.
     private function isCrossShardQuery(): bool {
+        $is_scatter_query = true;
         // we can't do much without a from clause
         $from = $this->query->fromClause;
-        if ($from === null) { return false; }
+        if ($from === null) {
+            return false;
+        }
 
         foreach ($from->tables as $table) {
             $where = $this->query->whereClause;
             list($database, $table_name) = Query::parseTableName($this->conn, $table['name']);
             $table_schema = QueryContext::getSchema($database, $table_name);
             $vitess_sharding = $table_schema['vitess_sharding'] ?? null;
-            if ($vitess_sharding === null) { continue; }
+            // if we don't have a sharding scheme defined, assume it isn't cross shard
+            if ($vitess_sharding === null) {
+                $is_scatter_query = false;
+                continue;
+            }
 
             if ($where is BinaryOperatorExpression) {
                 $columns = VitessQueryValidator::extractColumnExprNames($where->traverse());
                 // if the where clause selects on the sharding key, we're good to go
                 if (C\contains_key($columns, $vitess_sharding['sharding_key'])) {
+                    // TODO: for now this just returns but we need to eventually
+                    // handle cases like JOINS where multiple tables are involved
                     return false;
                 }
             }
         }
 
-        return true;
+        return $is_scatter_query;
     }
 
     public async function scatterMustContainSelectColumns(): Awaitable<void> {
