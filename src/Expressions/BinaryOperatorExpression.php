@@ -172,7 +172,7 @@ final class BinaryOperatorExpression extends Expression {
       case Operator::PERCENT:
       case Operator::MOD:
       case Operator::MINUS:
-      case Operator::PERCENT:
+      case Operator::PLUS:
       case Operator::DOUBLE_LESS_THAN:
       case Operator::DOUBLE_GREATER_THAN:
       case Operator::ASTERISK: // Put in here twice?
