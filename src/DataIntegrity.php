@@ -2,7 +2,7 @@
 
 namespace Slack\SQLFake;
 
-use namespace HH\Lib\{C, Keyset, Vec, Str};
+use namespace HH\Lib\{C, Keyset, Str, Vec};
 
 /**
  * Manages data integrity checks for a table based on its schema

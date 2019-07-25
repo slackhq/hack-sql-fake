@@ -5,7 +5,7 @@ namespace Slack\SQLFake;
 use namespace HH\Lib\{C, Regex};
 use type Facebook\CLILib\CLIWithArguments;
 use namespace Facebook\CLILib\CLIOptions;
-use type Facebook\HackCodegen\{HackCodegenFactory, HackCodegenConfig, HackBuilderValues, HackBuilderKeys};
+use type Facebook\HackCodegen\{HackBuilderKeys, HackBuilderValues, HackCodegenConfig, HackCodegenFactory};
 
 final class BuildSchemaCLI extends CLIWithArguments {
 	private string $constName = 'DB_SCHEMA';
