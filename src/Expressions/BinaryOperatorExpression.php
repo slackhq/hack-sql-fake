@@ -327,7 +327,7 @@ final class BinaryOperatorExpression extends Expression {
 
   <<__Override>>
   public function setNextChild(Expression $expr, bool $overwrite = false): void {
-    if ($this->operator is null || ($this->right && !$overwrite)) {
+    if ($this->operator === null || ($this->right && !$overwrite)) {
       throw new SQLFakeParseException("Parse error");
     }
     $this->right = $expr;

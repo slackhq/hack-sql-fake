@@ -275,7 +275,7 @@ final class ExpressionParser {
             // if it's something else like BETWEEN or IN, we convert it to that deliberately when encountering the operand
             $this->expression = new BinaryOperatorExpression($expr);
           } elseif (
-            $this->expression->operator is null &&
+            $this->expression->operator === null &&
             $this->expression is BinaryOperatorExpression &&
             $token['type'] === TokenType::IDENTIFIER
           ) {
@@ -471,7 +471,7 @@ final class ExpressionParser {
 
     if (!$this->expression->isWellFormed()) {
       // if we encountered some token like a column, constant, or subquery and we didn't find any more tokens than that, just return that token as the entire expression
-      if ($this->expression is BinaryOperatorExpression && $this->expression->operator is null) {
+      if ($this->expression is BinaryOperatorExpression && $this->expression->operator === null) {
         return $this->expression->left;
       }
       throw new SQLFakeParseException('Parse error, unexpected end of input');
