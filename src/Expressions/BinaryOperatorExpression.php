@@ -200,10 +200,12 @@ final class BinaryOperatorExpression extends Expression {
             return $left_number + $right_number;
           case Operator::DOUBLE_LESS_THAN:
             return (int)$left_number << (int)$right_number;
-          case Operator::GREATER_THAN:
+          case Operator::DOUBLE_GREATER_THAN:
             return (int)$left_number >> (int)$right_number;
           default:
-            throw new SQLFakeRuntimeException("Operator recognized but not implemented");
+            throw new SQLFakeRuntimeException(
+              Str\format("Operator %s recognized but not implemented", $this->operator),
+            );
         }
       case Operator::LIKE:
         $left_string = (string)$left->evaluate($row, $conn);
