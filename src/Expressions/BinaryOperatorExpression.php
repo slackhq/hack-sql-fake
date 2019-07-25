@@ -120,7 +120,7 @@ final class BinaryOperatorExpression extends Expression {
     $as_string = $left->getType() == TokenType::STRING_CONSTANT || $right->getType() == TokenType::STRING_CONSTANT;
 
     switch ($this->operator) {
-      case '':
+      case null:
         // an operator should only be in this state in the middle of parsing, never when evaluating
         throw new SQLFakeRuntimeException('Attempted to evaluate BinaryOperatorExpression with empty operator');
       case Operator::AND:
