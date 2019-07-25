@@ -2,8 +2,6 @@
 
 namespace Slack\SQLFake;
 
-use namespace HH\Lib\Str;
-
 //
 // Data Storage Types
 //
