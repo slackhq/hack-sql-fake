@@ -156,6 +156,54 @@ enum DataType: string {
   NUMERIC = 'NUMERIC';
 }
 
+enum Operator: string {
+  AMPERSAND = '&';
+  ANY = 'ANY';
+  DOUBLE_AMPERSAND = '&&';
+  AND = 'AND';
+  ASTERISK = '*';
+  BANG_EQUALS = '!=';
+  BETWEEN = 'BETWEEN';
+  BINARY = 'BINARY';
+  CASE = 'CASE';
+  CARET = '^';
+  COLLATE = 'COLLATE';
+  DIV = 'DIV';
+  DOUBLE_GREATER_THAN = '>>';
+  DOUBLE_LESS_THAN = '<<';
+  DOUBLE_PIPE = '||';
+  EQUALS = '=';
+  FORWARD_SLASH = '/';
+  GREATER_THAN = '>';
+  GREATER_THAN_EQUALS = '>=';
+  LESS_THAN = '<';
+  LESS_THAN_EQUALS = '<=';
+  LESS_THAN_EQUALS_GREATER_THAN = '<=>';
+  LESS_THAN_GREATER_THAN = '<>';
+  LIKE = 'LIKE';
+  IN = 'IN';
+  IS = 'IS';
+  MOD = 'MOD';
+  MINUS = '-';
+  OR = 'OR';
+  PERCENT = '%';
+  PIPE = '|';
+  PLUS = '+';
+  RLIKE = 'RLIKE';
+  REGEXP = 'REGEXP';
+  SOME = 'SOME';
+  SOUNDS = 'SOUNDS';
+  XOR = 'XOR';
+}
+
+function operator_to_string(Operator $o): string {
+  return $o as string;
+}
+
+function operatorn_to_string(?Operator $o): ?string {
+  return $o as ?string;
+}
+
 
 type server_config = shape(
   // i.e. 5.6, 5.7
