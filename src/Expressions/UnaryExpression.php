@@ -16,7 +16,7 @@ final class UnaryExpression extends Expression {
   public function __construct(public ?Operator $operator) {
     $this->type = TokenType::OPERATOR;
     $this->precedence = 14;
-    $this->name = operatorn_to_string($operator) ?? '';
+    $this->name = operatorn_to_string($operator);
   }
 
   <<__Override>>

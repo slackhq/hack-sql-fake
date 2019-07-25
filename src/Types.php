@@ -203,8 +203,13 @@ function operator_to_string(Operator $o): string {
   return $o as string;
 }
 
-function operatorn_to_string(?Operator $o): ?string {
-  return $o as ?string;
+/**
+ * Converts an Operator to a string and null to String.empty.
+ * Many pieces of code assume that String.empty is a valid Operator (meaning no operator).
+ * If Operators flow into string typed code, this conversion needs to happen again.
+ */
+function operatorn_to_string(?Operator $o): string {
+  return $o as ?string ?? '';
 }
 
 
