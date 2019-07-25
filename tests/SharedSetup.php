@@ -1,16 +1,12 @@
 <?hh // strict
 
 namespace Slack\SQLFake;
-use namespace HH\Lib\Dict;
 
 final class SharedSetup {
-	public static async function initAsync(bool $is_vitess_conn = false): Awaitable<AsyncMysqlConnection> {
+	public static async function initAsync(): Awaitable<AsyncMysqlConnection> {
 		$schema = TEST_SCHEMA;
-		if ($is_vitess_conn) {
-			$schema = Dict\merge($schema, VITESS_TEST_SCHEMA);
-		}
-
 		init($schema, true);
+
 		$pool = new AsyncMysqlConnectionPool(darray[]);
 		$conn = await $pool->connect("example", 1, 'db2', '', '');
 
@@ -40,38 +36,45 @@ final class SharedSetup {
 
 		$conn->getServer()->databases['db2'] = $database;
 
-		$vitess_conn = null;
-		if ($is_vitess_conn) {
-			$vitess_conn = await $pool->connect("example2", 2, 'vitess', '', '');
-
-			$vitess_dbs = dict[
-				'vt_table1' => vec[
-					dict['id' => 1, 'name' => 'Pallettown Chickenstrips'],
-					dict['id' => 2, 'name' => 'Brewery Cuttlefish'],
-					dict['id' => 3, 'name' => 'Blasphemy Chowderpants'],
-					dict['id' => 4, 'name' => 'Benjamin Ampersand'],
-				],
-				'vt_table2' => vec[
-					dict['id' => 11, 'vt_table1_id' => 1, 'description' => 'no'],
-					dict['id' => 12, 'vt_table1_id' => 2, 'description' => 'no'],
-					dict['id' => 13, 'vt_table1_id' => 3, 'description' => 'no'],
-					dict['id' => 14, 'vt_table1_id' => 4, 'description' => 'no'],
-				],
-			];
-
-			$vitess_conn->getServer()->databases['vitess'] = $vitess_dbs;
-			$vitess_conn->getServer()->setConfig(shape(
-				'mysql_version' => '5.7',
-				'is_vitess' => true,
-				'strict_sql_mode' => false,
-				'strict_schema_mode' => false,
-				'inherit_schema_from' => 'vitess',
-			));
-		}
 		snapshot('setup');
-		// if we wanted to create a vitess connection, return that
-		return $vitess_conn ?? $conn;
+		return $conn;
 	}
+
+	public static async function initVitessAsync(): Awaitable<AsyncMysqlConnection> {
+		$schema = VITESS_TEST_SCHEMA;
+		init($schema, true);
+
+		$pool = new AsyncMysqlConnectionPool(darray[]);
+		$vitess_conn = await $pool->connect("example2", 2, 'vitess', '', '');
+
+		$vitess_dbs = dict[
+			'vt_table1' => vec[
+				dict['id' => 1, 'name' => 'Pallettown Chickenstrips'],
+				dict['id' => 2, 'name' => 'Brewery Cuttlefish'],
+				dict['id' => 3, 'name' => 'Blasphemy Chowderpants'],
+				dict['id' => 4, 'name' => 'Benjamin Ampersand'],
+			],
+			'vt_table2' => vec[
+				dict['id' => 11, 'vt_table1_id' => 1, 'description' => 'no'],
+				dict['id' => 12, 'vt_table1_id' => 2, 'description' => 'no'],
+				dict['id' => 13, 'vt_table1_id' => 3, 'description' => 'no'],
+				dict['id' => 14, 'vt_table1_id' => 4, 'description' => 'no'],
+			],
+		];
+
+		$vitess_conn->getServer()->databases['vitess'] = $vitess_dbs;
+		$vitess_conn->getServer()->setConfig(shape(
+			'mysql_version' => '5.7',
+			'is_vitess' => true,
+			'strict_sql_mode' => false,
+			'strict_schema_mode' => false,
+			'inherit_schema_from' => 'vitess',
+		));
+
+		snapshot('vitess_setup');
+		return $vitess_conn;
+	}
+
 }
 
 const dict<string, dict<string, table_schema>> TEST_SCHEMA = dict[
