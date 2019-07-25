@@ -467,7 +467,7 @@ final class ExpressionParser {
 
     if (!$this->expression->isWellFormed()) {
       // if we encountered some token like a column, constant, or subquery and we didn't find any more tokens than that, just return that token as the entire expression
-      if ($this->expression is BinaryOperatorExpression && $this->expression->operator === '') {
+      if ($this->expression is BinaryOperatorExpression && $this->expression->operator is null) {
         return $this->expression->left;
       }
       throw new SQLFakeParseException('Parse error, unexpected end of input');

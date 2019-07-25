@@ -17,15 +17,15 @@ final class BinaryOperatorExpression extends Expression {
   public function __construct(
     public Expression $left, // public because we sometimes need to access it to split off into a BETWEEN
     public bool $negated = false,
-    public string $operator = '',
+    public ?Operator $operator = null,
     public ?Expression $right = null,
   ) {
     $this->name = '';
     // this gets overwritten once we have an operator
     $this->precedence = 0;
     $this->type = TokenType::OPERATOR;
-    if (!Str\is_empty($operator)) {
-      $this->precedence = ExpressionParser::OPERATOR_PRECEDENCE[$operator];
+    if ($operator is nonnull) {
+      $this->precedence = ExpressionParser::OPERATOR_PRECEDENCE[operator_to_string($operator)];
     }
 
     $this->negatedInt = $this->negated ? 1 : 0;

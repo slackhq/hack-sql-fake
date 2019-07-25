@@ -41,7 +41,7 @@ final class SetParser {
           list($this->pointer, $expression) = $expression_parser->buildWithPointer();
 
           // the only valid kind of expression in a SET is "foo = bar"
-          if (!$expression is BinaryOperatorExpression || $expression->operator !== '=') {
+          if (!$expression is BinaryOperatorExpression || $expression->operator !== Operator::EQUALS) {
             throw new SQLFakeParseException("Failed parsing SET clause: unexpected expression");
           }
 
