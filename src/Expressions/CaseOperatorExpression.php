@@ -21,9 +21,10 @@ final class CaseOperatorExpression extends Expression {
   private bool $wellFormed = false;
 
   public function __construct(token $_token) {
-    $this->name = 'CASE';
-    $this->precedence = ExpressionParser::OPERATOR_PRECEDENCE['CASE'];
-    $this->operator = 'CASE';
+    $op = Operator::CASE;
+    $this->name = operator_to_string($op);
+    $this->precedence = ExpressionParser::OPERATOR_PRECEDENCE[operator_to_string($op)];
+    $this->operator = $op;
     $this->type = TokenType::OPERATOR;
   }
 

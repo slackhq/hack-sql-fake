@@ -323,18 +323,19 @@ final class BinaryOperatorExpression extends Expression {
 
   <<__Override>>
   public function isWellFormed(): bool {
-    return $this->right && !Str\is_empty($this->operator);
+    return $this->right && $this->operator is nonnull;
   }
 
   <<__Override>>
   public function setNextChild(Expression $expr, bool $overwrite = false): void {
-    if (Str\is_empty($this->operator) || ($this->right && !$overwrite)) {
+    if ($this->operator is null || ($this->right && !$overwrite)) {
       throw new SQLFakeParseException("Parse error");
     }
     $this->right = $expr;
   }
 
   public function setOperator(string $operator): void {
+    /*HH_FIXME[4110] Left in here for migrational purposes. @LEXIDOR Remove me before release. */
     $this->operator = $operator;
     $this->precedence = ExpressionParser::OPERATOR_PRECEDENCE[$operator];
   }

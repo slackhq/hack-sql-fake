@@ -275,7 +275,7 @@ final class ExpressionParser {
             // if it's something else like BETWEEN or IN, we convert it to that deliberately when encountering the operand
             $this->expression = new BinaryOperatorExpression($expr);
           } elseif (
-            Str\is_empty($this->expression->operator) &&
+            $this->expression->operator is null &&
             $this->expression is BinaryOperatorExpression &&
             $token['type'] === TokenType::IDENTIFIER
           ) {
@@ -330,7 +330,7 @@ final class ExpressionParser {
 
           // when "EXISTS (foo)"
           // TODO handle EXISTS
-          if (!Str\is_empty($this->expression->operator)) {
+          if ($this->expression->operator is nonnull) {
             if (
               $operator === 'AND' && $this->expression->operator === 'BETWEEN' && !$this->expression->isWellFormed()
             ) {
@@ -377,7 +377,8 @@ final class ExpressionParser {
                 } elseif ($operator === 'IN') {
                   $this->expression = new InOperatorExpression($this->expression, $this->expression->negated);
                 } else {
-                  $this->expression = new BinaryOperatorExpression($this->expression, false, $operator);
+                  //@LEXIDOR Unsafe cast
+                  $this->expression = new BinaryOperatorExpression($this->expression, false, $operator as ?Operator);
                 }
               }
             }

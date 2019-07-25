@@ -18,6 +18,7 @@ final class FunctionExpression extends Expression {
     $this->precedence = 0;
     $this->functionName = $token['value'];
     $this->name = $token['value'];
+    /*HH_FIXME[4110] Open issue #24 should resolve what to do here.*/
     $this->operator = (string)$this->type;
   }
 

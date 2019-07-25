@@ -8,6 +8,8 @@ namespace Slack\SQLFake;
  * SELECT ~column
  * SELECT +5
  */
+
+/*HH_IGNORE_ERROR[4110] @LEXIDOR Will do after the next checkpoint.*/
 final class UnaryExpression extends Expression {
 
   private ?Expression $subject = null;

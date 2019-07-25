@@ -289,11 +289,11 @@ final class FromParser {
     ));
 
     // making a binary expression ensuring those two tokens are equal
-    $expr = new BinaryOperatorExpression($left, /* $negated */ false, '=', $right);
+    $expr = new BinaryOperatorExpression($left, /* $negated */ false, Operator::EQUALS, $right);
 
     // if this is not the first condition, make an AND that wraps the current and new filter
     if ($filter !== null) {
-      $filter = new BinaryOperatorExpression($filter, /* $negated */ false, 'AND', $expr);
+      $filter = new BinaryOperatorExpression($filter, /* $negated */ false, Operator::AND, $expr);
     } else {
       $filter = $expr;
     }
