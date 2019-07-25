@@ -2,8 +2,7 @@
 
 namespace Slack\SQLFake;
 
-use namespace HH\Lib\Regex;
-use namespace HH\Lib\C;
+use namespace HH\Lib\{C, Regex};
 use type Facebook\CLILib\CLIWithArguments;
 use namespace Facebook\CLILib\CLIOptions;
 use type Facebook\HackCodegen\{HackCodegenFactory, HackCodegenConfig, HackBuilderValues, HackBuilderKeys};
