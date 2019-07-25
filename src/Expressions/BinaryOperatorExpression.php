@@ -123,89 +123,89 @@ final class BinaryOperatorExpression extends Expression {
       case '':
         // an operator should only be in this state in the middle of parsing, never when evaluating
         throw new SQLFakeRuntimeException('Attempted to evaluate BinaryOperatorExpression with empty operator');
-      case 'AND':
+      case Operator::AND:
         if ((bool)$l_value && (bool)$r_value) {
           return (int)!$this->negated;
         }
         return (int)$this->negated;
-      case 'OR':
+      case Operator::OR:
         if ((bool)$l_value || (bool)$r_value) {
           return (int)!$this->negated;
         }
         return (int)$this->negated;
-      case '=':
+      case Operator::EQUALS:
         // maybe do some stuff with data types here
         // comparing strings: gotta think about collation and case sensitivity!
         return ($l_value == $r_value) ? 1 : 0 ^ $this->negatedInt;
-      case '<>':
-      case '!=':
+      case Operator::LESS_THAN_GREATER_THAN:
+      case Operator::BANG_EQUALS:
         if ($as_string) {
           return ((string)$l_value != (string)$r_value) ? 1 : 0 ^ $this->negatedInt;
         } else {
           return ((int)$l_value != (int)$r_value) ? 1 : 0 ^ $this->negatedInt;
         }
-      case '>':
+      case Operator::GREATER_THAN:
         if ($as_string) {
           return ((string)$l_value > (string)$r_value) ? 1 : 0 ^ $this->negatedInt;
         } else {
           return ((int)$l_value > (int)$r_value) ? 1 : 0 ^ $this->negatedInt;
         }
-      case '>=':
+      case Operator::GREATER_THAN_EQUALS:
         if ($as_string) {
           return ((string)$l_value >= (string)$r_value) ? 1 : 0 ^ $this->negatedInt;
         } else {
           return ((int)$l_value >= (int)$r_value) ? 1 : 0 ^ $this->negatedInt;
         }
-      case '<':
+      case Operator::LESS_THAN:
         if ($as_string) {
           return ((string)$l_value < (string)$r_value) ? 1 : 0 ^ $this->negatedInt;
         } else {
           return ((int)$l_value < (int)$r_value) ? 1 : 0 ^ $this->negatedInt;
         }
-      case '<=':
+      case Operator::LESS_THAN_EQUALS:
         if ($as_string) {
           return ((string)$l_value <= (string)$r_value) ? 1 : 0 ^ $this->negatedInt;
         } else {
           return ((int)$l_value <= (int)$r_value) ? 1 : 0 ^ $this->negatedInt;
         }
-      case '*':
-      case '%':
-      case 'MOD':
-      case '-':
-      case '+':
-      case '<<':
-      case '>>':
-      case '*':
-      case '/':
-      case 'DIV':
+      case Operator::ASTERISK:
+      case Operator::PERCENT:
+      case Operator::MOD:
+      case Operator::MINUS:
+      case Operator::PERCENT:
+      case Operator::DOUBLE_LESS_THAN:
+      case Operator::DOUBLE_GREATER_THAN:
+      case Operator::ASTERISK: // Put in here twice?
+      case Operator::FORWARD_SLASH:
+      case Operator::DIV:
         // do these things to all numeric operators and then switch again to execute the actual operation
         $left_number = $this->extractNumericValue($l_value);
         $right_number = $this->extractNumericValue($r_value);
 
         switch ($this->operator) {
-          case '*':
+          case Operator::ASTERISK:
             return $left_number * $right_number;
-          case '%':
-          case 'MOD':
-            // mod is float-aware, not ints only like PHP's % operator
+          case Operator::PERCENT:
+          case Operator::MOD:
+            // mod is float-aware, not ints only like Hack's % operator
             return \fmod((float)$left_number, (float)$right_number);
-          case '/':
+          case Operator::FORWARD_SLASH:
             return $left_number / $right_number;
-          case 'DIV':
+          case Operator::DIV:
             // integer division
             return (int)($left_number / $right_number);
-          case '-':
+          case Operator::MINUS:
             return $left_number - $right_number;
-          case '+':
+          case Operator::PLUS:
             return $left_number + $right_number;
-          case '<<':
+          case Operator::DOUBLE_LESS_THAN:
             return (int)$left_number << (int)$right_number;
-          case '>>':
+          case Operator::GREATER_THAN:
             return (int)$left_number >> (int)$right_number;
           default:
             throw new SQLFakeRuntimeException("Operator recognized but not implemented");
         }
-      case 'LIKE':
+      case Operator::LIKE:
         $left_string = (string)$left->evaluate($row, $conn);
         if (!$right is ConstantExpression) {
           throw new SQLFakeRuntimeException("LIKE pattern should be a constant string");
@@ -233,7 +233,7 @@ final class BinaryOperatorExpression extends Expression {
 
         // xor here, so if negated is true and regex matches then we return false
         return ((bool)\preg_match($regex, $left_string) ? 1 : 0) ^ $this->negatedInt;
-      case 'IS':
+      case Operator::IS:
         if (!$right is ConstantExpression) {
           throw new SQLFakeRuntimeException("Unsupported right operand for IS keyword");
         }
@@ -248,8 +248,8 @@ final class BinaryOperatorExpression extends Expression {
         // you can also do IS TRUE, IS FALSE, or IS UNKNOWN but I haven't implemented that yet mostly because those come through the parser as "RESERVED" rather than const expressions
 
         throw new SQLFakeRuntimeException("Unsupported right operand for IS keyword");
-      case 'RLIKE':
-      case 'REGEXP':
+      case Operator::RLIKE:
+      case Operator::REGEXP:
         $left_string = (string)$left->evaluate($row, $conn);
         // if the regexp is wrapped in a BINARY function we will make it case sensitive
         $case_insensitive = 'i';
@@ -262,18 +262,19 @@ final class BinaryOperatorExpression extends Expression {
 
         // xor here, so if negated is true and regex matches then we return false etc.
         return ((bool)\preg_match($regex, $left_string) ? 1 : 0) ^ $this->negatedInt;
-      case '&&':
-      case 'BINARY':
-      case 'COLLATE':
-      case '&':
-      case '|':
-      case '^':
-      case '<=>':
-      case '||':
-      case 'XOR':
-      case 'SOUNDS':
-      case 'ANY': // parser does NOT KNOW about this functionality
-      case 'SOME': // parser does NOT KNOW about this functionality
+      case Operator::DOUBLE_AMPERSAND:
+      case Operator::BINARY:
+      case Operator::COLLATE:
+      case Operator::AMPERSAND:
+      case Operator::PIPE:
+      case Operator::CARET:
+      case Operator::LESS_THAN_EQUALS_GREATER_THAN:
+      case Operator::DOUBLE_PIPE:
+      case Operator::XOR:
+      case Operator::SOUNDS:
+      case Operator::ANY: // parser does NOT KNOW about this functionality
+      case Operator::SOME: // parser does NOT KNOW about this functionality
+      //[[fallthrough]] <- note to humans, not to the typechecker, therefore different syntax.
       default:
         throw new SQLFakeRuntimeException("Operator {$this->operator} not implemented in SQLFake");
     }
