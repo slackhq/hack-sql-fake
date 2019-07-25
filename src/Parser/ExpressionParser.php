@@ -399,7 +399,8 @@ final class ExpressionParser {
               $this->expression = new InOperatorExpression($this->expression->left, $this->expression->negated);
             } elseif ($operator === 'UNARY_MINUS' || $operator === 'UNARY_PLUS' || $operator === '~') {
               $this->expression as PlaceholderExpression;
-              $this->expression = new UnaryExpression($operator);
+              // @LEXIDOR Unsafe cast
+              $this->expression = new UnaryExpression($operator as ?Operator);
             } else {
               $this->expression as BinaryOperatorExpression;
               $this->expression->setOperator($operator);

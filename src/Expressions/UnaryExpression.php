@@ -9,15 +9,14 @@ namespace Slack\SQLFake;
  * SELECT +5
  */
 
-/*HH_IGNORE_ERROR[4110] @LEXIDOR Will do after the next checkpoint.*/
 final class UnaryExpression extends Expression {
 
   private ?Expression $subject = null;
 
-  public function __construct(public string $operator) {
+  public function __construct(public ?Operator $operator) {
     $this->type = TokenType::OPERATOR;
     $this->precedence = 14;
-    $this->name = $operator;
+    $this->name = operatorn_to_string($operator) ?? '';
   }
 
   <<__Override>>
