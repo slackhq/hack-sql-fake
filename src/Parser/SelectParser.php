@@ -84,7 +84,7 @@ final class SelectParser {
               throw new SQLFakeParseException("Unexpected ,");
             }
             $query->needsSeparator = false;
-          } elseif ($token['value'] === ';') {
+          } else if ($token['value'] === ';') {
             // this should be the final token. if it's not, throw. otherwise, return
             if ($this->pointer !== $count - 1) {
               throw new SQLFakeParseException("Unexpected tokens after semicolon");

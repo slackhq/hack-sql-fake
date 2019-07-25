@@ -38,11 +38,16 @@ final class AsyncMysqlQueryResult extends \AsyncMysqlQueryResult {
     foreach ($this->rows as $row) {
       $map = Map {};
       foreach ($row as $column => $value) {
-        // in the untyped version, all columns are strings
-        $map->set($column, (string)$value);
+        // in the untyped version, all columns are `?string`
+        $map->set($column, $value is nonnull ? (string)$value : null);
       }
       $out->add($map);
     }
+    /*HH_IGNORE_ERROR[4110]
+      The actual return type of this function is `Vector<Map<string, ?string>>`
+      The parent class is typed incorrectly in the HHI file.
+      @TODO Update the return type once we target HHVM ~4.16.
+     */
     return $out;
   }
 
@@ -61,11 +66,16 @@ final class AsyncMysqlQueryResult extends \AsyncMysqlQueryResult {
     foreach ($this->rows as $row) {
       $v = Vector {};
       foreach ($row as $value) {
-        // in the untyped version, all columns are strings
-        $v->add((string)$value);
+        // in the untyped version, all columns are `?string`
+        $v->add($value is nonnull ? (string)$value : null);
       }
       $out->add($v);
     }
+    /*HH_IGNORE_ERROR[4110]
+      The actual return type of this function is `Vector<Vector<?string>>`
+      The parent class is typed incorrectly in the HHI file.
+      @TODO Update the return type once we target HHVM ~4.16.
+     */
     return $out;
   }
 

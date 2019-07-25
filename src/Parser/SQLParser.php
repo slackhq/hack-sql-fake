@@ -104,7 +104,7 @@ final class SQLParser {
           'raw' => $token,
         );
         continue;
-      } elseif (C\contains_key(keyset['\'', '"'], $token[0])) {
+      } else if (C\contains_key(keyset['\'', '"'], $token[0])) {
         // chop off the quotes before storing the value
         $raw = $token;
         $token = Str\slice($token, 1, Str\length($token) - 2);
@@ -120,7 +120,7 @@ final class SQLParser {
           'raw' => $raw,
         );
         continue;
-      } elseif ($token[0] === '`') {
+      } else if ($token[0] === '`') {
         $raw = $token;
         // Only chop off the ` if it's fully wrapping the identifier
         if (Str\ends_with($token, '`')) {
@@ -147,10 +147,10 @@ final class SQLParser {
           'raw' => $raw,
         );
         continue;
-      } elseif ($token[0] === '(') {
+      } else if ($token[0] === '(') {
         $out[] = shape('type' => TokenType::PAREN, 'value' => $token, 'raw' => $token);
         continue;
-      } elseif ($token === '*') {
+      } else if ($token === '*') {
         // the * character is special because it's sometimes an operator and most of the time it means "all columns"
         $k = C\last_key($out);
         if ($k === null) {
@@ -176,14 +176,14 @@ final class SQLParser {
             'raw' => $token,
           );
           continue;
-        } elseif ($previous['type'] === TokenType::IDENTIFIER && Str\ends_with($previous['value'], '.')) {
+        } else if ($previous['type'] === TokenType::IDENTIFIER && Str\ends_with($previous['value'], '.')) {
           // previous ended like "foo.", we should keep "foo.*" together as one token
           $previous['value'] .= $token;
           $previous['raw'] .= $token;
           $out[$k] = $previous;
           continue;
         }
-      } elseif ($token === '-' || $token === '+') {
+      } else if ($token === '-' || $token === '+') {
         // these operands can be binary or unary operands
         // for example "SELECT -5" or "SELECT 7 - 5" are both valid, in the first case it's a unary op
         // we don't just combine it into the constant, because it's also valid for columns like SELECT -some_column FROM table
@@ -228,25 +228,25 @@ final class SQLParser {
           'value' => $token,
           'raw' => $token,
         );
-      } elseif ($token_upper === 'TRUE') {
+      } else if ($token_upper === 'TRUE') {
         $out[] = shape(
           'type' => TokenType::NUMERIC_CONSTANT,
           'value' => '1',
           'raw' => $token,
         );
-      } elseif ($token_upper === 'FALSE') {
+      } else if ($token_upper === 'FALSE') {
         $out[] = shape(
           'type' => TokenType::NUMERIC_CONSTANT,
           'value' => '0',
           'raw' => $token,
         );
-      } elseif (C\contains_key(self::CLAUSES, $token_upper)) {
+      } else if (C\contains_key(self::CLAUSES, $token_upper)) {
         $out[] = shape(
           'type' => TokenType::CLAUSE,
           'value' => $token_upper,
           'raw' => $token,
         );
-      } elseif (
+      } else if (
         C\contains_key(self::OPERATORS, $token_upper) &&
         !self::isFunctionVersionOfOperator($token_upper, $i, $count, $tokens)
       ) {
@@ -255,19 +255,19 @@ final class SQLParser {
           'value' => $token_upper,
           'raw' => $token,
         );
-      } elseif (C\contains_key(self::RESERVED_WORDS, $token_upper)) {
+      } else if (C\contains_key(self::RESERVED_WORDS, $token_upper)) {
         $out[] = shape(
           'type' => TokenType::RESERVED,
           'value' => $token_upper,
           'raw' => $token,
         );
-      } elseif (C\contains_key(self::SEPARATORS, $token_upper)) {
+      } else if (C\contains_key(self::SEPARATORS, $token_upper)) {
         $out[] = shape(
           'type' => TokenType::SEPARATOR,
           'value' => $token_upper,
           'raw' => $token,
         );
-      } elseif ($i < $count - 1 && $tokens[$i + 1] === '(') {
+      } else if ($i < $count - 1 && $tokens[$i + 1] === '(') {
         $out[] = shape(
           'type' => TokenType::SQLFUNCTION,
           'value' => $token_upper,
@@ -314,7 +314,7 @@ final class SQLParser {
     foreach ($remaining_tokens as $i => $token) {
       if ($token['type'] === TokenType::PAREN) {
         $paren_count++;
-      } elseif ($token['type'] === TokenType::SEPARATOR && $token['value'] === ')') {
+      } else if ($token['type'] === TokenType::SEPARATOR && $token['value'] === ')') {
         $paren_count--;
         if ($paren_count === 0) {
           return $pointer + $i;
@@ -363,11 +363,11 @@ final class SQLParser {
         $next = $tokens[$pointer] ?? null;
         if ($next === null) {
           throw new SQLFakeParseException("Expected JOIN, ORDER BY, or GROUP BY after FOR in index hint");
-        } elseif ($next['value'] === 'JOIN') {
+        } else if ($next['value'] === 'JOIN') {
           //this is fine
           $pointer++;
           $next = $tokens[$pointer] ?? null;
-        } elseif (C\contains_key(keyset['GROUP', 'ORDER'], $next['value'])) {
+        } else if (C\contains_key(keyset['GROUP', 'ORDER'], $next['value'])) {
           $pointer++;
           $next = $tokens[$pointer] ?? null;
           if ($next === null || $next['value'] !== 'BY') {
@@ -402,7 +402,7 @@ final class SQLParser {
           if ($arg['type'] !== TokenType::IDENTIFIER) {
             throw new SQLFakeParseException("Expected identifier in index hint");
           }
-        } elseif ($arg['value'] !== ',') {
+        } else if ($arg['value'] !== ',') {
           throw new SQLFakeParseException("Expected , or ) after index hint");
         }
       }
@@ -442,7 +442,7 @@ final class SQLParser {
         }
 
         throw new SQLFakeParseException("Unexpected keyword {$next['value']} after FOR");
-      } elseif ($next['value'] === 'LOCK') {
+      } else if ($next['value'] === 'LOCK') {
         // skip over LOCK IN SHARE MODE while validating it
         $expected = vec['IN', 'SHARE', 'MODE'];
         foreach ($expected as $index => $keyword) {

@@ -81,7 +81,7 @@ final class BetweenOperatorExpression extends Expression {
       // this mode is when we come out of a recursive expression where we had to pull out the most recent token, so overwrite that expression with the result
       if ($this->end) {
         $this->end = $expr;
-      } elseif ($this->start) {
+      } else if ($this->start) {
         $this->start = $expr;
       } else {
         $this->left = $expr;
@@ -91,7 +91,7 @@ final class BetweenOperatorExpression extends Expression {
 
     if (!$this->start) {
       $this->start = $expr;
-    } elseif ($this->and && !$this->end) {
+    } else if ($this->and && !$this->end) {
       $this->end = $expr;
     } else {
       throw new SQLFakeParseException("Parse error: unexpected token in BETWEEN statement");

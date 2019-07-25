@@ -38,7 +38,7 @@ final class FromParser {
             );
             $from->addTable($table);
             $this->pointer = SQLParser::skipIndexHints($this->pointer, $this->tokens);
-          } elseif (!$from->mostRecentHasAlias) {
+          } else if (!$from->mostRecentHasAlias) {
             $from->aliasRecentExpression((string)$token['value']);
             $this->pointer = SQLParser::skipIndexHints($this->pointer, $this->tokens);
           }
@@ -169,7 +169,7 @@ final class FromParser {
       if ($next === null || $next['value'] !== 'JOIN') {
         throw new SQLFakeParseException("Expected keyword JOIN after {$token['value']}");
       }
-    } elseif (C\contains_key(keyset['LEFT', 'RIGHT'], $token['value'])) {
+    } else if (C\contains_key(keyset['LEFT', 'RIGHT'], $token['value'])) {
       $this->pointer++;
       $next = $this->tokens[$this->pointer] ?? null;
       if ($next !== null && $next['value'] === 'OUTER') {
@@ -204,7 +204,7 @@ final class FromParser {
       if ($next === null) {
         return $table;
       }
-    } elseif ($next['value'] === 'AS') {
+    } else if ($next['value'] === 'AS') {
       $this->pointer++;
       $next = $this->tokens[$this->pointer] ?? null;
       if ($next === null || $next['type'] !== TokenType::IDENTIFIER) {
@@ -253,7 +253,7 @@ final class FromParser {
             throw new SQLFakeParseException("Expected identifier in USING clause");
           }
           $filter = $this->addJoinFilterExpression($filter, $left_table, $table['name'], $arg['value']);
-        } elseif ($arg['value'] !== ',') {
+        } else if ($arg['value'] !== ',') {
           throw new SQLFakeParseException("Expected , after argument in USING clause");
         }
       }
