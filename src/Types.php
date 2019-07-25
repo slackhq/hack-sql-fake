@@ -162,8 +162,6 @@ enum Operator: string {
   AMPERSAND = '&';
   AND = 'AND';
   ANY = 'ANY';
-  DOUBLE_AMPERSAND = '&&';
-  AND = 'AND';
   ASTERISK = '*';
   BANG = '!';
   BANG_EQUALS = '!=';
@@ -173,6 +171,7 @@ enum Operator: string {
   CARET = '^';
   COLLATE = 'COLLATE';
   DIV = 'DIV';
+  DOUBLE_AMPERSAND = '&&';
   DOUBLE_GREATER_THAN = '>>';
   DOUBLE_LESS_THAN = '<<';
   DOUBLE_PIPE = '||';
