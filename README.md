@@ -166,3 +166,9 @@ This library aims to support everything its users use in MySQL, rather than ever
 ## Contributing
 
 See [Contributing](CONTRIBUTING.md)
+
+## Latest Releases
+
+* v4.0.2
+
+See [Change log](CHANGELOG.md) for more details.

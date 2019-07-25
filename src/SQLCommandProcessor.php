@@ -3,7 +3,6 @@
 namespace Slack\SQLFake;
 
 use namespace HH\Lib\Str;
-use namespace Slack\SQLFake\VitessQueryValidator;
 
 /**
  * The query running interface

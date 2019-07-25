@@ -20,7 +20,6 @@ To push a new release, follow these steps:
 
 1. Make sure the `master` branch is up to date with all changes and has been tested, and the Travis build is passing.
 2. Merge a new commit with the following changes:
-   - Update the version in `package.json` by following the versioning guide below
    - Add a description of all changes since the last release in `CHANGELOG.md`
    - Add or update the "Latest releases" section in `README.md` with release highlights
 3. Create a new GitHub release:
