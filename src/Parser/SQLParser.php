@@ -295,7 +295,7 @@ final class SQLParser {
   }
 
   /**
-   * There seems to be a few operators that also exists as functions. MOD() for example.
+   * There seem to be a few operators that also exists as functions. MOD() for example.
    * So we check if this particular find is an operator or a function.
    */
   private static function isFunctionVersionOfOperator(

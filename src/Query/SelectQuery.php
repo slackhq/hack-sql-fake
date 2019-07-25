@@ -255,7 +255,7 @@ final class SelectQuery extends Query {
     foreach ($this->selectExpressions as $expr) {
       $name = $expr->name;
       // if we are selecting everything we know the field is included
-      if ($name == "*") {
+      if ($name === "*") {
         return $data;
       }
       if ($name !== null) {

@@ -292,7 +292,7 @@ final class ExpressionParser {
           // mysql is case insensitive, but php is case sensitive so just uppercase operators for comparisons
           $operator = $token['value'];
 
-          if ($operator === 'CASE') {
+          if ($operator === Operator::CASE) {
             if (!($this->expression is PlaceholderExpression)) {
               // we encountered a CASE statement inside another expression
               // such as "column_name = CASE when ... end"
@@ -332,17 +332,19 @@ final class ExpressionParser {
           // TODO handle EXISTS
           if ($this->expression->operator is nonnull) {
             if (
-              $operator === 'AND' && $this->expression->operator === 'BETWEEN' && !$this->expression->isWellFormed()
+              $operator === Operator::AND &&
+              $this->expression->operator === Operator::BETWEEN &&
+              !$this->expression->isWellFormed()
             ) {
               $this->expression as BetweenOperatorExpression;
               $this->expression->foundAnd();
-            } elseif ($operator === 'NOT') {
-              if ($this->expression->operator !== 'IS') {
+            } elseif ($operator === Operator::NOT) {
+              if ($this->expression->operator !== Operator::IS) {
                 $next = $this->peekNext();
                 if (
                   $next !== null &&
                   (
-                    ($next['type'] === TokenType::OPERATOR && Str\uppercase($next['value']) === 'IN') ||
+                    ($next['type'] === TokenType::OPERATOR && Str\uppercase($next['value']) === Operator::IN) ||
                     $next['type'] === TokenType::PAREN
                   )
                 ) {
@@ -372,9 +374,9 @@ final class ExpressionParser {
                 // example: 9 / 3 * 3
                 // We are at the *. Take the entire current expression, make it be the "left" of a new expression with a "type" of the current operator
                 // It's important to nest like this to preserve left-to-right evaluation.
-                if ($operator === 'BETWEEN') {
+                if ($operator === Operator::BETWEEN) {
                   $this->expression = new BetweenOperatorExpression($this->expression);
-                } elseif ($operator === 'IN') {
+                } elseif ($operator === Operator::IN) {
                   $this->expression = new InOperatorExpression($this->expression, $this->expression->negated);
                 } else {
                   //@LEXIDOR Unsafe cast
@@ -383,21 +385,23 @@ final class ExpressionParser {
               }
             }
           } else {
-            if ($operator === 'BETWEEN') {
+            if ($operator === Operator::BETWEEN) {
               if (!$this->expression is BinaryOperatorExpression) {
                 throw new SQLFakeParseException('Unexpected keyword BETWEEN');
               }
               $this->expression = new BetweenOperatorExpression($this->expression->left);
-            } elseif ($operator === 'NOT') {
+            } elseif ($operator === Operator::NOT) {
               // this negates another operator like "NOT IN" or "IS NOT NULL"
               // operators would throw an SQLFakeException here if they don't support negation
               $this->expression->negate();
-            } elseif ($operator === 'IN') {
+            } elseif ($operator === Operator::IN) {
               if (!$this->expression is BinaryOperatorExpression) {
                 throw new SQLFakeParseException('Unexpected keyword IN');
               }
               $this->expression = new InOperatorExpression($this->expression->left, $this->expression->negated);
-            } elseif ($operator === 'UNARY_MINUS' || $operator === 'UNARY_PLUS' || $operator === '~') {
+            } elseif (
+              $operator === Operator::UNARY_MINUS || $operator === Operator::UNARY_PLUS || $operator === Operator::TILDE
+            ) {
               $this->expression as PlaceholderExpression;
               // @LEXIDOR Unsafe cast
               $this->expression = new UnaryExpression($operator as ?Operator);
