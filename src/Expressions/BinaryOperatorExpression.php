@@ -68,7 +68,7 @@ final class BinaryOperatorExpression extends Expression {
 
       // as soon as you find any pair of elements that aren't equal, you can return whatever their comparison result is immediately
       // this is why (1, 2, 3) > (1, 1, 4) is true, for example, because the 2nd element comparison returns immediately
-      switch ($this->operator) {
+      switch ($this->operator as Operator) {
         case Operator::EQUALS:
           return ($le == $re);
         case Operator::LESS_THAN_EQUALS_GREATER_THAN:
