@@ -336,10 +336,9 @@ final class BinaryOperatorExpression extends Expression {
     $this->right = $expr;
   }
 
-  public function setOperator(string $operator): void {
-    /*HH_FIXME[4110] Left in here for migrational purposes. @LEXIDOR Remove me before release. */
+  public function setOperator(Operator $operator): void {
     $this->operator = $operator;
-    $this->precedence = ExpressionParser::OPERATOR_PRECEDENCE[$operator];
+    $this->precedence = ExpressionParser::OPERATOR_PRECEDENCE[operator_to_string($operator)];
   }
 
   public function getRightOrThrow(): Expression {
