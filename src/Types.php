@@ -222,17 +222,6 @@ function operatorn_to_string(?Operator $o): string {
   return $o as ?string ?? '';
 }
 
-function operator_try(?string $operatorish): ?Operator {
-  if ($operatorish is Operator) {
-    return $operatorish;
-  }
-  if (!Str\is_empty($operatorish)) {
-    \trigger_error("Expected to turn {$operatorish} into an operator, but failed. Defaulting to null.");
-  }
-  return null;
-}
-
-
 type server_config = shape(
   // i.e. 5.6, 5.7
   'mysql_version' => string,
