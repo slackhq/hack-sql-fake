@@ -13,7 +13,7 @@ use namespace HH\Lib\C;
  * @TODO Support the second argument `path`
  */
 function length(?string $column_value): ?int {
-  if ($column_value is null) {
+  if ($column_value === null) {
     return null;
   }
   $decoded = \json_decode($column_value, true);
