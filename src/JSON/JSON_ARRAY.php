@@ -6,8 +6,6 @@
 
 namespace Slack\SQLFake\JSON;
 
-use namespace HH\Lib\C;
-
 /**
  * @reference https://dev.mysql.com/doc/refman/5.7/en/json-creation-functions.html#function_json-array
  * @TODO Support the second argument `path`
