@@ -6,7 +6,7 @@
 
 namespace Slack\SQLFake\JSON;
 
-use namespace HH\Lib\{C, Str, Regex};
+use namespace HH\Lib\Str;
 use namespace Facebook\TypeCoerce;
 use type Facebook\TypeAssert\TypeCoercionException;
 
