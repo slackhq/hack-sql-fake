@@ -41,5 +41,9 @@ final class JsonTypeTest extends HackTest {
     expect(JSON\type($column_value))->toBeSame($expected);
   }
 
+  public function testInvalidJsonArgument(): void {
+    expect(() ==> JSON\type_nonlazy(''))->toThrow(\InvalidArgumentException::class);
+  }
+
 
 }
