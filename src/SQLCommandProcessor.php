@@ -27,7 +27,8 @@ abstract final class SQLCommandProcessor {
 
     $query = SQLParser::parse($sql);
 
-    if ($conn->getServer()->config['is_vitess'] ?? false) {
+    $is_vitess_query = $conn->getServer()->config['is_vitess'] ?? false;
+    if ($is_vitess_query && !QueryContext::$skipVitessValidation) {
       VitessQueryValidator::validate($query, $conn);
     }
 
