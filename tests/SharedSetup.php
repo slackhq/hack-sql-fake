@@ -313,7 +313,19 @@ const dict<string, dict<string, table_schema>> TEST_SCHEMA = dict[
 					'null' => false,
 					'hack_type' => 'string',
 				),
-			]
+			],
+			'indexes' => vec[
+				shape(
+					'name' => 'PRIMARY',
+					'type' => 'PRIMARY',
+					'fields' => keyset['id'],
+				),
+				shape(
+					'name' => 'test_type',
+					'type' => 'INDEX',
+					'fields' => keyset['test_type'],
+				),
+			],
 		),
 		'association_table' => shape(
 			'name' => 'association_table',
