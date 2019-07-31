@@ -30,6 +30,13 @@ final class SharedSetup {
 				dict['id' => 1003, 'group_id' => 7, 'description' => 'desc1'],
 				dict['id' => 1004, 'group_id' => 7, 'description' => 'desc2'],
 			],
+			'table5' => vec[
+				dict['id' => 1000, 'test_type' => 0x0, 'description' => 'desc0'],
+				dict['id' => 1001, 'test_type' => 0x1, 'description' => 'desc1'],
+				dict['id' => 1002, 'test_type' => 0x1, 'description' => 'desc2'],
+				dict['id' => 1003, 'test_type' => 0x2, 'description' => 'desc3'],
+				dict['id' => 1004, 'test_type' => 0x1, 'description' => 'desc4'],
+			],
 			'association_table' => vec[
 				dict['table_3_id' => 1, 'table_4_id' => 1000, 'group_id' => 12345, 'description' => 'association 1'],
 				dict['table_3_id' => 1, 'table_4_id' => 1001, 'group_id' => 12345, 'description' => 'association 2'],
@@ -281,6 +288,32 @@ const dict<string, dict<string, table_schema>> TEST_SCHEMA = dict[
 					'fields' => keyset['group_id'],
 				),
 			],
+		),
+		'table5' => shape(
+			'name' => 'table5',
+			'fields' => vec[
+				shape(
+					'name' => 'id',
+					'type' => DataType::BIGINT,
+					'length' => 20,
+					'null' => false,
+					'hack_type' => 'int',
+				),
+				shape(
+					'name' => 'test_type',
+					'type' => DataType::INT,
+					'length' => 16,
+					'null' => false,
+					'hack_type' => 'int',
+				),
+				shape(
+					'name' => 'description',
+					'type' => DataType::VARCHAR,
+					'length' => 255,
+					'null' => false,
+					'hack_type' => 'string',
+				),
+			]
 		),
 		'association_table' => shape(
 			'name' => 'association_table',

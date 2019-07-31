@@ -262,10 +262,11 @@ final class BinaryOperatorExpression extends Expression {
 
         // xor here, so if negated is true and regex matches then we return false etc.
         return ((bool)\preg_match($regex, $left_string) ? 1 : 0) ^ $this->negatedInt;
+      case '&':
+        return (int)$l_value & (int)$r_value;
       case '&&':
       case 'BINARY':
       case 'COLLATE':
-      case '&':
       case '|':
       case '^':
       case '<=>':
