@@ -325,6 +325,23 @@ final class SQLFunctionTest extends HackTest {
 		]);
 	}
 
+	public async function testBitmaskAND(): Awaitable<void> {
+		$conn = static::$conn as nonnull;
+		$results1 = await $conn->query('SELECT id, description FROM table5 where (test_type & 1) = 1');
+		expect($results1->rows())->toBeSame(vec[
+			dict['id' => 1001, 'description' => 'desc1'],
+			dict['id' => 1002, 'description' => 'desc2'],
+			dict['id' => 1004, 'description' => 'desc4'],
+		]);
+		$results2 = await $conn->query('SELECT id, description FROM table5 where (test_type & 2) != 2');
+		expect($results2->rows())->toBeSame(vec[
+			dict['id' => 1000, 'description' => 'desc0'],
+			dict['id' => 1001, 'description' => 'desc1'],
+			dict['id' => 1002, 'description' => 'desc2'],
+			dict['id' => 1004, 'description' => 'desc4'],
+		]);
+	}
+
 	<<__Override>>
 	public static async function beforeFirstTestAsync(): Awaitable<void> {
 		static::$conn = await SharedSetup::initAsync();
