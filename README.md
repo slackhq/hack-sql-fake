@@ -169,6 +169,6 @@ See [Contributing](CONTRIBUTING.md)
 
 ## Latest Releases
 
-* v4.0.2
+* v4.0.5
 
 See [Change log](CHANGELOG.md) for more details.
