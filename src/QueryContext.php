@@ -32,6 +32,12 @@ abstract final class QueryContext {
   public static Verbosity $verbosity = Verbosity::QUIET;
 
   /**
+   * Set to true to skip validating if this query will
+   * work on vitess
+   */
+  public static bool $skipVitessValidation = false;
+
+  /**
    * Representation of database schema
    * String keys are database names, with table names inside that list
    *

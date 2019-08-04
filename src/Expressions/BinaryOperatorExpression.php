@@ -264,10 +264,11 @@ final class BinaryOperatorExpression extends Expression {
 
         // xor here, so if negated is true and regex matches then we return false etc.
         return ((bool)\preg_match($regex, $left_string) ? 1 : 0) ^ $this->negatedInt;
+      case Operator::AMPERSAND:
+        return (int)$l_value & (int)$r_value;
       case Operator::DOUBLE_AMPERSAND:
       case Operator::BINARY:
       case Operator::COLLATE:
-      case Operator::AMPERSAND:
       case Operator::PIPE:
       case Operator::CARET:
       case Operator::LESS_THAN_EQUALS_GREATER_THAN:

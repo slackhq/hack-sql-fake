@@ -227,7 +227,7 @@ final class FromParser {
     }
 
     // now we need ON or USING
-    if (!$next['type'] === TokenType::RESERVED || !C\contains_key(keyset['ON', 'USING'], $next['value'])) {
+    if ($next['type'] !== TokenType::RESERVED || !C\contains_key(keyset['ON', 'USING'], $next['value'])) {
       throw new SQLFakeParseException("Expected ON or USING join condition");
     }
 

@@ -13,14 +13,14 @@ final class SelectQueryValidatorTest extends HackTest {
 
     <<__Override>>
     public static async function beforeFirstTestAsync(): Awaitable<void> {
-        static::$conn = await SharedSetup::initAsync(true);
+        static::$conn = await SharedSetup::initVitessAsync();
         // block hole logging
         Logger::setHandle(new \Facebook\CLILib\TestLib\StringOutput());
     }
 
     <<__Override>>
     public async function beforeEachTestAsync(): Awaitable<void> {
-        restore('setup');
+        restore('vitess_setup');
         QueryContext::$strictSchemaMode = false;
         QueryContext::$strictSQLMode = false;
     }

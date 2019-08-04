@@ -3,7 +3,9 @@
 ### Please select the options that apply
 
  - [ ] Feature request
+ - [ ] Question
  - [ ] Suggestion
+ - [ ] Typechecker errors
  - [ ] Incorrect result
  - [ ] Cripplingly bad performance
  - [ ] Crash
@@ -23,6 +25,40 @@ It should behave like this:
 
 ```
 Free form
+```
+
+#### Question
+
+```
+Free form
+```
+
+#### Typechecker errors
+
+```
+On HHVM version
+----------------
+
+Output from hhvm --version
+Output from hh_client --version
+
+----------------
+
+I get this typechecker error
+----------------
+
+Output from hh_client
+
+----------------
+
+I can tell the typecheck is right/mistaken because,
+----------------
+
+Either an explanation of why this is typesafe at runtime or a case in which this could go wrong
+
+----------------
+
+I think you can fix it by (open a PR) 😉
 ```
 
 #### Incorrect result
