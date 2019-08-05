@@ -156,6 +156,69 @@ enum DataType: string {
   NUMERIC = 'NUMERIC';
 }
 
+enum Operator: string {
+  AMPERSAND = '&';
+  AND = 'AND';
+  ANY = 'ANY';
+  ASTERISK = '*';
+  BANG = '!';
+  BANG_EQUALS = '!=';
+  BETWEEN = 'BETWEEN';
+  BINARY = 'BINARY';
+  CASE = 'CASE';
+  CARET = '^';
+  COLLATE = 'COLLATE';
+  DIV = 'DIV';
+  DOUBLE_AMPERSAND = '&&';
+  DOUBLE_GREATER_THAN = '>>';
+  DOUBLE_LESS_THAN = '<<';
+  DOUBLE_PIPE = '||';
+  ELSE = 'ELSE';
+  END = 'END';
+  EQUALS = '=';
+  EXISTS = 'EXISTS';
+  FORWARD_SLASH = '/';
+  GREATER_THAN = '>';
+  GREATER_THAN_EQUALS = '>=';
+  LESS_THAN = '<';
+  LESS_THAN_EQUALS = '<=';
+  LESS_THAN_EQUALS_GREATER_THAN = '<=>';
+  LESS_THAN_GREATER_THAN = '<>';
+  LIKE = 'LIKE';
+  IN = 'IN';
+  INTERVAL = 'INTERVAL';
+  IS = 'IS';
+  MOD = 'MOD';
+  MINUS = '-';
+  NOT = 'NOT';
+  OR = 'OR';
+  PERCENT = '%';
+  PIPE = '|';
+  PLUS = '+';
+  RLIKE = 'RLIKE';
+  REGEXP = 'REGEXP';
+  SOME = 'SOME';
+  SOUNDS = 'SOUNDS';
+  THEN = 'THEN';
+  TILDE = '~';
+  WHEN = 'WHEN';
+  UNARY_MINUS = 'UNARY_MINUS';
+  UNARY_PLUS = 'UNARY_PLUS';
+  XOR = 'XOR';
+}
+
+function operator_to_string(Operator $o): string {
+  return $o as string;
+}
+
+/**
+ * Converts an Operator to a string and null to String.empty.
+ * Many pieces of code assume that String.empty is a valid Operator (meaning no operator).
+ * If Operators flow into string typed code, this conversion needs to happen again.
+ */
+function operatorn_to_string(?Operator $o): string {
+  return $o as ?string ?? '';
+}
 
 type server_config = shape(
   // i.e. 5.6, 5.7

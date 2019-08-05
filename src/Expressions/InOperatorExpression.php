@@ -12,9 +12,10 @@ final class InOperatorExpression extends Expression {
   private ?vec<Expression> $inList = null;
 
   public function __construct(private Expression $left, public bool $negated = false) {
+    $op = Operator::IN;
     $this->name = '';
-    $this->precedence = ExpressionParser::OPERATOR_PRECEDENCE['IN'];
-    $this->operator = 'IN';
+    $this->precedence = ExpressionParser::OPERATOR_PRECEDENCE[operator_to_string($op)];
+    $this->operator = $op;
     $this->type = TokenType::OPERATOR;
   }
 

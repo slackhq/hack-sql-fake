@@ -96,8 +96,8 @@ final class ColumnExpression extends Expression {
 
   public function prefixColumnExpression(string $prefix): void {
     if (!Str\starts_with($this->columnExpression, $prefix)) {
-			$this->columnExpression = $prefix.$this->columnExpression;
-		}
+      $this->columnExpression = $prefix.$this->columnExpression;
+    }
   }
 
   <<__Override>>

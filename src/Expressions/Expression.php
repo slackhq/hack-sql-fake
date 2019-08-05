@@ -22,7 +22,7 @@ use namespace HH\Lib\C;
 */
 abstract class Expression {
 
-  public string $operator = '';
+  public ?Operator $operator;
   public bool $negated = false;
   public int $precedence;
   public string $name;

@@ -8,14 +8,15 @@ namespace Slack\SQLFake;
  * SELECT ~column
  * SELECT +5
  */
+
 final class UnaryExpression extends Expression {
 
   private ?Expression $subject = null;
 
-  public function __construct(public string $operator) {
+  public function __construct(public ?Operator $operator) {
     $this->type = TokenType::OPERATOR;
     $this->precedence = 14;
-    $this->name = $operator;
+    $this->name = operatorn_to_string($operator);
   }
 
   <<__Override>>
@@ -24,12 +25,15 @@ final class UnaryExpression extends Expression {
       throw new SQLFakeRuntimeException("Attempted to evaluate unary operation with no operand");
     }
     $val = $this->subject->evaluate($row, $conn);
-    switch ($this->operator) {
-      case 'UNARY_MINUS':
+
+    $op = $this->operator;
+    invariant($op is nonnull, 'This case was not considered. The operator is null.');
+    switch ($op) {
+      case Operator::UNARY_MINUS:
         return -1 * (float)$val;
-      case 'UNARY_PLUS':
+      case Operator::UNARY_PLUS:
         return (float)$val;
-      case '~':
+      case Operator::TILDE:
         return ~(int)$val;
       default:
         throw new SQLFakeRuntimeException("Unimplemented unary operand {$this->name}");

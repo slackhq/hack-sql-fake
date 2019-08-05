@@ -14,9 +14,10 @@ final class BetweenOperatorExpression extends Expression {
   public bool $negated = false;
 
   public function __construct(private Expression $left) {
+    $op = Operator::BETWEEN;
     $this->name = '';
-    $this->precedence = ExpressionParser::OPERATOR_PRECEDENCE['BETWEEN'];
-    $this->operator = 'BETWEEN';
+    $this->precedence = ExpressionParser::OPERATOR_PRECEDENCE[operator_to_string($op)];
+    $this->operator = $op;
     $this->type = TokenType::OPERATOR;
   }
 
