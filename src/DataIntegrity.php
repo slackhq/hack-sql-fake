@@ -76,6 +76,7 @@ abstract final class DataIntegrity {
       $field_mysql_type = $field['type'];
       $field_nullable = $field['null'] ?? false;
       $field_default = $field['default'] ?? null;
+      $field_unsigned = $field['unsigned'] ?? false;
 
       if (!C\contains_key($row, $field_name)) {
         $row[$field_name] =
@@ -110,27 +111,27 @@ abstract final class DataIntegrity {
             } else if ($row[$field_name] is int) {
 
                 $row[$field_name] = (int)$row[$field_name];
-                $signed_int = true;
+                $signed = !($field_unsigned);
 
                 switch($field_mysql_type) {
                   case DataType::TINYINT:
-                    if ($row[$field_name] >= (($signed_int) ? -\pow(2,7) : 0) && $row[$field_name] < (($signed_int) ? \pow(2,7) : \pow(2,8))){
+                    if ($row[$field_name] >= (($signed) ? -\pow(2,7) : 0) && $row[$field_name] < (($signed) ? \pow(2,7) : \pow(2,8))){
                       break;
                     }
                   case DataType::SMALLINT:
-                    if ($row[$field_name] >= (($signed_int) ? -\pow(2,15) : 0) && $row[$field_name] < (($signed_int) ? \pow(2,15) : \pow(2,16))){
+                    if ($row[$field_name] >= (($signed) ? -\pow(2,15) : 0) && $row[$field_name] < (($signed) ? \pow(2,15) : \pow(2,16))){
                       break;
                     }
                   case DataType::MEDIUMINT:
-                    if ($row[$field_name] >= (($signed_int) ? -\pow(2,23) : 0) && $row[$field_name] < (($signed_int) ? \pow(2,23) : \pow(2,24))){
+                    if ($row[$field_name] >= (($signed) ? -\pow(2,23) : 0) && $row[$field_name] < (($signed) ? \pow(2,23) : \pow(2,24))){
                       break;
                     }
                   case DataType::INT:
-                    if ($row[$field_name] >= (($signed_int) ? -\pow(2,31) : 0) && $row[$field_name] < (($signed_int) ? \pow(2,31) : \pow(2,32))){
+                    if ($row[$field_name] >= (($signed) ? -\pow(2,31) : 0) && $row[$field_name] < (($signed) ? \pow(2,31) : \pow(2,32))){
                       break;
                     }
                   case DataType::BIGINT:
-                    if ($row[$field_name] >= (($signed_int) ? -\pow(2,63) : 0) && $row[$field_name] < (($signed_int) ? \pow(2,63) : \pow(2,64))){
+                    if ($row[$field_name] >= (($signed) ? -\pow(2,63) : 0) && $row[$field_name] < (($signed) ? \pow(2,63) : \pow(2,64))){
                       break;
                     }
                   default:
