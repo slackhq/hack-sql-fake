@@ -60,6 +60,7 @@ final class SchemaGenerator {
 		switch ($field['type']) {
 			case 'TINYINT':
 			case 'SMALLINT':
+			case 'MEDIUMINT':
 			case 'INT':
 			case 'BIGINT':
 				$type = 'int';
