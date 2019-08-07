@@ -127,6 +127,7 @@ type table_schema = shape(
 enum DataType: string {
   TINYINT = 'TINYINT';
   SMALLINT = 'SMALLINT';
+  MEDIUMINT = 'MEDIUMINT';
   INT = 'INT';
   BIT = 'BIT';
   BIGINT = 'BIGINT';
