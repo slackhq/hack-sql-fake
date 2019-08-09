@@ -108,6 +108,7 @@ type table_schema = shape(
       'length' => int,
       'null' => bool,
       'hack_type' => string,
+      ?'unsigned' => bool,
       ?'default' => string,
     ),
   >,
