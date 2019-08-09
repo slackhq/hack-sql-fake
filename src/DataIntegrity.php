@@ -112,7 +112,6 @@ abstract final class DataIntegrity {
 
                 $signed = !($field_unsigned);
                 $field_value = (int)$row[$field_name];
-                $row[$field_name] = $field_value;
 
                 switch($field_mysql_type) {
                   case DataType::TINYINT:
