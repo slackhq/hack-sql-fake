@@ -46,6 +46,7 @@ final class GenerateSchemaTest extends HackTest {
 						'length' => 20,
 						'null' => false,
 						'hack_type' => 'int',
+						'unsigned' => true,
 					),
 					shape(
 						'name' => 'name',
