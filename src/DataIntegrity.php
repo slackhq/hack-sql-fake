@@ -179,6 +179,14 @@ abstract final class DataIntegrity {
               } else {
                 $row[$field_name] = (string)$row[$field_name];
               }
+            } else {
+              $field_value = (string)$row[$field_name];
+              if (Str\length($field_value) > $field_length) {
+                $field_str = \var_export($row[$field_name], true);
+                throw new SQLFakeRuntimeException(
+                  "Invalid value '{$field_str}' for column '{$field_name}' on '{$schema['name']}', expected string of size {$field_value}",
+                );
+              }
             }
             break;
         }
