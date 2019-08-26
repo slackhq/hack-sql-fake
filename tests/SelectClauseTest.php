@@ -184,8 +184,9 @@ final class SelectClauseTest extends HackTest {
 
 	public async function testLimit(): Awaitable<void> {
 		$conn = static::$conn as nonnull;
-		$results =
-			await $conn->query("select group_id, table_4_id from association_table ORDER BY group_id, 2 DESC LIMIT 2");
+		$results = await $conn->query(
+			"select group_id, table_4_id from association_table ORDER BY group_id, 2 DESC LIMIT 2",
+		);
 		expect($results->rows())->toBeSame(
 			vec[
 				dict['group_id' => 0, 'table_4_id' => 1003],
@@ -228,5 +229,44 @@ final class SelectClauseTest extends HackTest {
 			() ==> $conn->query("select group_id, table_4_id from association_table LIMIT 2 ORDER BY group_id, 2 DESC"),
 		)
 			->toThrow(SQLFakeParseException::class, "Unexpected ORDER");
+	}
+
+	public async function testMultiUnion(): Awaitable<void> {
+		$conn = static::$conn as nonnull;
+		$results = await $conn->query(
+			"SELECT t2.id, t2.group_id FROM
+			(
+				(
+					SELECT DISTINCT group_id
+						FROM table3
+						WHERE name='name3'
+				)
+				UNION DISTINCT
+				(
+					SELECT DISTINCT group_id
+						FROM table4
+						WHERE description='desc2'
+				)
+				UNION DISTINCT
+				(
+					SELECT DISTINCT group_id
+						FROM association_table
+				)
+			) as t1
+			INNER JOIN
+			(
+				SELECT DISTINCT id, group_id
+					FROM table3
+			) AS t2
+			ON
+			t1.group_id = t2.group_id",
+		);
+		expect($results->rows())->toBeSame(vec[
+			dict['id' => 1, 'group_id' => 12345],
+			dict['id' => 2, 'group_id' => 12345],
+			dict['id' => 3, 'group_id' => 12345],
+			dict['id' => 4, 'group_id' => 6],
+			dict['id' => 6, 'group_id' => 6],
+		]);
 	}
 }
