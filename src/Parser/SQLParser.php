@@ -37,13 +37,15 @@ final class SQLParser {
         // we still have something left here after parsing the whole top level query? hopefully it's a multi-query keyword
         if (C\contains_key($tokens, $pointer)) {
           $next = $tokens[$pointer] ?? null;
-          $val = $next ? $next['value'] : 'null';
           while ($next !== null && C\contains_key(keyset['UNION', 'INTERSECT', 'EXCEPT'], $next['value'])) {
             $type = $next['value'];
             if ($next['value'] === 'UNION') {
               $next_plus = $tokens[$pointer + 1];
               if ($next_plus['value'] === 'ALL') {
                 $type = 'UNION_ALL';
+                $pointer++;
+              }
+              if ($next_plus['value'] === 'DISTINCT') {
                 $pointer++;
               }
             }
