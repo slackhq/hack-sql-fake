@@ -107,7 +107,6 @@ final class FromParser {
     return tuple($this->pointer, $from);
   }
 
-
   private function getTableOrSubquery(token $token): from_table {
     switch ($token['type']) {
       case TokenType::IDENTIFIER:
@@ -119,7 +118,6 @@ final class FromParser {
         if (!C\count($subquery_tokens)) {
           throw new SQLFakeParseException("Empty parentheses found");
         }
-        $this->pointer = $close;
         $expr = new PlaceholderExpression();
 
         // this will throw if the first keyword isn't SELECT which is what we want
@@ -127,9 +125,41 @@ final class FromParser {
         $parser = new SelectParser(0, $subquery_tokens, $subquery_sql);
         list($p, $select) = $parser->parse();
         $expr = new SubqueryExpression($select, '');
-
-        $this->pointer++;
+        # only move pointer forward by $p
+        $this->pointer += $p + 1;
         $next = $this->tokens[$this->pointer] ?? null;
+
+        // we still have something left here after parsing the whole top level query? hopefully it's a multi-query keyword
+        while ($next !== null && C\contains_key(keyset['UNION', 'INTERSECT', 'EXCEPT'], $next['value'])) {
+          $type = $next['value'];
+          if ($next['value'] === 'UNION') {
+            $next_plus = $this->tokens[$this->pointer + 1];
+            if ($next_plus['value'] === 'ALL') {
+              $type = 'UNION_ALL';
+              $this->pointer++;
+            }
+            if ($next_plus['value'] === 'DISTINCT') {
+              $this->pointer++;
+            }
+          }
+          $this->pointer++;
+          $next = $this->tokens[$this->pointer] ?? null;
+          #if ($next is nonnull && $next['type'] === TokenType::PAREN) {
+          #$close = SQLParser::findMatchingParen($this->pointer, $this->tokens);
+          #$subquery_tokens = Vec\slice($this->tokens, $this->pointer + 1, $close - $this->pointer - 1);
+          #}
+          #$subquery_sql = Vec\map($subquery_tokens, $token ==> $token['value']) |> Str\join($$, ' ');
+          $subselect = new SelectParser($this->pointer, $this->tokens, '');
+          list($p, $q) = $subselect->parse();
+          $this->pointer += $p;
+          $select->addMultiQuery(MultiOperand::assert($type), $q);
+
+          $next = $this->tokens[$this->pointer] ?? null;
+        }
+
+        $this->pointer = $close + 1;
+        $next = $this->tokens[$this->pointer] ?? null;
+
         if ($next !== null && $next['value'] === 'AS') {
           $this->pointer++;
           $next = $this->tokens[$this->pointer];

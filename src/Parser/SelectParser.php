@@ -22,6 +22,19 @@ final class SelectParser {
 
   public function parse(): (int, SelectQuery) {
     // if we got here, the first token had better be a SELECT
+    $token = $this->tokens[$this->pointer] ?? null;
+    $incr = 0;
+    while ($token is nonnull && $token['type'] === TokenType::PAREN) {
+      $close = SQLParser::findMatchingParen($this->pointer, $this->tokens);
+      $this->tokens = Vec\slice($this->tokens, $this->pointer + 1, $close - $this->pointer - 1);
+      $this->pointer = 0;
+      $incr++;
+      $token = $this->tokens[$this->pointer + $incr] ?? null;
+    }
+
+    // for every paren we took off, we took of two tokens
+    $incr *= 2;
+
     if ($this->tokens[$this->pointer]['value'] !== 'SELECT') {
       throw new SQLFakeParseException("Parser error: expected SELECT");
     }
@@ -89,7 +102,7 @@ final class SelectParser {
             if ($this->pointer !== $count - 1) {
               throw new SQLFakeParseException("Unexpected tokens after semicolon");
             }
-            return tuple($this->pointer, $query);
+            return tuple($this->pointer + $incr, $query);
           } else {
             throw new SQLFakeParseException("Unexpected {$token['value']}");
           }
@@ -172,7 +185,7 @@ final class SelectParser {
             case 'EXCEPT':
             case 'INTERSECT':
               // return control back to parent, so that if we are at top level we can add this and otherwise not
-              return tuple($this->pointer, $query);
+              return tuple($this->pointer + $incr, $query);
               break;
             default:
               throw new SQLFakeParseException("Unexpected {$token['value']}");
@@ -221,6 +234,6 @@ final class SelectParser {
     }
 
     // check if query is well formed here? well basically it just has to have at least one expression in the SELECT clause
-    return tuple($this->pointer, $query);
+    return tuple($this->pointer + $incr, $query);
   }
 }
