@@ -144,11 +144,6 @@ final class FromParser {
           }
           $this->pointer++;
           $next = $this->tokens[$this->pointer] ?? null;
-          #if ($next is nonnull && $next['type'] === TokenType::PAREN) {
-          #$close = SQLParser::findMatchingParen($this->pointer, $this->tokens);
-          #$subquery_tokens = Vec\slice($this->tokens, $this->pointer + 1, $close - $this->pointer - 1);
-          #}
-          #$subquery_sql = Vec\map($subquery_tokens, $token ==> $token['value']) |> Str\join($$, ' ');
           $subselect = new SelectParser($this->pointer, $this->tokens, '');
           list($p, $q) = $subselect->parse();
           $this->pointer += $p;
