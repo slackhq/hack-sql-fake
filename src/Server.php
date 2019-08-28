@@ -32,6 +32,18 @@ final class Server {
     return $server;
   }
 
+  public static function cloneByName(string $name, string $clone_name): this {
+    $clone = static::get($clone_name);
+    if ($clone === null) {
+        throw new SQLFakeRuntimeException("Server $clone_name not found, unable to clone databases and snapshots");
+    }
+
+    $server = static::getOrCreate($name);
+    $server->databases = $clone->databases;
+    $server->snapshots = $clone->snapshots;
+    return $server;
+  }
+
   public static function reset(): void {
     foreach (static::getAll() as $server) {
       $server->doReset();
