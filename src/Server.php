@@ -14,6 +14,10 @@ final class Server {
   public static function getAll(): dict<string, this> {
     return static::$instances;
   }
+  
+  public static function setAll(dict<string, Server> $instances): void {
+		static::$instances = $instances;
+	}
 
   public static function get(string $name): ?this {
     return static::$instances[$name] ?? null;
