@@ -15,9 +15,12 @@ final class Server {
     return static::$instances;
   }
 
+  /**
+   * This will override everything in $instances
+   */
   public static function setAll(dict<string, Server> $instances): void {
-		static::$instances = $instances;
-	}
+    static::$instances = $instances;
+  }
 
   public static function get(string $name): ?this {
     return static::$instances[$name] ?? null;
