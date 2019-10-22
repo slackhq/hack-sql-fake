@@ -345,6 +345,7 @@ final class ExpressionParser {
                   $next !== null &&
                   (
                     ($next['type'] === TokenType::OPERATOR && Str\uppercase($next['value']) === Operator::IN) ||
+                    ($next['type'] === TokenType::OPERATOR && Str\uppercase($next['value']) === Operator::LIKE) ||
                     $next['type'] === TokenType::PAREN
                   )
                 ) {
