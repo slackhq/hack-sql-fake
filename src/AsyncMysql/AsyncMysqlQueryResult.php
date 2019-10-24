@@ -6,7 +6,6 @@ namespace Slack\SQLFake;
 
 use namespace HH\Lib\C;
 
-/* HH_FIXME[2049] */
 <<__MockClass>>
 final class AsyncMysqlQueryResult extends \AsyncMysqlQueryResult {
 

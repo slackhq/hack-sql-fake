@@ -2,7 +2,6 @@
 
 namespace Slack\SQLFake;
 
-/* HH_FIXME[2049] */
 <<__MockClass>>
 final class AsyncMysqlConnectResult extends \AsyncMysqlConnectResult {
   private int $elapsed;

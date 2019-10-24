@@ -274,7 +274,7 @@ final class ExpressionParser {
             // we assume an expression will be a Binary Operator (most common) when we first encounter a token
             // if it's something else like BETWEEN or IN, we convert it to that deliberately when encountering the operand
             $this->expression = new BinaryOperatorExpression($expr);
-          } elseif (
+          } else if (
             $this->expression->operator === null &&
             $this->expression is BinaryOperatorExpression &&
             $token['type'] === TokenType::IDENTIFIER
@@ -338,7 +338,7 @@ final class ExpressionParser {
             ) {
               $this->expression as BetweenOperatorExpression;
               $this->expression->foundAnd();
-            } elseif ($operator === Operator::NOT) {
+            } else if ($operator === Operator::NOT) {
               if ($this->expression->operator !== Operator::IS) {
                 $next = $this->peekNext();
                 if (
@@ -377,7 +377,7 @@ final class ExpressionParser {
                 // It's important to nest like this to preserve left-to-right evaluation.
                 if ($operator === Operator::BETWEEN) {
                   $this->expression = new BetweenOperatorExpression($this->expression);
-                } elseif ($operator === Operator::IN) {
+                } else if ($operator === Operator::IN) {
                   $this->expression = new InOperatorExpression($this->expression, $this->expression->negated);
                 } else {
                   $this->expression = new BinaryOperatorExpression($this->expression, false, $operator);
@@ -390,16 +390,16 @@ final class ExpressionParser {
                 throw new SQLFakeParseException('Unexpected keyword BETWEEN');
               }
               $this->expression = new BetweenOperatorExpression($this->expression->left);
-            } elseif ($operator === Operator::NOT) {
+            } else if ($operator === Operator::NOT) {
               // this negates another operator like "NOT IN" or "IS NOT NULL"
               // operators would throw an SQLFakeException here if they don't support negation
               $this->expression->negate();
-            } elseif ($operator === Operator::IN) {
+            } else if ($operator === Operator::IN) {
               if (!$this->expression is BinaryOperatorExpression) {
                 throw new SQLFakeParseException('Unexpected keyword IN');
               }
               $this->expression = new InOperatorExpression($this->expression->left, $this->expression->negated);
-            } elseif (
+            } else if (
               $operator === Operator::UNARY_MINUS || $operator === Operator::UNARY_PLUS || $operator === Operator::TILDE
             ) {
               $this->expression as PlaceholderExpression;

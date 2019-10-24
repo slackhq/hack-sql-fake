@@ -231,11 +231,10 @@ final class SelectQuery extends Query {
 
     if (C\contains_key($this->options, 'DISTINCT')) {
 
-      /*  HH_FIXME[4110] generics */
       return Vec\unique_by($out, (row $row): string ==> Str\join(Vec\map($row, $col ==> (string)$col), '-'));
     }
 
-    return /* HH_FIXME[4110] generics */ $out;
+    return $out;
   }
 
 
