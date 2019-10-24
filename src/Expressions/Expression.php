@@ -89,7 +89,6 @@ abstract class Expression {
   protected function maybeUnrollGroupedDataset(row $rows): row {
     $first = C\first($rows);
     if ($first is dict<_, _>) {
-      /* HH_FIXME[4110] generics can't be specified here yet */
       return $first;
     }
 

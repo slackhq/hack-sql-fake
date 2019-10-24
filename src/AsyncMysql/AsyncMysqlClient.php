@@ -6,7 +6,6 @@ use namespace HH\Lib\Vec;
 
 /* HHAST_IGNORE_ALL[UnusedParameter] */
 
-/* HH_IGNORE_ERROR[2049] */
 <<__MockClass>>
 final class AsyncMysqlClient extends \AsyncMysqlClient {
 
