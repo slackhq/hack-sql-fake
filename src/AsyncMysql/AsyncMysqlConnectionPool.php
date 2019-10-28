@@ -18,6 +18,10 @@ final class AsyncMysqlConnectionPool extends \AsyncMysqlConnectionPool {
   private int $poolMisses = 0;
   private static dict<string, AsyncMysqlConnection> $pool = dict[];
 
+  public function reset(): void {
+    static::$pool = dict[];
+  }
+
   <<__Override>>
   public async function connect(
     string $host,
