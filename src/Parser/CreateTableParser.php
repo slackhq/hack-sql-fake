@@ -398,6 +398,7 @@ final class CreateTableParser {
 				$tokens = Vec\drop($tokens, 1);
 			} else {
 				$tokens = Vec\drop($tokens, 1);
+        $this->vecUnshift(inout $tokens);
 			}
 		}
 
