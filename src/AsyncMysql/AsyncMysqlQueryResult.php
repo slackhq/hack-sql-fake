@@ -32,7 +32,7 @@ final class AsyncMysqlQueryResult extends \AsyncMysqlQueryResult {
   }
 
   <<__Override>>
-  public function mapRows(): Vector<Map<string, string>> {
+  public function mapRows(): Vector<Map<string, ?string>> {
     $out = Vector {};
     foreach ($this->rows as $row) {
       $map = Map {};
@@ -60,7 +60,7 @@ final class AsyncMysqlQueryResult extends \AsyncMysqlQueryResult {
   }
 
   <<__Override>>
-  public function vectorRows(): Vector<Vector<string>> {
+  public function vectorRows(): Vector<KeyedContainer<int, ?string>> {
     $out = Vector {};
     foreach ($this->rows as $row) {
       $v = Vector {};
@@ -79,7 +79,7 @@ final class AsyncMysqlQueryResult extends \AsyncMysqlQueryResult {
   }
 
   <<__Override>>
-  public function vectorRowsTyped(): Vector<Vector<mixed>> {
+  public function vectorRowsTyped(): Vector<KeyedContainer<int, mixed>> {
     $out = Vector {};
     foreach ($this->rows as $row) {
       $v = Vector {};

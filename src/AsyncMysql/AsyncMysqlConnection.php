@@ -110,10 +110,12 @@ final class AsyncMysqlConnection extends \AsyncMysqlConnection {
   public function isValid(): bool {
     return $this->open;
   }
-
+  /**
+   * Not implemented, parsing this string will cause unexpected results.
+   */
   <<__Override>>
-  public function serverInfo(): mixed {
-    return null;
+  public function serverInfo(): string {
+    return 'HackSQLFake, no real SQL server';
   }
 
   <<__Override>>
@@ -141,9 +143,12 @@ final class AsyncMysqlConnection extends \AsyncMysqlConnection {
     return $this->reusable;
   }
 
+  /**
+   * Not implemented, returns now()
+   */
   <<__Override>>
-  public function lastActivityTime(): mixed {
-    return null;
+  public function lastActivityTime(): float {
+    return (float)\time();
   }
 
   <<__Override>>
