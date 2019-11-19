@@ -37,8 +37,6 @@ use namespace HH\Lib\{C, Str};
  */
 abstract final class QueryFormatter {
 	public static function formatQuery(string $query, mixed ...$args): string {
-		$sql = '';
-
 		// string, size, offset
 		// match types: d, f, v, s, m, u
 		// digit, float, magic, string, m..., unsigned int?

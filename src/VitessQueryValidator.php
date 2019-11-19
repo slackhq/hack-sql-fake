@@ -22,7 +22,7 @@ abstract class VitessQueryValidator {
     // bubbles up any exceptions
     private async function processHandlers(): Awaitable<void> {
         $awaitables = vec[];
-        foreach ($this->getHandlers() as $error_msg => $handler_fn) {
+        foreach ($this->getHandlers() as $handler_fn) {
             $awaitables[] = $handler_fn();
         }
 

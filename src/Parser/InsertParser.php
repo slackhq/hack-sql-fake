@@ -62,7 +62,6 @@ final class InsertParser {
     $count = C\count($this->tokens);
 
     $needs_comma = false;
-    $end_of_set = false;
     while ($this->pointer < $count) {
       $token = $this->tokens[$this->pointer];
 
@@ -186,7 +185,6 @@ final class InsertParser {
     $expressions = vec[];
 
     $needs_comma = false;
-    $end_of_set = false;
     while ($pointer < $count) {
       $token = $tokens[$pointer];
       switch ($token['type']) {
@@ -201,7 +199,6 @@ final class InsertParser {
             throw new SQLFakeParseException("Expected , between expressions in SET clause near {$token['value']}");
           }
           $expression_parser = new ExpressionParser($tokens, $pointer - 1);
-          $start = $pointer;
           list($pointer, $expression) = $expression_parser->buildWithPointer();
           $expressions[] = $expression;
           $needs_comma = true;

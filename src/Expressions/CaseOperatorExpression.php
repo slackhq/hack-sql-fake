@@ -2,7 +2,7 @@
 
 namespace Slack\SQLFake;
 
-use namespace HH\Lib\{C, Str};
+use namespace HH\Lib\Str;
 
 /**
  * a statement like CASE WHEN X THEN Y ELSE Z END
@@ -136,7 +136,6 @@ final class CaseOperatorExpression extends Expression {
 
   <<__Override>>
   public function __debugInfo(): dict<string, mixed> {
-    $last_case = C\lastx($this->whenExpressions);
     $when_list = vec[];
     foreach ($this->whenExpressions as $exp) {
       $when_list[] = dict['when' => \var_dump($exp['when'], true), 'then' => \var_dump($exp['then'], true)];

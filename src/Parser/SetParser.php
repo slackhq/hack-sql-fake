@@ -37,7 +37,6 @@ final class SetParser {
             throw new SQLFakeParseException("Expected , between expressions in SET clause");
           }
           $expression_parser = new ExpressionParser($this->tokens, $this->pointer - 1);
-          $start = $this->pointer;
           list($this->pointer, $expression) = $expression_parser->buildWithPointer();
 
           // the only valid kind of expression in a SET is "foo = bar"

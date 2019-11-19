@@ -131,7 +131,6 @@ final class SelectParser {
               $this->pointer++;
               $next = $this->tokens[$this->pointer] ?? null;
               $expressions = vec[];
-              $sort_directions = vec[];
               if ($next === null || $next['value'] !== 'BY') {
                 throw new SQLFakeParseException("Expected BY after GROUP");
               }

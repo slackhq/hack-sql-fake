@@ -306,10 +306,6 @@ final class SelectExpressionTest extends HackTest {
 
 	public async function testRowComparator(): Awaitable<void> {
 		$conn = static::$conn as nonnull;
-		$expected = vec[
-			dict['id' => 4, 'my_fav_group_id' => 6],
-			dict['id' => 6, 'my_fav_group_id' => 6],
-		];
 		$results = await $conn->query("SELECT (1, 2, 3) > (4, 5, 6)");
 		expect($results->rows())->toBeSame(vec[dict['(1, 2, 3) > (4, 5, 6)' => 0]], 'greater than increasing');
 

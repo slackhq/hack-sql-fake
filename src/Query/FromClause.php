@@ -36,9 +36,7 @@ final class FromClause {
   public function process(AsyncMysqlConnection $conn, string $sql): dataset {
 
     $data = vec[];
-    $columns = vec[];
     $is_first_table = true;
-    $left_column_list = keyset[];
 
     foreach ($this->tables as $table) {
 
