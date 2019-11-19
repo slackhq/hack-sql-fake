@@ -28,7 +28,7 @@ final class AsyncMysqlConnectResult extends \AsyncMysqlConnectResult {
   }
   <<__Override>>
   public function endTime(): float {
-    return (float)($this->start + $this->elapsed);
+    return $this->start + $this->elapsed;
   }
 
   <<__Override>>
