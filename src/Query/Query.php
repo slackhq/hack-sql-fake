@@ -42,7 +42,7 @@ abstract class Query {
     }
 
     // allow all column expressions to fall through to the full row
-    foreach ($order_by as $k => $rule) {
+    foreach ($order_by as $rule) {
       $expr = $rule['expression'];
       if ($expr is ColumnExpression) {
         $expr->allowFallthrough();
@@ -94,7 +94,7 @@ abstract class Query {
     // dicts maintain insert order. the keys will be inserted out of order but have to match the original
     // keys for updates/deletes to be able to delete the right rows
     $data = dict[];
-    foreach ($data_temp as $index => $item) {
+    foreach ($data_temp as $item) {
       $data[$item[0]] = $item[1];
     }
 
@@ -194,7 +194,7 @@ abstract class Query {
       foreach ($set_clauses as $clause) {
         $existing_value = $row[$clause['column']] ?? null;
         $expr = $clause['expression'];
-        $new_value = $clause['expression']->evaluate($update_row, $conn);
+        $new_value = $expr->evaluate($update_row, $conn);
 
         if ($new_value !== $existing_value) {
           $row[$clause['column']] = $new_value;
