@@ -55,7 +55,6 @@ final class BinaryOperatorExpression extends Expression {
     }
 
     $last_index = C\last_key($left_elems);
-    $match = true;
 
     foreach ($left_elems as $index => $le) {
       $re = $right_elems[$index];

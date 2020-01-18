@@ -24,7 +24,6 @@ final class BuildSchemaCLI extends CLIWithArguments {
 	<<__Override>>
 	public async function mainAsync(): Awaitable<int> {
 		$terminal = $this->getTerminal();
-		$stderr = $this->getStderr();
 
 		if (C\is_empty($this->getArguments())) {
 			$program = $this->getArgv()[0];

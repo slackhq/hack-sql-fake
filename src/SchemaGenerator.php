@@ -60,8 +60,6 @@ final class SchemaGenerator {
 	 * Convert a type in SQL to a type in Hack
 	 */
 	private function sqlToHackFieldType(parsed_field $field): string {
-		$name = $field['name'];
-
 		switch ($field['type']) {
 			case 'TINYINT':
 			case 'SMALLINT':

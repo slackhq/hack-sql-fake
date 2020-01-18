@@ -384,20 +384,10 @@ final class CreateTableParser {
 	): void {
 
 		#
-		# parse a single create_definition
-		#
-
-		$has_constraint = false;
-		$constraint = null;
-
-
-		#
 		# constraints can come before a few different things
 		#
 
 		if ($tokens[0] === 'CONSTRAINT') {
-
-			$has_constraint = true;
 
 			if (
 				$tokens[1] === 'PRIMARY KEY' ||
@@ -409,7 +399,7 @@ final class CreateTableParser {
 				$tokens = Vec\drop($tokens, 1);
 			} else {
 				$tokens = Vec\drop($tokens, 1);
-				$constraint = $this->vecUnshift(inout $tokens);
+				$this->vecUnshift(inout $tokens);
 			}
 		}
 
