@@ -71,7 +71,7 @@ abstract final class QueryFormatter {
 			}
 
 			$param = $args[$args_pointer];
-      $args_pointer++;
+			$args_pointer++;
 			switch ($c) {
 				case 'd':
 				case 's':
@@ -95,7 +95,7 @@ abstract final class QueryFormatter {
 					$out = self::appendColumnTableName($out, $param);
 					break;
 				case '=':
-          $i++;
+					$i++;
 					$type = $query[$i];
 					if (!C\contains_key(keyset['d', 's', 'f', 'u'], $type)) {
 						throw new SQLFakeParseException("at %=$type, expected %=d, %=c, %=s, or %=u");
@@ -141,7 +141,7 @@ abstract final class QueryFormatter {
 					}
 					break;
 				case 'L':
-          $i++;
+					$i++;
 					$type = $query[$i];
 					if ($type === "O" || $type === "A") {
 						$out[] = "(";
