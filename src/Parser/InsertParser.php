@@ -87,6 +87,7 @@ final class InsertParser {
                 $this->pointer++;
                 if ($needs_another_plus_plus) {
                   $this->pointer++;
+                  $needs_another_plus_plus = false;
                 }
                 $token = $this->tokens[$this->pointer];
                 // VALUES must be followed by paren and then a list of values
@@ -108,6 +109,11 @@ final class InsertParser {
                 $this->pointer = $close;
                 $needs_another_plus_plus = true;
               } while (($this->tokens[$this->pointer + 1]['value'] ?? null) === ',' && $this->pointer);
+              // The while loop above used to havea $this->pointer++ here.             ^^^^^^^^^^^^^^
+              // We still need to increment is this condition is true.
+              if ($needs_another_plus_plus && ($this->tokens[$this->pointer + 1]['value'] ?? null) === ',') {
+                $this->pointer++;
+              }
               break;
             default:
               throw new SQLFakeParseException("Unexpected clause {$token['value']}");
