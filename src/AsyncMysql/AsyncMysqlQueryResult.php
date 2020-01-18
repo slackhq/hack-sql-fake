@@ -32,7 +32,7 @@ final class AsyncMysqlQueryResult extends \AsyncMysqlQueryResult {
   }
 
   <<__Override>>
-  public function mapRows(): Vector<Map<string, string>> {
+  public function mapRows(): Vector<Map<string, ?string>> {
     $out = Vector {};
     foreach ($this->rows as $row) {
       $map = Map {};
@@ -42,11 +42,6 @@ final class AsyncMysqlQueryResult extends \AsyncMysqlQueryResult {
       }
       $out->add($map);
     }
-    /*HH_IGNORE_ERROR[4110]
-      The actual return type of this function is `Vector<Map<string, ?string>>`
-      The parent class is typed incorrectly in the HHI file.
-      @TODO Update the return type once we target HHVM ~4.16.
-     */
     return $out;
   }
 
@@ -60,7 +55,7 @@ final class AsyncMysqlQueryResult extends \AsyncMysqlQueryResult {
   }
 
   <<__Override>>
-  public function vectorRows(): Vector<Vector<string>> {
+  public function vectorRows(): Vector<KeyedContainer<int, ?string>> {
     $out = Vector {};
     foreach ($this->rows as $row) {
       $v = Vector {};
@@ -70,16 +65,11 @@ final class AsyncMysqlQueryResult extends \AsyncMysqlQueryResult {
       }
       $out->add($v);
     }
-    /*HH_IGNORE_ERROR[4110]
-      The actual return type of this function is `Vector<Vector<?string>>`
-      The parent class is typed incorrectly in the HHI file.
-      @TODO Update the return type once we target HHVM ~4.16.
-     */
     return $out;
   }
 
   <<__Override>>
-  public function vectorRowsTyped(): Vector<Vector<mixed>> {
+  public function vectorRowsTyped(): Vector<KeyedContainer<int, mixed>> {
     $out = Vector {};
     foreach ($this->rows as $row) {
       $v = Vector {};

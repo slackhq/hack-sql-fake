@@ -112,8 +112,9 @@ final class AsyncMysqlConnection extends \AsyncMysqlConnection {
   }
 
   <<__Override>>
-  public function serverInfo(): mixed {
-    return null;
+  public function serverInfo(): string {
+    // Copied from https://docs.hhvm.com/hack/reference/class/AsyncMysqlConnection/serverInfo/
+    return '5.6.24-fb-log-slackhq-sql-fake';
   }
 
   <<__Override>>
@@ -142,8 +143,10 @@ final class AsyncMysqlConnection extends \AsyncMysqlConnection {
   }
 
   <<__Override>>
-  public function lastActivityTime(): mixed {
-    return null;
+  public function lastActivityTime(): float {
+    // A float representing the number of seconds ago since epoch that we had successful activity on the current connection.
+    // 50 ms ago seems like a reasonable answer.
+    return \microtime(true) - 0.05;
   }
 
   <<__Override>>

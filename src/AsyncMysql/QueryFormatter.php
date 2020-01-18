@@ -37,8 +37,6 @@ use namespace HH\Lib\{C, Str};
  */
 abstract final class QueryFormatter {
 	public static function formatQuery(string $query, mixed ...$args): string {
-		$sql = '';
-
 		// string, size, offset
 		// match types: d, f, v, s, m, u
 		// digit, float, magic, string, m..., unsigned int?
@@ -72,7 +70,8 @@ abstract final class QueryFormatter {
 				throw new SQLFakeParseException('too few parameters for query: %'.$c.' has no param to bind');
 			}
 
-			$param = $args[$args_pointer++];
+			$param = $args[$args_pointer];
+      $args_pointer++;
 			switch ($c) {
 				case 'd':
 				case 's':
@@ -96,7 +95,8 @@ abstract final class QueryFormatter {
 					$out = self::appendColumnTableName($out, $param);
 					break;
 				case '=':
-					$type = $query[++$i];
+          $i++;
+					$type = $query[$i];
 					if (!C\contains_key(keyset['d', 's', 'f', 'u'], $type)) {
 						throw new SQLFakeParseException("at %=$type, expected %=d, %=c, %=s, or %=u");
 					}
@@ -141,7 +141,8 @@ abstract final class QueryFormatter {
 					}
 					break;
 				case 'L':
-					$type = $query[++$i];
+          $i++;
+					$type = $query[$i];
 					if ($type === "O" || $type === "A") {
 						$out[] = "(";
 						$sep = ($type === "O") ? " OR " : " AND ";
