@@ -32,13 +32,12 @@ final class FromClause {
   /**
    * The FROM clause of the query gets processed first, retrieving data from tables, executing subqueries, and handling joins
    * This is also where we build up the $columns list which is commonly used throughout the entire library to map column references to indexes in this dataset
+   * @reviewer, we don't build up the $columns, since the variable is unused...
    */
   public function process(AsyncMysqlConnection $conn, string $sql): dataset {
 
     $data = vec[];
-    $columns = vec[];
     $is_first_table = true;
-    $left_column_list = keyset[];
 
     foreach ($this->tables as $table) {
 

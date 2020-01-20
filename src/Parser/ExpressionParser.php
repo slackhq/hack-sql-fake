@@ -189,7 +189,6 @@ final class ExpressionParser {
    */
   public function build(): Expression {
     $token = $this->nextToken();
-    $break_while = false;
     while ($token !== null) {
       switch ($token['type']) {
         case TokenType::PAREN:

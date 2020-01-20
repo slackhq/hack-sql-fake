@@ -136,7 +136,7 @@ final class CaseOperatorExpression extends Expression {
 
   <<__Override>>
   public function __debugInfo(): dict<string, mixed> {
-    $last_case = C\lastx($this->whenExpressions);
+    invariant(!C\is_empty($this->whenExpressions), 'There must be at least one whenExpression');
     $when_list = vec[];
     foreach ($this->whenExpressions as $exp) {
       $when_list[] = dict['when' => \var_dump($exp['when'], true), 'then' => \var_dump($exp['then'], true)];

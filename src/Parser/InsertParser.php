@@ -62,7 +62,6 @@ final class InsertParser {
     $count = C\count($this->tokens);
 
     $needs_comma = false;
-    $end_of_set = false;
     while ($this->pointer < $count) {
       $token = $this->tokens[$this->pointer];
 
@@ -83,8 +82,13 @@ final class InsertParser {
 
           switch ($token['value']) {
             case 'VALUES':
+              $needs_another_plus_plus = false;
               do {
                 $this->pointer++;
+                if ($needs_another_plus_plus) {
+                  $this->pointer++;
+                  $needs_another_plus_plus = false;
+                }
                 $token = $this->tokens[$this->pointer];
                 // VALUES must be followed by paren and then a list of values
                 if ($token === null || $token['value'] !== '(') {
@@ -103,7 +107,13 @@ final class InsertParser {
                 }
                 $query->values[] = $values;
                 $this->pointer = $close;
-              } while (($this->tokens[$this->pointer + 1]['value'] ?? null) === ',' && $this->pointer++);
+                $needs_another_plus_plus = true;
+              } while (($this->tokens[$this->pointer + 1]['value'] ?? null) === ',' && $this->pointer);
+              // The while loop above used to havea $this->pointer++ here.             ^^^^^^^^^^^^^^
+              // We still need to increment is this condition is true.
+              if ($needs_another_plus_plus && ($this->tokens[$this->pointer + 1]['value'] ?? null) === ',') {
+                $this->pointer++;
+              }
               break;
             default:
               throw new SQLFakeParseException("Unexpected clause {$token['value']}");
@@ -186,7 +196,6 @@ final class InsertParser {
     $expressions = vec[];
 
     $needs_comma = false;
-    $end_of_set = false;
     while ($pointer < $count) {
       $token = $tokens[$pointer];
       switch ($token['type']) {
@@ -201,7 +210,6 @@ final class InsertParser {
             throw new SQLFakeParseException("Expected , between expressions in SET clause near {$token['value']}");
           }
           $expression_parser = new ExpressionParser($tokens, $pointer - 1);
-          $start = $pointer;
           list($pointer, $expression) = $expression_parser->buildWithPointer();
           $expressions[] = $expression;
           $needs_comma = true;

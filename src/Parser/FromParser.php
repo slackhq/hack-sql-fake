@@ -110,7 +110,7 @@ final class FromParser {
   private function getTableOrSubquery(token $token): from_table {
     switch ($token['type']) {
       case TokenType::IDENTIFIER:
-        return $table = shape('name' => $token['value'], 'join_type' => JoinType::JOIN);
+        return shape('name' => $token['value'], 'join_type' => JoinType::JOIN);
       case TokenType::PAREN:
         // this must be a subquery in the FROM clause
         $close = SQLParser::findMatchingParen($this->pointer, $this->tokens);

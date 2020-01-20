@@ -149,9 +149,9 @@ abstract final class JoinProcessor {
     if ($left === null || $right === null) {
       throw new SQLFakeParseException("Attempted NATURAL join with no data present");
     }
-    foreach ($left as $column => $val) {
+    foreach ($left as $column => $_) {
       $name = Str\split($column, '.') |> C\lastx($$);
-      foreach ($right as $col => $v) {
+      foreach ($right as $col => $_) {
         $colname = Str\split($col, '.') |> C\lastx($$);
         if ($colname === $name) {
           $filter = self::addJoinFilterExpression($filter, $column, $col);

@@ -398,7 +398,7 @@ final class FunctionExpression extends Expression {
       throw new SQLFakeRuntimeException("MySQL CONCAT() function must be called with at least two arguments");
     }
     $final_concat = "";
-    foreach ($args as $k => $arg) {
+    foreach ($args as $arg) {
       $val = (string)$arg->evaluate($row, $conn);
       $final_concat .= $val;
     }

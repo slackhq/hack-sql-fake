@@ -312,7 +312,6 @@ final class SQLParser {
   public static function findMatchingParen(int $pointer, token_list $tokens): int {
     $paren_count = 0;
     $remaining_tokens = Vec\drop($tokens, $pointer);
-    $token_count = C\count($remaining_tokens);
     foreach ($remaining_tokens as $i => $token) {
       if ($token['type'] === TokenType::PAREN) {
         $paren_count++;
