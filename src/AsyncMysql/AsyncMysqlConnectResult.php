@@ -33,6 +33,6 @@ final class AsyncMysqlConnectResult extends \AsyncMysqlConnectResult {
 
   <<__Override>>
   public function clientStats(): \AsyncMysqlClientStats {
-    throw new SQLFakeNotImplementedException('client stats not implemented');
+    return new AsyncMysqlClientStats();
   }
 }
