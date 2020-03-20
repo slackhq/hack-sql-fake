@@ -83,6 +83,20 @@ final class UpdateQueryTest extends HackTest {
 		expect(() ==> $conn->query("UPDATE table3 set id=1"))->toThrow(SQLFakeUniqueKeyViolation::class);
 	}
 
+	public async function testUpdateIgnore(): Awaitable<void> {
+		$conn = static::$conn as nonnull;
+		await $conn->query("INSERT INTO table3 (id, name) VALUES (7, 'test'), (77, 'testupdated')");
+		expect(() ==> $conn->query("UPDATE IGNORE table3 SET name='testupdated' WHERE id=7"))->notToThrow(
+			SQLFakeUniqueKeyViolation::class,
+		);
+		$results = await $conn->query("SELECT * FROM table3 WHERE name='testupdated'");
+		expect($results->rows())->toBeSame(
+			vec[
+				dict['id' => 77, 'group_id' => 0, 'name' => 'testupdated']
+			],
+		);
+	}
+
 	public async function testTypeCoercion(): Awaitable<void> {
 		$conn = static::$conn as nonnull;
 		await $conn->query("UPDATE table3 set name=1 WHERE id=6");
