@@ -21,6 +21,7 @@ abstract class Query {
    * debugging and logging
    */
   public string $sql;
+  public bool $ignoreDupes = false;
 
   protected function applyWhere(AsyncMysqlConnection $conn, dataset $data): dataset {
     $where = $this->whereClause;
@@ -207,12 +208,17 @@ abstract class Query {
           // throw on invalid data types if strict mode
           $row = DataIntegrity::coerceToSchema($row, $table_schema);
           $result = DataIntegrity::checkUniqueConstraints($original_table, $row, $table_schema, $row_id);
-          if ($result is nonnull && !QueryContext::$relaxUniqueConstraints) {
-            throw new SQLFakeUniqueKeyViolation($result[0]);
+          if ($result is nonnull) {
+            if($this->ignoreDupes) {
+              continue;
+            }
+            if(!QueryContext::$relaxUniqueConstraints) {
+              throw new SQLFakeUniqueKeyViolation($result[0]);
+            }
           }
+          $original_table[$row_id] = $row;
+          $update_count++;
         }
-        $original_table[$row_id] = $row;
-        $update_count++;
       }
     }
 
@@ -220,5 +226,4 @@ abstract class Query {
     $conn->getServer()->saveTable($database, $table_name, $original_table);
     return tuple($update_count, $original_table);
   }
-
 }

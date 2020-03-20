@@ -4,7 +4,7 @@ namespace Slack\SQLFake;
 
 final class UpdateQuery extends Query {
 
-  public function __construct(public from_table $updateClause, public string $sql) {}
+  public function __construct(public from_table $updateClause, public string $sql, public bool $ignoreDupes) {}
 
   public vec<BinaryOperatorExpression> $setClause = vec[];
 

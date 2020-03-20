@@ -27,6 +27,14 @@ final class UpdateParser {
       throw new SQLFakeParseException("Parser error: expected UPDATE");
     }
     $this->pointer++;
+
+    // IGNORE can come next and indicates duplicate keys should be ignored
+    $ignore_dupes = false;
+    if ($this->tokens[$this->pointer]['value'] === 'IGNORE') {
+      $ignore_dupes = true;
+      $this->pointer++;
+    }
+
     $count = C\count($this->tokens);
 
     // next token has to be a table name
@@ -39,7 +47,7 @@ final class UpdateParser {
 
     $table = shape('name' => $token['value'], 'join_type' => JoinType::JOIN);
 
-    $query = new UpdateQuery($table, $this->sql);
+    $query = new UpdateQuery($table, $this->sql, $ignore_dupes);
 
     $this->pointer++;
 
