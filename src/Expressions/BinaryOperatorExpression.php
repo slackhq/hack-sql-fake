@@ -227,7 +227,7 @@ final class BinaryOperatorExpression extends Expression {
         }
 
         // escape all + characters
-        $pattern = \preg_quote($pattern, '+');
+        $pattern = \preg_quote($pattern, '/');
 
         // replace only unescaped % and _ characters to make regex
         $pattern = Regex\replace($pattern, re"/(?<!\\\)%/", '.*?');

@@ -204,11 +204,11 @@ final class SelectExpressionTest extends HackTest {
 	public async function testLike(): Awaitable<void> {
 		$conn = static::$conn as nonnull;
 		$results = await $conn->query(
-			"SELECT 'foo' LIKE 'foo' as test1, 'foobarbaz' like '%bar%' test2, 'foobaz' LIKE 'foo_az' test3, 'foobarqux' like 'foo%' test4, 'foobarqux' LIKE '%qux' test5, 'blahfoobarbazqux blah' LIKE '%foo%qux%' test6, 'blegh' LIKE '%foo%' test7, 'foo+bar' LIKE '%foo+bar%' test8",
+			"SELECT 'foo' LIKE 'foo' as test1, 'foobarbaz' like '%bar%' test2, 'foobaz' LIKE 'foo_az' test3, 'foobarqux' like 'foo%' test4, 'foobarqux' LIKE '%qux' test5, 'blahfoobarbazqux blah' LIKE '%foo%qux%' test6, 'blegh' LIKE '%foo%' test7, 'foo+bar' LIKE '%foo+bar%' test8, 'foo/bar' LIKE '%foo/bar%' test9",
 		);
 		expect($results->rows())->toBeSame(
 			vec[
-				dict['test1' => 1, 'test2' => 1, 'test3' => 1, 'test4' => 1, 'test5' => 1, 'test6' => 1, 'test7' => 0, 'test8' => 1],
+				dict['test1' => 1, 'test2' => 1, 'test3' => 1, 'test4' => 1, 'test5' => 1, 'test6' => 1, 'test7' => 0, 'test8' => 1, 'test9' => 1],
 			],
 		);
 	}
