@@ -11,9 +11,9 @@ use namespace HH\Lib\{C, Str, Vec};
  */
 
 enum UnsupportedCases: string as string {
-    GroupByColumns = 'unsupported: in scatter query: group by column must reference column in SELECT list';
-    OrderByColumns = 'unsupported: in scatter query: order by column must reference column in SELECT list';
-    Unions = 'unsupported: UNION cannot be executed as a single route';
+    GROUP_BY_COLUMNS = 'unsupported: in scatter query: group by column must reference column in SELECT list';
+    ORDER_BY_COLUMNS = 'unsupported: in scatter query: order by column must reference column in SELECT list';
+    UNIONS = 'unsupported: UNION cannot be executed as a single route';
 }
 
 abstract class VitessQueryValidator {
@@ -42,7 +42,9 @@ abstract class VitessQueryValidator {
     public static function extractColumnExprNames(vec<Expression> $selectExpressions): keyset<string> {
         $exprNames = keyset[];
         foreach ($selectExpressions as $expr) {
-            if ($expr is ColumnExpression) { $exprNames[] = $expr->name; }
+            if ($expr is ColumnExpression) {
+                $exprNames[] = $expr->name;
+            }
         }
         return $exprNames;
     }
@@ -55,8 +57,8 @@ final class SelectQueryValidator extends VitessQueryValidator {
     <<__Override>>
     public function getHandlers(): dict<string, (function(): Awaitable<void>)> {
         return dict[
-            UnsupportedCases::GroupByColumns => inst_meth($this, 'scatterMustContainSelectColumns'),
-            UnsupportedCases::Unions => inst_meth($this, 'unionsNotAllowed'),
+            UnsupportedCases::GROUP_BY_COLUMNS => inst_meth($this, 'scatterMustContainSelectColumns'),
+            UnsupportedCases::UNIONS => inst_meth($this, 'unionsNotAllowed'),
         ];
     }
 
@@ -105,22 +107,32 @@ final class SelectQueryValidator extends VitessQueryValidator {
 
         // check group by columns
         foreach ($groupByCols ?? vec[] as $col) {
-            if (!$col is ColumnExpression) { continue; }
-            if (C\contains_key($exprNames, $col->name)) { continue; }
+            if (!$col is ColumnExpression) {
+                continue;
+            }
+            if (C\contains_key($exprNames, $col->name)) {
+                continue;
+            }
 
             throw new SQLFakeVitessQueryViolation(
-                Str\format("Vitess query validation error: %s", UnsupportedCases::GroupByColumns),
+                Str\format("Vitess query validation error: %s", UnsupportedCases::GROUP_BY_COLUMNS),
             );
         }
 
         // check order by columns
         foreach ($orderByCols ?? vec[] as $col) {
-            if (!$col['expression'] is ColumnExpression) { continue; }
-            if (C\contains_key($exprNames, $col['expression']->name)) { continue; }
-            if (!$this->isCrossShardQuery()) { continue; }
+            if (!$col['expression'] is ColumnExpression) {
+                continue;
+            }
+            if (C\contains_key($exprNames, $col['expression']->name)) {
+                continue;
+            }
+            if (!$this->isCrossShardQuery()) {
+                continue;
+            }
 
             throw new SQLFakeVitessQueryViolation(
-                Str\format("Vitess query validation error: %s", UnsupportedCases::OrderByColumns),
+                Str\format("Vitess query validation error: %s", UnsupportedCases::ORDER_BY_COLUMNS),
             );
         }
     }
@@ -128,7 +140,9 @@ final class SelectQueryValidator extends VitessQueryValidator {
     public async function unionsNotAllowed(): Awaitable<void> {
         $query = $this->query;
         $multiQueries = $query->multiQueries;
-        if (C\is_empty($multiQueries)) { return; }
+        if (C\is_empty($multiQueries)) {
+            return;
+        }
 
         foreach ($multiQueries as $query) {
             switch ($query['type']) {
@@ -137,7 +151,7 @@ final class SelectQueryValidator extends VitessQueryValidator {
                 case MultiOperand::INTERSECT:
                 case MultiOperand::EXCEPT:
                     throw new SQLFakeVitessQueryViolation(
-                        Str\format("Vitess query validation error: %s", UnsupportedCases::Unions),
+                        Str\format("Vitess query validation error: %s", UnsupportedCases::UNIONS),
                     );
             }
         }

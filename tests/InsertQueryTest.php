@@ -305,4 +305,5 @@ final class InsertQueryTest extends HackTest {
       ],
     ]);
   }
+
 }

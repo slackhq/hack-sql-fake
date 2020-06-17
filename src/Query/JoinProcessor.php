@@ -169,9 +169,9 @@ abstract final class JoinProcessor {
     if ($left === null || $right === null) {
       throw new SQLFakeParseException("Attempted NATURAL join with no data present");
     }
-    foreach ($left as $column => $val) {
+    foreach ($left as $column => $_val) {
       $name = Str\split($column, '.') |> C\lastx($$);
-      foreach ($right as $col => $v) {
+      foreach ($right as $col => $_v) {
         $colname = Str\split($col, '.') |> C\lastx($$);
         if ($colname === $name) {
           $filter = self::addJoinFilterExpression($filter, $column, $col);
@@ -242,7 +242,7 @@ abstract final class JoinProcessor {
   ): dataset {
     $left = $filter->left as ColumnExpression;
     $right = $filter->right as ColumnExpression;
-    if ($left->tableName() === $right_table_name){
+    if ($left->tableName() === $right_table_name) {
       // filter order may not match table order
       // if the left filter is for the right table, swap the filters
       list($left, $right) = vec[$right, $left];
@@ -285,7 +285,6 @@ abstract final class JoinProcessor {
           $any_match = false;
           $value = $left->evaluate($row, $conn) |> static::coerceToArrayKey($$);
           foreach ($right_dataset as $r) {
-            $candidate_row = Dict\merge($row, $r);
             foreach ($right_temp_table[$value] ?? keyset[] as $k) {
               $out[] = Dict\merge($row, $right_dataset[$k]);
               $any_match = true;
