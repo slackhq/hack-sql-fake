@@ -60,7 +60,7 @@ final class SQLLexer {
           $tokens[$comment] .= $token;
         }
 
-        if (!$inline && ($token === "*/")) {
+        if (!$inline && ($token === '*/')) {
           if ($comment is nonnull) {
             unset($tokens[$comment]);
           }
@@ -94,18 +94,18 @@ final class SQLLexer {
       }
 
       // MySQL requires a space after double dash for it to be counted as a comment: https://dev.mysql.com/doc/refman/5.7/en/ansi-diff-comments.html
-      if ($token === "--") {
+      if ($token === '--') {
         $comment = $i;
         $inline = true;
       }
 
       // hash comments don't require a space
-      if (Str\starts_with($token, "#")) {
+      if (Str\starts_with($token, '#')) {
         $comment = $i;
         $inline = true;
       }
 
-      if ($token === "/*") {
+      if ($token === '/*') {
         $comment = $i;
         $inline = false;
       }

@@ -127,7 +127,7 @@ final class CreateTableParser {
 			}
 
 			if (Regex\matches($sql, re"!\\*!A", $pos)) {
-				$p2 = Str\search($sql, "*/", $pos);
+				$p2 = Str\search($sql, '*/', $pos);
 				if ($p2 === null) {
 					$pos = $len;
 				} else {
@@ -148,7 +148,7 @@ final class CreateTableParser {
 
 			# backtick quoted field
 			if (Str\slice($sql, $pos, 1) === '`') {
-				$p2 = Str\search($sql, "`", $pos + 1);
+				$p2 = Str\search($sql, '`', $pos + 1);
 				if ($p2 === null) {
 					$pos = $len;
 				} else {
@@ -230,8 +230,8 @@ final class CreateTableParser {
 			if ($t === ';') {
 				if (C\count($temp)) {
 					$statements[] = shape(
-						"tuples" => $temp,
-						"sql" => Str\slice(
+						'tuples' => $temp,
+						'sql' => Str\slice(
 							$sql,
 							$source_map[$start][0],
 							$source_map[$i][0] - $source_map[$start][0] + $source_map[$i][1],
@@ -246,8 +246,8 @@ final class CreateTableParser {
 		}
 		if (C\count($temp)) {
 			$statements[] = shape(
-				"tuples" => $temp,
-				"sql" => Str\slice(
+				'tuples' => $temp,
+				'sql' => Str\slice(
 					$sql,
 					$source_map[$start][0],
 					$source_map[$i][0] - $source_map[$start][0] + $source_map[$i][1],

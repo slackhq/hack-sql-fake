@@ -23,7 +23,7 @@ final class FromClause {
   public function aliasRecentExpression(string $name): void {
     $k = C\last_key($this->tables);
     if ($k === null || $this->mostRecentHasAlias) {
-      throw new SQLFakeParseException("Unexpected AS");
+      throw new SQLFakeParseException('Unexpected AS');
     }
     $this->tables[$k]['alias'] = $name;
     $this->mostRecentHasAlias = true;

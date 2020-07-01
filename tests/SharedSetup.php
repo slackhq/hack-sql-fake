@@ -8,7 +8,7 @@ final class SharedSetup {
 		init($schema, true);
 
 		$pool = new AsyncMysqlConnectionPool(darray[]);
-		$conn = await $pool->connect("example", 1, 'db2', '', '');
+		$conn = await $pool->connect('example', 1, 'db2', '', '');
 
 		// populate database state
 		$database = dict[
@@ -52,7 +52,7 @@ final class SharedSetup {
 		init($schema, true);
 
 		$pool = new AsyncMysqlConnectionPool(darray[]);
-		$vitess_conn = await $pool->connect("example2", 2, 'vitess', '', '');
+		$vitess_conn = await $pool->connect('example2', 2, 'vitess', '', '');
 
 		$vitess_dbs = dict[
 			'vt_table1' => vec[

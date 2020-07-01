@@ -2,8 +2,7 @@
 
 namespace Slack\SQLFake;
 
-use namespace HH\Lib\{C, Dict, Keyset, Math, Str};
-use namespace HH\Lib\IO;
+use namespace HH\Lib\{C, Dict, IO, Keyset, Math, Str};
 
 abstract final class Logger {
 
@@ -21,6 +20,7 @@ abstract final class Logger {
 
 	protected static function write(string $message): void {
 		if (self::$handle is nonnull) {
+      /*HHAST_FIXME[DontUseAsioJoin]*/
 			\HH\Asio\join(self::$handle->writeAsync($message));
 		} else {
 			\error_log($message);
@@ -74,7 +74,7 @@ abstract final class Logger {
 		$out .= $separator;
 		$out .= "$count row".($count === 1 ? '' : 's').' in set';
 
-		$out .= " from ".$server;
+		$out .= ' from '.$server;
 		$out .= "\n";
 
 		return $out;

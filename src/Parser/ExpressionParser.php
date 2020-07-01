@@ -111,7 +111,7 @@ final class ExpressionParser {
           $pos++;
           $t = $tokens[$pos];
           if ($close - $pos !== 1) {
-            throw new SQLFakeParseException("Parse error near DISTINCT");
+            throw new SQLFakeParseException('Parse error near DISTINCT');
           }
           $p = new ExpressionParser(vec[$t], -1);
           $expr = $p->build();
@@ -127,7 +127,7 @@ final class ExpressionParser {
           $pos++;
           continue;
         } else {
-          throw new SQLFakeParseException("Unexpected comma in SQL query");
+          throw new SQLFakeParseException('Unexpected comma in SQL query');
         }
       }
       $p = new ExpressionParser($tokens, $pos - 1);
@@ -196,7 +196,7 @@ final class ExpressionParser {
           $close = SQLParser::findMatchingParen($this->pointer, $this->tokens);
           $arg_tokens = Vec\slice($this->tokens, $this->pointer + 1, $close - $this->pointer - 1);
           if (!C\count($arg_tokens)) {
-            throw new SQLFakeParseException("Empty parentheses found");
+            throw new SQLFakeParseException('Empty parentheses found');
           }
           $this->pointer = $close;
           $expr = new PlaceholderExpression();
@@ -223,7 +223,7 @@ final class ExpressionParser {
               $pointer++;
               $next = $arg_tokens[$pointer];
               if ($next['value'] !== ',') {
-                throw new SQLFakeParseException("Expected , in IN () list");
+                throw new SQLFakeParseException('Expected , in IN () list');
               }
             }
             $this->expression as InOperatorExpression;
@@ -242,7 +242,7 @@ final class ExpressionParser {
             if ($second_token !== null && $second_token['type'] === TokenType::SEPARATOR) {
               list($distinct, $elements) = $this->getListExpression($arg_tokens);
               if ($distinct) {
-                throw new SQLFakeParseException("Unexpected DISTINCT in row expression");
+                throw new SQLFakeParseException('Unexpected DISTINCT in row expression');
               }
 
               $expr = new RowExpression($elements);
@@ -354,7 +354,7 @@ final class ExpressionParser {
                     ->addRecursiveExpression($this->tokens, $this->pointer, true);
                   break;
                 }
-                throw new SQLFakeParseException("Unexpected NOT");
+                throw new SQLFakeParseException('Unexpected NOT');
               }
               $this->expression->negate();
             } else {
