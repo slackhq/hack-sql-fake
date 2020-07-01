@@ -1,2 +1,4 @@
 hackfmt.line_width=120
 assume_php=false
+allowed_decl_fixme_codes=2053,4047
+allowed_fixme_codes_strict=2011,2049,2050,2053,2083,3084,4027,4047,4104,4107,4108,4110,4128,4135,4188,4223,4240,4323
