@@ -4,6 +4,9 @@ services: docker
 env:
   - HHVM_VERSION=4.41-latest
   - HHVM_VERSION=4.56-latest
+  - HHVM_VERSION=4.62-latest
+  # - HHVM_VERSION=4.63-latest (skipped)
+  - HHVM_VERSION=4.64-latest
 
 
 install:
