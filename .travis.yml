@@ -6,7 +6,10 @@ env:
   - HHVM_VERSION=4.56-latest
   - HHVM_VERSION=4.64-latest
   - HHVM_VERSION=latest
-  - HHVM_VERSION=nightly
+  # - HHVM_VERSION=nightly hhast needs a newer schema, fails with this nightly
+  # HipHop VM 4.65.0-dev (rel)
+  # Compiler: 1593575948_409517482
+  # Repo schema: d1ae8e21bf3419a65f12a010527485564e719d07
 
 
 install:
