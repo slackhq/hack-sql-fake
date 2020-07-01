@@ -34,7 +34,7 @@ final class SelectExpressionTest extends HackTest {
 
 	public async function testSelectStar(): Awaitable<void> {
 		$conn = static::$conn as nonnull;
-		$results = await $conn->query("SELECT * FROM table3");
+		$results = await $conn->query('SELECT * FROM table3');
 		expect($results->rows())->toBeSame(vec[
 			dict['id' => 1, 'group_id' => 12345, 'name' => 'name1'],
 			dict['id' => 2, 'group_id' => 12345, 'name' => 'name2'],
@@ -47,7 +47,7 @@ final class SelectExpressionTest extends HackTest {
 	public async function testSelectExpressions(): Awaitable<void> {
 		$conn = static::$conn as nonnull;
 		$results =
-			await $conn->query("SELECT id, group_id as my_fav_group_id, id*1000 as math FROM table3 WHERE group_id=6");
+			await $conn->query('SELECT id, group_id as my_fav_group_id, id*1000 as math FROM table3 WHERE group_id=6');
 		expect($results->rows())->toBeSame(
 			vec[
 				dict['id' => 4, 'my_fav_group_id' => 6, 'math' => 4000],
@@ -68,7 +68,7 @@ final class SelectExpressionTest extends HackTest {
 
 	public async function testBetween(): Awaitable<void> {
 		$conn = static::$conn as nonnull;
-		$results = await $conn->query("SELECT id FROM table4 WHERE id BETWEEN 1000 AND 1003");
+		$results = await $conn->query('SELECT id FROM table4 WHERE id BETWEEN 1000 AND 1003');
 		expect($results->rows())->toBeSame(vec[
 			dict['id' => 1000],
 			dict['id' => 1001],
@@ -76,7 +76,7 @@ final class SelectExpressionTest extends HackTest {
 			dict['id' => 1003],
 		]);
 
-		$results = await $conn->query("SELECT id FROM table4 WHERE id*10 BETWEEN 1000*10 AND 1004*10-10");
+		$results = await $conn->query('SELECT id FROM table4 WHERE id*10 BETWEEN 1000*10 AND 1004*10-10');
 		expect($results->rows())->toBeSame(
 			vec[
 				dict['id' => 1000],
@@ -87,7 +87,7 @@ final class SelectExpressionTest extends HackTest {
 			'with complex expressions',
 		);
 
-		$results = await $conn->query("SELECT 5 BETWEEN 3 AND 9 AND 6 = 6 AND 10/2 = 5");
+		$results = await $conn->query('SELECT 5 BETWEEN 3 AND 9 AND 6 = 6 AND 10/2 = 5');
 		expect($results->rows())->toBeSame(
 			vec[
 				dict['5 BETWEEN 3 AND 9 AND 6 = 6 AND 10/2 = 5' => 1],
@@ -95,7 +95,7 @@ final class SelectExpressionTest extends HackTest {
 			'handles AND, and knows which AND is which',
 		);
 
-		$results = await $conn->query("SELECT 5 BETWEEN 3 AND 9 AND 5 = 6 AND 10/2 = 5");
+		$results = await $conn->query('SELECT 5 BETWEEN 3 AND 9 AND 5 = 6 AND 10/2 = 5');
 		expect($results->rows())->toBeSame(
 			vec[
 				dict['5 BETWEEN 3 AND 9 AND 5 = 6 AND 10/2 = 5' => 0],
@@ -106,14 +106,14 @@ final class SelectExpressionTest extends HackTest {
 
 	public async function testIn(): Awaitable<void> {
 		$conn = static::$conn as nonnull;
-		$results = await $conn->query("SELECT id FROM table4 WHERE id IN (1000, 1002, 1003)");
+		$results = await $conn->query('SELECT id FROM table4 WHERE id IN (1000, 1002, 1003)');
 		expect($results->rows())->toBeSame(vec[
 			dict['id' => 1000],
 			dict['id' => 1002],
 			dict['id' => 1003],
 		]);
 
-		$results = await $conn->query("SELECT id FROM table4 WHERE id IN (1000, 1002, 1003, description)");
+		$results = await $conn->query('SELECT id FROM table4 WHERE id IN (1000, 1002, 1003, description)');
 		expect($results->rows())->toBeSame(
 			vec[
 				dict['id' => 1000],
@@ -126,7 +126,7 @@ final class SelectExpressionTest extends HackTest {
 
 	public async function testNotIn(): Awaitable<void> {
 		$conn = static::$conn as nonnull;
-		$results = await $conn->query("SELECT id FROM table4 WHERE id NOT IN (1000, 1002, 1003)");
+		$results = await $conn->query('SELECT id FROM table4 WHERE id NOT IN (1000, 1002, 1003)');
 		expect($results->rows())->toBeSame(vec[
 			dict['id' => 1001],
 			dict['id' => 1004],
@@ -135,7 +135,7 @@ final class SelectExpressionTest extends HackTest {
 
 	public async function testOr(): Awaitable<void> {
 		$conn = static::$conn as nonnull;
-		$results = await $conn->query("SELECT id FROM table4 WHERE id = 1001 OR id = 1004");
+		$results = await $conn->query('SELECT id FROM table4 WHERE id = 1001 OR id = 1004');
 		expect($results->rows())->toBeSame(vec[
 			dict['id' => 1001],
 			dict['id' => 1004],
@@ -192,7 +192,7 @@ final class SelectExpressionTest extends HackTest {
 
 	public async function testDistinct(): Awaitable<void> {
 		$conn = static::$conn as nonnull;
-		$results = await $conn->query("SELECT DISTINCT group_id FROM table3");
+		$results = await $conn->query('SELECT DISTINCT group_id FROM table3');
 		expect($results->rows())->toBeSame(
 			vec[
 				dict['group_id' => 12345],
@@ -306,28 +306,28 @@ final class SelectExpressionTest extends HackTest {
 
 	public async function testRowComparator(): Awaitable<void> {
 		$conn = static::$conn as nonnull;
-		$results = await $conn->query("SELECT (1, 2, 3) > (4, 5, 6)");
+		$results = await $conn->query('SELECT (1, 2, 3) > (4, 5, 6)');
 		expect($results->rows())->toBeSame(vec[dict['(1, 2, 3) > (4, 5, 6)' => 0]], 'greater than increasing');
 
-		$results = await $conn->query("SELECT (1, 2, 3) < (4, 5, 6)");
+		$results = await $conn->query('SELECT (1, 2, 3) < (4, 5, 6)');
 		expect($results->rows())->toBeSame(vec[dict['(1, 2, 3) < (4, 5, 6)' => 1]], 'less than increasing');
 
-		$results = await $conn->query("SELECT (1, 2, 3) > (1, 2, 2)");
+		$results = await $conn->query('SELECT (1, 2, 3) > (1, 2, 2)');
 		expect($results->rows())->toBeSame(
 			vec[dict['(1, 2, 3) > (1, 2, 2)' => 1]],
 			'greater than with some elements equal',
 		);
 
-		$results = await $conn->query("SELECT (1, 2, 3) > (1, 1, 4)");
+		$results = await $conn->query('SELECT (1, 2, 3) > (1, 1, 4)');
 		expect($results->rows())->toBeSame(
 			vec[dict['(1, 2, 3) > (1, 1, 4)' => 1]],
 			'greater than with first element equal',
 		);
 
-		$results = await $conn->query("SELECT (4, 5, 6) > (1, 2, 3)");
+		$results = await $conn->query('SELECT (4, 5, 6) > (1, 2, 3)');
 		expect($results->rows())->toBeSame(vec[dict['(4, 5, 6) > (1, 2, 3)' => 1]], 'greater than decreasing');
 
-		$results = await $conn->query("select * from table3 WHERE (id, group_id) > (3, 1)");
+		$results = await $conn->query('select * from table3 WHERE (id, group_id) > (3, 1)');
 		expect($results->rows())->toBeSame(
 			vec[
 				dict['id' => 3, 'group_id' => 12345, 'name' => 'name3'],
@@ -340,7 +340,7 @@ final class SelectExpressionTest extends HackTest {
 
 	public async function testConstantExpression(): Awaitable<void> {
 		$conn = static::$conn as nonnull;
-		$results = await $conn->query("SELECT 1+1");
+		$results = await $conn->query('SELECT 1+1');
 		expect($results->rows())->toBeSame(vec[
 			dict['1+1' => 2],
 		]);
@@ -348,7 +348,7 @@ final class SelectExpressionTest extends HackTest {
 
 	public async function testOperatorPrecedence(): Awaitable<void> {
 		$conn = static::$conn as nonnull;
-		$results = await $conn->query("SELECT 1 + 3 * 4");
+		$results = await $conn->query('SELECT 1 + 3 * 4');
 		expect($results->rows())->toBeSame(
 			vec[
 				dict['1 + 3 * 4' => 13],
@@ -356,7 +356,7 @@ final class SelectExpressionTest extends HackTest {
 			'increasing precedence',
 		);
 
-		$results = await $conn->query("SELECT 1 + 3 * 4 + 5");
+		$results = await $conn->query('SELECT 1 + 3 * 4 + 5');
 		expect($results->rows())->toBeSame(
 			vec[
 				dict['1 + 3 * 4 + 5' => 18],
@@ -364,7 +364,7 @@ final class SelectExpressionTest extends HackTest {
 			'increasing then decreasing precedence',
 		);
 
-		$results = await $conn->query("SELECT 100 >> 0 + 2*2");
+		$results = await $conn->query('SELECT 100 >> 0 + 2*2');
 		expect($results->rows())->toBeSame(
 			vec[
 				dict['100 >> 0 + 2*2' => 6],
@@ -372,7 +372,7 @@ final class SelectExpressionTest extends HackTest {
 			'strictly increasing precedence',
 		);
 
-		$results = await $conn->query("SELECT 100 >> 2 * 2 + 0");
+		$results = await $conn->query('SELECT 100 >> 2 * 2 + 0');
 		expect($results->rows())->toBeSame(
 			vec[
 				dict['100 >> 2 * 2 + 0' => 6],
@@ -385,12 +385,12 @@ final class SelectExpressionTest extends HackTest {
 		$conn = static::$conn as nonnull;
 		// equal precedence, but left associative
 		// processed as (9/3)*5, not 9/(3*5)
-		$results = await $conn->query("SELECT 9 / 3 * 5");
+		$results = await $conn->query('SELECT 9 / 3 * 5');
 		expect($results->rows())->toBeSame(vec[
 			dict['9 / 3 * 5' => 15],
 		]);
 
-		$results = await $conn->query("SELECT 9 / (3 * 5)");
+		$results = await $conn->query('SELECT 9 / (3 * 5)');
 		expect((float)$results->rows()[0]['9 / (3 * 5)'])->toAlmostEqual(9 / 15.0, 'parens change results');
 	}
 
@@ -398,7 +398,7 @@ final class SelectExpressionTest extends HackTest {
 		$conn = static::$conn as nonnull;
 		// equal precedence, but left associative
 		// processed as (9/3)*5, not 9/(3*5)
-		$results = await $conn->query("SELECT 5=9 AND 6>3 OR 2<7 AND 9=8");
+		$results = await $conn->query('SELECT 5=9 AND 6>3 OR 2<7 AND 9=8');
 		expect($results->rows())->toBeSame(
 			vec[
 				dict['5=9 AND 6>3 OR 2<7 AND 9=8' => 0],
@@ -406,7 +406,7 @@ final class SelectExpressionTest extends HackTest {
 			'parses multiple Binary operations as one expression',
 		);
 
-		$results = await $conn->query("SELECT 5=5 AND 6>3 OR 2<7 AND 9=8");
+		$results = await $conn->query('SELECT 5=5 AND 6>3 OR 2<7 AND 9=8');
 		expect($results->rows())->toBeSame(
 			vec[
 				dict['5=5 AND 6>3 OR 2<7 AND 9=8' => 1],
@@ -414,7 +414,7 @@ final class SelectExpressionTest extends HackTest {
 			'OR precedence works properly, only left expressions are truthy',
 		);
 
-		$results = await $conn->query("SELECT 5=5 AND (6>3 OR 2<7) AND 9=8");
+		$results = await $conn->query('SELECT 5=5 AND (6>3 OR 2<7) AND 9=8');
 		expect($results->rows())->toBeSame(
 			vec[
 				dict['5=5 AND (6>3 OR 2<7) AND 9=8' => 0],
@@ -422,7 +422,7 @@ final class SelectExpressionTest extends HackTest {
 			'handles parentheses',
 		);
 
-		$results = await $conn->query("SELECT 5=5 AND (6>3 OR 2<7) AND 8=8");
+		$results = await $conn->query('SELECT 5=5 AND (6>3 OR 2<7) AND 8=8');
 		expect($results->rows())->toBeSame(
 			vec[
 				dict['5=5 AND (6>3 OR 2<7) AND 8=8' => 1],

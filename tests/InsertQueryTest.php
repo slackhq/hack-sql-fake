@@ -13,7 +13,7 @@ final class InsertQueryTest extends HackTest {
   public static async function beforeFirstTestAsync(): Awaitable<void> {
     init(TEST_SCHEMA, true);
     $pool = new AsyncMysqlConnectionPool(darray[]);
-    static::$conn = await $pool->connect("example", 1, 'db1', '', '');
+    static::$conn = await $pool->connect('example', 1, 'db1', '', '');
     // block hole logging
     Logger::setHandle(new \Facebook\CLILib\TestLib\StringOutput());
   }
@@ -28,21 +28,21 @@ final class InsertQueryTest extends HackTest {
   public async function testSingleInsert(): Awaitable<void> {
     $conn = static::$conn as nonnull;
     await $conn->query("INSERT INTO table1 (id, name) VALUES (1, 'test')");
-    $results = await $conn->query("SELECT * FROM table1");
+    $results = await $conn->query('SELECT * FROM table1');
     expect($results->rows())->toBeSame(vec[dict['id' => 1, 'name' => 'test']]);
   }
 
   public async function testSingleInsertBacktickIdentifiers(): Awaitable<void> {
     $conn = static::$conn as nonnull;
     await $conn->query("INSERT INTO `table1` (`id`, `name`) VALUES (1, 'test')");
-    $results = await $conn->query("SELECT * FROM `table1`");
+    $results = await $conn->query('SELECT * FROM `table1`');
     expect($results->rows())->toBeSame(vec[dict['id' => 1, 'name' => 'test']]);
   }
 
   public async function testMultiInsert(): Awaitable<void> {
     $conn = static::$conn as nonnull;
     await $conn->query("INSERT INTO table1 (id, name) VALUES (1, 'test'), (2, 'test2')");
-    $results = await $conn->query("SELECT * FROM table1");
+    $results = await $conn->query('SELECT * FROM table1');
     expect($results->rows())->toBeSame(vec[dict['id' => 1, 'name' => 'test'], dict['id' => 2, 'name' => 'test2']]);
   }
 
@@ -61,7 +61,7 @@ final class InsertQueryTest extends HackTest {
     expect(() ==> $conn->query("INSERT IGNORE INTO table1 (id, name) VALUES (1, 'test2')"))->notToThrow(
       SQLFakeUniqueKeyViolation::class,
     );
-    $results = await $conn->query("SELECT * FROM table1");
+    $results = await $conn->query('SELECT * FROM table1');
     expect($results->rows())->toBeSame(
       vec[dict[
         'id' => 1,
@@ -93,7 +93,7 @@ final class InsertQueryTest extends HackTest {
     expect(() ==> $conn->query("INSERT IGNORE INTO table1 (id, name) VALUES (2, 'test')"))->notToThrow(
       SQLFakeUniqueKeyViolation::class,
     );
-    $results = await $conn->query("SELECT * FROM table1");
+    $results = await $conn->query('SELECT * FROM table1');
     expect($results->rows())->toBeSame(
       vec[dict[
         'id' => 1,
@@ -105,7 +105,7 @@ final class InsertQueryTest extends HackTest {
   public async function testPartialValuesList(): Awaitable<void> {
     $conn = static::$conn as nonnull;
     await $conn->query("INSERT INTO table_with_more_fields (id, name) VALUES (1, 'test')");
-    $results = await $conn->query("SELECT * FROM table_with_more_fields");
+    $results = await $conn->query('SELECT * FROM table_with_more_fields');
     expect($results->rows())->toBeSame(vec[dict[
       'id' => 1,
       'name' => 'test',
@@ -118,7 +118,7 @@ final class InsertQueryTest extends HackTest {
   public async function testExplicitNullForNullableField(): Awaitable<void> {
     $conn = static::$conn as nonnull;
     await $conn->query("INSERT INTO table_with_more_fields (id, name, nullable_unique) VALUES (1, 'test', null)");
-    $results = await $conn->query("SELECT * FROM table_with_more_fields");
+    $results = await $conn->query('SELECT * FROM table_with_more_fields');
     expect($results->rows())->toBeSame(vec[dict[
       'id' => 1,
       'name' => 'test',
@@ -142,7 +142,7 @@ final class InsertQueryTest extends HackTest {
   public async function testExplicitNullForNotNullableFieldNotStrict(): Awaitable<void> {
     $conn = static::$conn as nonnull;
     await $conn->query("INSERT INTO table_with_more_fields (id, name, not_null_default) VALUES (1, 'test', null)");
-    $results = await $conn->query("SELECT * FROM table_with_more_fields");
+    $results = await $conn->query('SELECT * FROM table_with_more_fields');
     expect($results->rows())->toBeSame(vec[dict[
       'id' => 1,
       'name' => 'test',
@@ -201,8 +201,8 @@ final class InsertQueryTest extends HackTest {
 
   public async function testMissingNotNullFieldNoDefault(): Awaitable<void> {
     $conn = static::$conn as nonnull;
-    await $conn->query("INSERT INTO table2 (id, table_1_id) VALUES (1, 1)");
-    $results = await $conn->query("SELECT * FROM table2");
+    await $conn->query('INSERT INTO table2 (id, table_1_id) VALUES (1, 1)');
+    $results = await $conn->query('SELECT * FROM table2');
     expect($results->rows())->toBeSame(vec[dict[
       'id' => 1,
       'table_1_id' => 1,
@@ -213,7 +213,7 @@ final class InsertQueryTest extends HackTest {
   public async function testMissingNotNullFieldNoDefaultStrict(): Awaitable<void> {
     $conn = static::$conn as nonnull;
     QueryContext::$strictSQLMode = true;
-    expect(() ==> $conn->query("INSERT INTO table2 (id, table_1_id) VALUES (1, 1)"))->toThrow(
+    expect(() ==> $conn->query('INSERT INTO table2 (id, table_1_id) VALUES (1, 1)'))->toThrow(
       SQLFakeRuntimeException::class,
       "Column 'description' on 'table2' does not allow null values",
     );
@@ -222,7 +222,7 @@ final class InsertQueryTest extends HackTest {
   public async function testWrongDataType(): Awaitable<void> {
     $conn = static::$conn as nonnull;
     await $conn->query("INSERT INTO table2 (id, table_1_id, description) VALUES (1, 'notastring', 'test')");
-    $results = await $conn->query("SELECT * FROM table2");
+    $results = await $conn->query('SELECT * FROM table2');
     expect($results->rows())->toBeSame(vec[dict[
       'id' => 1,
       'table_1_id' => 0,
@@ -245,7 +245,7 @@ final class InsertQueryTest extends HackTest {
     await $conn->query(
       "INSERT INTO table_with_more_fields (id, name, nullable_unique) VALUES (1, 'test', 'example') ON DUPLICATE KEY UPDATE nullable_default=nullable_default+1",
     );
-    $results = await $conn->query("SELECT * FROM table_with_more_fields");
+    $results = await $conn->query('SELECT * FROM table_with_more_fields');
     expect($results->rows())->toBeSame(vec[dict[
       'id' => 1,
       'name' => 'test',
@@ -263,7 +263,7 @@ final class InsertQueryTest extends HackTest {
     await $conn->query(
       "INSERT INTO table_with_more_fields (id, name, nullable_unique) VALUES (1, 'test', 'example') ON DUPLICATE KEY UPDATE nullable_default=nullable_default+1",
     );
-    $results = await $conn->query("SELECT * FROM table_with_more_fields");
+    $results = await $conn->query('SELECT * FROM table_with_more_fields');
     expect($results->rows())->toBeSame(vec[dict[
       'id' => 1,
       'name' => 'test',
@@ -279,7 +279,7 @@ final class InsertQueryTest extends HackTest {
     await $conn->query(
       "INSERT INTO table_with_more_fields (id, name, nullable_unique) VALUES (1, 'test', 'new_example') ON DUPLICATE KEY UPDATE nullable_unique=VALUES(nullable_unique)",
     );
-    $results = await $conn->query("SELECT * FROM table_with_more_fields");
+    $results = await $conn->query('SELECT * FROM table_with_more_fields');
     expect($results->rows())->toBeSame(vec[dict[
       'id' => 1,
       'name' => 'test',
@@ -294,7 +294,7 @@ final class InsertQueryTest extends HackTest {
     await $conn->query(
       "INSERT INTO table_with_more_fields (`id`, `name`, `nullable_unique`) VALUES (56789,'{\\\"tes\\'st\\\":\\\"12345\\\"}','test') /* SQL Comment */",
     );
-    $results = await $conn->query("SELECT * FROM table_with_more_fields");
+    $results = await $conn->query('SELECT * FROM table_with_more_fields');
     expect($results->rows())->toBeSame(vec[
       dict[
         'id' => 56789,

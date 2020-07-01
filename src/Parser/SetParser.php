@@ -14,7 +14,7 @@ final class SetParser {
 
     // if we got here, the first token had better be a SET
     if (!$skip_set && $this->tokens[$this->pointer]['value'] !== 'SET') {
-      throw new SQLFakeParseException("Parser error: expected SET");
+      throw new SQLFakeParseException('Parser error: expected SET');
     }
     $expressions = vec[];
     $this->pointer++;
@@ -34,7 +34,7 @@ final class SetParser {
         case TokenType::IDENTIFIER:
         case TokenType::PAREN:
           if ($needs_comma) {
-            throw new SQLFakeParseException("Expected , between expressions in SET clause");
+            throw new SQLFakeParseException('Expected , between expressions in SET clause');
           }
           $expression_parser = new ExpressionParser($this->tokens, $this->pointer - 1);
           $this->pointer;
@@ -42,11 +42,11 @@ final class SetParser {
 
           // the only valid kind of expression in a SET is "foo = bar"
           if (!$expression is BinaryOperatorExpression || $expression->operator !== Operator::EQUALS) {
-            throw new SQLFakeParseException("Failed parsing SET clause: unexpected expression");
+            throw new SQLFakeParseException('Failed parsing SET clause: unexpected expression');
           }
 
           if (!$expression->left is ColumnExpression) {
-            throw new SQLFakeParseException("Left side of SET clause must be a column reference");
+            throw new SQLFakeParseException('Left side of SET clause must be a column reference');
           }
 
           $expressions[] = $expression;
@@ -55,7 +55,7 @@ final class SetParser {
         case TokenType::SEPARATOR:
           if ($token['value'] === ',') {
             if (!$needs_comma) {
-              throw new SQLFakeParseException("Unexpected ,");
+              throw new SQLFakeParseException('Unexpected ,');
             }
             $needs_comma = false;
           } else {
@@ -78,7 +78,7 @@ final class SetParser {
     }
 
     if (!C\count($expressions)) {
-      throw new SQLFakeParseException("Empty SET clause");
+      throw new SQLFakeParseException('Empty SET clause');
     }
 
     return tuple($this->pointer - 1, $expressions);

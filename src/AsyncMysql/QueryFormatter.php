@@ -81,7 +81,7 @@ abstract final class QueryFormatter {
 					break;
 				case 'm':
 					if (!($param is string || $param is num)) {
-						throw new SQLFakeParseException("%m  expects int/float/string, ".\gettype($param).' found');
+						throw new SQLFakeParseException('%m  expects int/float/string, '.\gettype($param).' found');
 					}
 					$out = self::appendValue($out, $c, $param);
 					break;
@@ -117,13 +117,13 @@ abstract final class QueryFormatter {
 						$first_in_row = true;
 						$col_idx = 0;
 						if (!$first_row) {
-							$out[] = ", ";
+							$out[] = ', ';
 						}
-						$out[] = "(";
+						$out[] = '(';
 						$row as Container<_>;
 						foreach ($row as $col) {
 							if (!$first_in_row) {
-								$out[] = ", ";
+								$out[] = ', ';
 							}
 							$out = self::appendValue($out, 'v', $col);
 							$col_idx++;
@@ -132,33 +132,33 @@ abstract final class QueryFormatter {
 								$row_len++;
 							}
 						}
-						$out[] = ")";
+						$out[] = ')';
 						if ($first_row) {
 							$first_row = false;
 						} else if ($col_idx != $row_len) {
-							throw new SQLFakeParseException("not all rows provided for %V formatter are the same size");
+							throw new SQLFakeParseException('not all rows provided for %V formatter are the same size');
 						}
 					}
 					break;
 				case 'L':
 					$i++;
 					$type = $query[$i];
-					if ($type === "O" || $type === "A") {
-						$out[] = "(";
-						$sep = ($type === "O") ? " OR " : " AND ";
+					if ($type === 'O' || $type === 'A') {
+						$out[] = '(';
+						$sep = ($type === 'O') ? ' OR ' : ' AND ';
 						$out = self::appendValueClauses($out, $sep, $param);
-						$out[] = ")";
+						$out[] = ')';
 					} else {
 						if (!$param is Container<_>) {
-							throw new SQLFakeParseException("expected array for %L formatter");
+							throw new SQLFakeParseException('expected array for %L formatter');
 						}
 						$first_param = true;
 						foreach ($param as $val) {
 							if (!$first_param) {
-								$out[] = ", ";
+								$out[] = ', ';
 							}
 							$first_param = false;
-							if ($type === "C") {
+							if ($type === 'C') {
 								$out = self::appendColumnTableName($out, $val);
 							} else {
 								$out = self::appendValue($out, $type[0], $val);
@@ -173,7 +173,7 @@ abstract final class QueryFormatter {
 					$out = self::appendValueClauses($out, ' AND ', $param);
 					break;
 				case 'Q':
-					throw new SQLFakeNotImplementedException("%Q not supported in SQLFake");
+					throw new SQLFakeNotImplementedException('%Q not supported in SQLFake');
 					break;
 				default:
 					throw new SQLFakeParseException("unknown % code %$c");
@@ -242,7 +242,7 @@ abstract final class QueryFormatter {
 					}
 					break;
 				default:
-					throw new SQLFakeParseException("Unexpected container type for %T/%C");
+					throw new SQLFakeParseException('Unexpected container type for %T/%C');
 			}
 		}
 		return $out;
@@ -250,7 +250,7 @@ abstract final class QueryFormatter {
 
 	private static function appendValueClauses(vec<string> $out, string $sep, mixed $param): vec<string> {
 		if (!$param is KeyedContainer<_, _>) {
-			throw new SQLFakeParseException("KeyedContainer expected for %Lx but received ".\gettype($param));
+			throw new SQLFakeParseException('KeyedContainer expected for %Lx but received '.\gettype($param));
 		}
 		$first_param = true;
 		foreach ($param as $key => $value) {
@@ -260,9 +260,9 @@ abstract final class QueryFormatter {
 			$first_param = false;
 			$out = self::appendColumnTableName($out, $key);
 			if ($value === null && $sep[0] !== ',') {
-				$out[] = " IS NULL";
+				$out[] = ' IS NULL';
 			} else {
-				$out[] = " = ";
+				$out[] = ' = ';
 				$out = self::appendValue($out, 'v', $value);
 			}
 		}

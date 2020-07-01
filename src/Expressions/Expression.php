@@ -67,7 +67,7 @@ abstract class Expression {
    * For several of the types that don't have child elements this is just a parse error, children who implement it can override
    */
   public function setNextChild(Expression $_expr, bool $_overwrite = false): void {
-    throw new SQLFakeParseException("Parse error: unexpected expression");
+    throw new SQLFakeParseException('Parse error: unexpected expression');
   }
 
   /**
@@ -75,7 +75,7 @@ abstract class Expression {
    * otherwise if unimplemented, it's a parse error
    */
   public function addRecursiveExpression(token_list $_tokens, int $_pointer, bool $_negated = false): int {
-    throw new SQLFakeParseException("Parse error: unexpected recursive expression");
+    throw new SQLFakeParseException('Parse error: unexpected recursive expression');
   }
 
   /**

@@ -30,7 +30,7 @@ final class SelectQueryValidatorTest extends HackTest {
 
         $unsupported_test_cases = vec[
             "select * from vt_table1 where id=2 and name='hi' group by id",
-            "select * from vt_table1 group by name",
+            'select * from vt_table1 group by name',
         ];
         foreach ($unsupported_test_cases as $sql) {
             expect(() ==> $conn->query($sql))->toThrow(
@@ -40,12 +40,12 @@ final class SelectQueryValidatorTest extends HackTest {
         }
 
         $unsupported_test_cases = vec[
-            "select * from vt_table1 where id in (1, 2) order by id",
-            "select id from vt_table1 order by name",
-            "select id, count(*) from vt_table1 group by id order by c1",
+            'select * from vt_table1 where id in (1, 2) order by id',
+            'select id from vt_table1 order by name',
+            'select id, count(*) from vt_table1 group by id order by c1',
         ];
         $supported_test_cases = vec[
-            "select * from vt_table1 where id=2 order by name",
+            'select * from vt_table1 where id=2 order by name',
             "select * from vt_table1 where id=2 and name='bob' order by name,id",
         ];
         foreach ($unsupported_test_cases as $sql) {
@@ -63,8 +63,8 @@ final class SelectQueryValidatorTest extends HackTest {
         $conn = static::$conn as nonnull;
 
         $test_cases = vec[
-            "select * from vt_table1 union select * from vt_table2",
-            "select id from vt_table1 union all select id from vt_table2",
+            'select * from vt_table1 union select * from vt_table2',
+            'select id from vt_table1 union all select id from vt_table2',
         ];
 
         foreach ($test_cases as $sql) {

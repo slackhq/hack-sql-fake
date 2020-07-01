@@ -35,6 +35,7 @@ abstract class VitessQueryValidator {
     // routes query to the applicate SQL processor and waits for the results
     public static function validate(Query $query, AsyncMysqlConnection $conn): void {
         if ($query is SelectQuery) {
+            /*HHAST_FIXME[DontUseAsioJoin]*/
             \HH\Asio\join((new SelectQueryValidator($query, $conn))->processHandlers());
         }
     }
@@ -115,7 +116,7 @@ final class SelectQueryValidator extends VitessQueryValidator {
             }
 
             throw new SQLFakeVitessQueryViolation(
-                Str\format("Vitess query validation error: %s", UnsupportedCases::GROUP_BY_COLUMNS),
+                Str\format('Vitess query validation error: %s', UnsupportedCases::GROUP_BY_COLUMNS),
             );
         }
 
@@ -132,7 +133,7 @@ final class SelectQueryValidator extends VitessQueryValidator {
             }
 
             throw new SQLFakeVitessQueryViolation(
-                Str\format("Vitess query validation error: %s", UnsupportedCases::ORDER_BY_COLUMNS),
+                Str\format('Vitess query validation error: %s', UnsupportedCases::ORDER_BY_COLUMNS),
             );
         }
     }
@@ -151,7 +152,7 @@ final class SelectQueryValidator extends VitessQueryValidator {
                 case MultiOperand::INTERSECT:
                 case MultiOperand::EXCEPT:
                     throw new SQLFakeVitessQueryViolation(
-                        Str\format("Vitess query validation error: %s", UnsupportedCases::UNIONS),
+                        Str\format('Vitess query validation error: %s', UnsupportedCases::UNIONS),
                     );
             }
         }

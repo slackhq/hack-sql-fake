@@ -70,7 +70,7 @@ EOT
 		$cg = new HackCodegenFactory(new HackCodegenConfig());
 
 		$generated = $cg->codegenConstant($this->constName)
-			->setType("dict<string, dict<string, table_schema>>")
+			->setType('dict<string, dict<string, table_schema>>')
 			->setValue($generated, HackBuilderValues::dict(HackBuilderKeys::export(), HackBuilderValues::dict(
 				HackBuilderKeys::export(),
 				// special exporters are required to make shapes and enum values, ::export would turn them into arrays and strings

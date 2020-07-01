@@ -167,7 +167,7 @@ abstract final class JoinProcessor {
     $left = C\first($left_dataset);
     $right = C\first($right_dataset);
     if ($left === null || $right === null) {
-      throw new SQLFakeParseException("Attempted NATURAL join with no data present");
+      throw new SQLFakeParseException('Attempted NATURAL join with no data present');
     }
     foreach ($left as $column => $_val) {
       $name = Str\split($column, '.') |> C\lastx($$);
@@ -181,7 +181,7 @@ abstract final class JoinProcessor {
 
     // MySQL actually doesn't throw if there's no matching columns, but I think we can take the liberty to assume it's not what you meant to do and throw here
     if ($filter === null) {
-      throw new SQLFakeParseException("NATURAL join keyword was used with tables that do not share any column names");
+      throw new SQLFakeParseException('NATURAL join keyword was used with tables that do not share any column names');
     }
 
     return $filter;

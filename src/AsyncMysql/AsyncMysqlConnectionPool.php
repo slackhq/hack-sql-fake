@@ -30,7 +30,7 @@ final class AsyncMysqlConnectionPool extends \AsyncMysqlConnectionPool {
     string $_user,
     string $_password,
     int $_timeout_micros = -1,
-    string $_caller = "",
+    string $_caller = '',
   ): Awaitable<AsyncMysqlConnection> {
     $this->connectionsRequest++;
     if (C\contains_key(static::$pool, $host)) {
@@ -55,7 +55,7 @@ final class AsyncMysqlConnectionPool extends \AsyncMysqlConnectionPool {
     string $user,
     string $password,
     \AsyncMysqlConnectionOptions $_conn_opts,
-    string $caller = "",
+    string $caller = '',
   ): Awaitable<\AsyncMysqlConnection> {
     // currently, options are ignored in SQLFake
     return $this->connect($host, $port, $dbname, $user, $password, -1, $caller);

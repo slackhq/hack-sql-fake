@@ -22,7 +22,7 @@ abstract final class SQLCommandProcessor {
       // unlike BEGIN and COMMIT, this actually needs to have material effect on the observed behavior
       // even in a single test case, and so we need to throw since it's not implemented yet
       // there's no reason we couldn't start supporting transactions in the future, just haven't done the work yet
-      throw new SQLFakeNotImplementedException("Transactions are not yet supported");
+      throw new SQLFakeNotImplementedException('Transactions are not yet supported');
     }
 
     $query = SQLParser::parse($sql);
@@ -41,7 +41,7 @@ abstract final class SQLCommandProcessor {
     } else if ($query is InsertQuery) {
       return tuple(vec[], $query->execute($conn));
     } else {
-      throw new SQLFakeNotImplementedException("Unhandled query type: ".\get_class($query));
+      throw new SQLFakeNotImplementedException('Unhandled query type: '.\get_class($query));
     }
   }
 }

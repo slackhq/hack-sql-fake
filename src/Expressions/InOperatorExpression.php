@@ -23,7 +23,7 @@ final class InOperatorExpression extends Expression {
   public function evaluate(row $row, AsyncMysqlConnection $conn): mixed {
     $inList = $this->inList;
     if ($inList === null || C\count($inList) === 0) {
-      throw new SQLFakeParseException("Parse error: empty IN list");
+      throw new SQLFakeParseException('Parse error: empty IN list');
     }
 
     //
@@ -51,7 +51,7 @@ final class InOperatorExpression extends Expression {
         foreach ($ret as $r) {
           $r as KeyedContainer<_, _>;
           if (C\count($r) !== 1) {
-            throw new SQLFakeRuntimeException("Subquery result should contain 1 column");
+            throw new SQLFakeRuntimeException('Subquery result should contain 1 column');
           }
           foreach ($r as $val) {
             if ($value == $val) {

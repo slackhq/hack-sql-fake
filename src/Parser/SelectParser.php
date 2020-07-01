@@ -36,7 +36,7 @@ final class SelectParser {
     $incr *= 2;
 
     if ($this->tokens[$this->pointer]['value'] !== 'SELECT') {
-      throw new SQLFakeParseException("Parser error: expected SELECT");
+      throw new SQLFakeParseException('Parser error: expected SELECT');
     }
 
     $query = new SelectQuery($this->sql);
@@ -94,13 +94,13 @@ final class SelectParser {
         case TokenType::SEPARATOR:
           if ($token['value'] === ',') {
             if (!$query->needsSeparator) {
-              throw new SQLFakeParseException("Unexpected ,");
+              throw new SQLFakeParseException('Unexpected ,');
             }
             $query->needsSeparator = false;
           } else if ($token['value'] === ';') {
             // this should be the final token. if it's not, throw. otherwise, return
             if ($this->pointer !== $count - 1) {
-              throw new SQLFakeParseException("Unexpected tokens after semicolon");
+              throw new SQLFakeParseException('Unexpected tokens after semicolon');
             }
             return tuple($this->pointer + $incr, $query);
           } else {
@@ -132,7 +132,7 @@ final class SelectParser {
               $next = $this->tokens[$this->pointer] ?? null;
               $expressions = vec[];
               if ($next === null || $next['value'] !== 'BY') {
-                throw new SQLFakeParseException("Expected BY after GROUP");
+                throw new SQLFakeParseException('Expected BY after GROUP');
               }
 
               while (true) {
@@ -202,7 +202,7 @@ final class SelectParser {
                 $next === null ||
                 !C\contains_key(keyset[TokenType::IDENTIFIER, TokenType::STRING_CONSTANT], $next['type'])
               ) {
-                throw new SQLFakeParseException("Expected alias name after AS");
+                throw new SQLFakeParseException('Expected alias name after AS');
               }
               $query->aliasRecentExpression($next['value']);
               break;
