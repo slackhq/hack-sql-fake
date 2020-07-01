@@ -3,7 +3,7 @@
 namespace Slack\SQLFake;
 
 use namespace HH\Lib\{C, Dict, Keyset, Math, Str};
-use namespace HH\Lib\Experimental\IO;
+use namespace HH\Lib\IO;
 
 abstract final class Logger {
 

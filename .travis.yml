@@ -3,6 +3,8 @@ language: generic
 services: docker
 env:
   - HHVM_VERSION=4.39-latest
+  - HHVM_VERSION=4.56-latest
+
 
 install:
 - docker pull hhvm/hhvm:$HHVM_VERSION
