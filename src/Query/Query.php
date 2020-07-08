@@ -66,7 +66,9 @@ abstract class Query {
               : 1;
           } else {
             return (
-              ((string)$value_a < (string)$value_b ? 1 : 0) ^ (($rule['direction'] === SortDirection::DESC) ? 1 : 0)
+              // Use string comparison explicity to handle lexicographical ordering of things like '125' < '5'
+              (((Str\compare((string)$value_a, (string)$value_b)) < 0) ? 1 : 0) ^
+              (($rule['direction'] === SortDirection::DESC) ? 1 : 0)
             )
               ? -1
               : 1;
