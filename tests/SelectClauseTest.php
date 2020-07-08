@@ -128,6 +128,17 @@ final class SelectClauseTest extends HackTest {
 				dict['group_id' => 12345, 'table_4_id' => 1000],
 			],
 		);
+
+		$results = await $conn->query('select id, position from table6 ORDER BY position ASC');
+		expect($results->rows())->toBeSame(
+			vec[
+				dict['id' => 1001, 'position' => '125'],
+				dict['id' => 1004, 'position' => '25'],
+				dict['id' => 1000, 'position' => '5'],
+				dict['id' => 1003, 'position' => '625'],
+				dict['id' => 1002, 'position' => '75'],
+			],
+		);
 	}
 
 	public async function testOrderByNotInSelect(): Awaitable<void> {
