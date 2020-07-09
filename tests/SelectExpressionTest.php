@@ -64,6 +64,40 @@ final class SelectExpressionTest extends HackTest {
 				dict['id' => 2],
 			],
 		);
+
+		$results = await $conn->query('select id, position from table6 WHERE position<\'625\' ORDER BY position DESC');
+		expect($results->rows())->toBeSame(
+			vec[
+				dict['id' => 1000, 'position' => '5'],
+				dict['id' => 1004, 'position' => '25'],
+				dict['id' => 1001, 'position' => '125'],
+			],
+		);
+
+		$results = await $conn->query('select id, position from table6 WHERE position<=\'625\' ORDER BY position DESC');
+		expect($results->rows())->toBeSame(
+			vec[
+				dict['id' => 1003, 'position' => '625'],
+				dict['id' => 1000, 'position' => '5'],
+				dict['id' => 1004, 'position' => '25'],
+				dict['id' => 1001, 'position' => '125'],
+			],
+		);
+
+		$results = await $conn->query('select id, position from table6 WHERE position>\'625\' ORDER BY position DESC');
+		expect($results->rows())->toBeSame(
+			vec[
+				dict['id' => 1002, 'position' => '75'],
+			],
+		);
+
+		$results = await $conn->query('select id, position from table6 WHERE position>=\'625\' ORDER BY position DESC');
+		expect($results->rows())->toBeSame(
+			vec[
+				dict['id' => 1002, 'position' => '75'],
+				dict['id' => 1003, 'position' => '625'],
+			],
+		);
 	}
 
 	public async function testBetween(): Awaitable<void> {
