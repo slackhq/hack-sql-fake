@@ -148,25 +148,27 @@ final class BinaryOperatorExpression extends Expression {
         }
       case Operator::GREATER_THAN:
         if ($as_string) {
-          return ((string)$l_value > (string)$r_value) ? 1 : 0 ^ $this->negatedInt;
+          return (((Str\compare((string)$l_value, (string)$r_value)) > 0) ? 1 : 0) ^ $this->negatedInt;
         } else {
           return ((int)$l_value > (int)$r_value) ? 1 : 0 ^ $this->negatedInt;
         }
       case Operator::GREATER_THAN_EQUALS:
         if ($as_string) {
-          return ((string)$l_value >= (string)$r_value) ? 1 : 0 ^ $this->negatedInt;
+          $comparison = Str\compare((string)$l_value, (string)$r_value);
+          return (($comparison > 0 || $comparison === 0) ? 1 : 0) ^ $this->negatedInt;
         } else {
           return ((int)$l_value >= (int)$r_value) ? 1 : 0 ^ $this->negatedInt;
         }
       case Operator::LESS_THAN:
         if ($as_string) {
-          return ((string)$l_value < (string)$r_value) ? 1 : 0 ^ $this->negatedInt;
+          return (((Str\compare((string)$l_value, (string)$r_value)) < 0) ? 1 : 0) ^ $this->negatedInt;
         } else {
           return ((int)$l_value < (int)$r_value) ? 1 : 0 ^ $this->negatedInt;
         }
       case Operator::LESS_THAN_EQUALS:
         if ($as_string) {
-          return ((string)$l_value <= (string)$r_value) ? 1 : 0 ^ $this->negatedInt;
+          $comparison = Str\compare((string)$l_value, (string)$r_value);
+          return (($comparison < 0 || $comparison === 0) ? 1 : 0) ^ $this->negatedInt;
         } else {
           return ((int)$l_value <= (int)$r_value) ? 1 : 0 ^ $this->negatedInt;
         }
