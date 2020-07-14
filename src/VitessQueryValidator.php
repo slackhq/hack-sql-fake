@@ -14,6 +14,7 @@ enum UnsupportedCases: string as string {
     GROUP_BY_COLUMNS = 'unsupported: in scatter query: group by column must reference column in SELECT list';
     ORDER_BY_COLUMNS = 'unsupported: in scatter query: order by column must reference column in SELECT list';
     UNIONS = 'unsupported: UNION cannot be executed as a single route';
+	PRIMARY_VINDEX_COLUMN = 'unsupported: update changes primary vindex column';
 }
 
 abstract class VitessQueryValidator {
@@ -37,7 +38,10 @@ abstract class VitessQueryValidator {
         if ($query is SelectQuery) {
             /*HHAST_FIXME[DontUseAsioJoin]*/
             \HH\Asio\join((new SelectQueryValidator($query, $conn))->processHandlers());
-        }
+		} else if ($query is UpdateQuery) {
+            /*HHAST_FIXME[DontUseAsioJoin]*/
+            \HH\Asio\join((new UpdateQueryValidator($query, $conn))->processHandlers());
+		}
     }
 
     public static function extractColumnExprNames(vec<Expression> $selectExpressions): keyset<string> {
@@ -45,10 +49,43 @@ abstract class VitessQueryValidator {
         foreach ($selectExpressions as $expr) {
             if ($expr is ColumnExpression) {
                 $exprNames[] = $expr->name;
-            }
+			} else if ($expr is BinaryOperatorExpression) {
+				$exprNames[] = $expr->left->name;
+		   	}
         }
         return $exprNames;
     }
+}
+
+final class UpdateQueryValidator extends VitessQueryValidator {
+    public function __construct(public UpdateQuery $query, public AsyncMysqlConnection $conn) {}
+
+    <<__Override>>
+    public function getHandlers(): dict<string, (function(): Awaitable<void>)> {
+		return dict[
+			UnsupportedCases::PRIMARY_VINDEX_COLUMN => inst_meth($this, 'updateChangesPrimaryVindexColumn')
+		];
+	}
+
+	public async function updateChangesPrimaryVindexColumn(): Awaitable<void> {
+    	$set = $this->query->setClause;
+
+    	list($database, $table_name) = Query::parseTableName($this->conn, $this->query->updateClause['name']);
+        $table_schema = QueryContext::getSchema($database, $table_name);
+        $vitess_sharding = $table_schema['vitess_sharding'] ?? null;
+
+		if ($vitess_sharding === null) {
+			throw new SQLFakeVitessQueryViolation(Str\format('Missing Vitess sharding information for: %s', $table_name));
+		}
+
+        $columns = VitessQueryValidator::extractColumnExprNames($set);
+
+        if (C\contains_key($columns, $vitess_sharding['sharding_key'])) {
+            throw new SQLFakeVitessQueryViolation(
+                Str\format('Vitess query validation error: %s', UnsupportedCases::PRIMARY_VINDEX_COLUMN),
+            );
+		}
+	}
 }
 
 final class SelectQueryValidator extends VitessQueryValidator {
