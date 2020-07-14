@@ -11,7 +11,7 @@ final class UpdateQueryValidatorTest extends HackTest {
     <<__Override>>
     public static async function beforeFirstTestAsync(): Awaitable<void> {
         static::$conn = await SharedSetup::initVitessAsync();
-		// block hole logging 
+		// block hole logging
 		// ? copied from SelectQueryValidatorTest.php, not sure what that means.
         Logger::setHandle(new \Facebook\CLILib\TestLib\StringOutput());
     }
@@ -27,8 +27,8 @@ final class UpdateQueryValidatorTest extends HackTest {
         $conn = static::$conn as nonnull;
 
 		$unsupported_test_cases = vec[
-			"update vt_table1 set id=1 where id=1",
-			"update vt_table2 set vt_table1_id=1 where id=1"
+			'update vt_table1 set id=1 where id=1',
+			'update vt_table2 set vt_table1_id=1 where id=1'
 		];
 
 		foreach($unsupported_test_cases as $sql) {
@@ -48,4 +48,3 @@ final class UpdateQueryValidatorTest extends HackTest {
 		
 	}
 }
-

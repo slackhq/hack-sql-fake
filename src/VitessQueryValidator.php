@@ -39,6 +39,7 @@ abstract class VitessQueryValidator {
             /*HHAST_FIXME[DontUseAsioJoin]*/
             \HH\Asio\join((new SelectQueryValidator($query, $conn))->processHandlers());
 		} else if ($query is UpdateQuery) {
+            /*HHAST_FIXME[DontUseAsioJoin]*/
             \HH\Asio\join((new UpdateQueryValidator($query, $conn))->processHandlers());
 		}
     }
@@ -48,7 +49,7 @@ abstract class VitessQueryValidator {
         foreach ($selectExpressions as $expr) {
             if ($expr is ColumnExpression) {
                 $exprNames[] = $expr->name;
-			} elseif ($expr is BinaryOperatorExpression) {
+			} else if ($expr is BinaryOperatorExpression) {
 				$exprNames[] = $expr->left->name;
 		   	}
         }
@@ -74,14 +75,14 @@ final class UpdateQueryValidator extends VitessQueryValidator {
         $vitess_sharding = $table_schema['vitess_sharding'] ?? null;
 
 		if ($vitess_sharding === null) {
-			throw new SQLFakeVitessQueryViolation(Str\format("Missing Vitess sharding information for: %s", $table_name));
+			throw new SQLFakeVitessQueryViolation(Str\format('Missing Vitess sharding information for: %s', $table_name));
 		}
 
         $columns = VitessQueryValidator::extractColumnExprNames($set);
 
         if (C\contains_key($columns, $vitess_sharding['sharding_key'])) {
             throw new SQLFakeVitessQueryViolation(
-                Str\format("Vitess query validation error: %s", UnsupportedCases::PRIMARY_VINDEX_COLUMN),
+                Str\format('Vitess query validation error: %s', UnsupportedCases::PRIMARY_VINDEX_COLUMN),
             );
 		}
 	}
