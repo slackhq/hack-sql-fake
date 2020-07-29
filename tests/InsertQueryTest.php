@@ -14,7 +14,7 @@ final class InsertQueryTest extends HackTest {
     init(TEST_SCHEMA, true);
     $pool = new AsyncMysqlConnectionPool(darray[]);
     static::$conn = await $pool->connect("example", 1, 'db1', '', '');
-    // block hole logging
+    // black hole logging
     Logger::setHandle(new \Facebook\CLILib\TestLib\StringOutput());
   }
 
@@ -305,4 +305,22 @@ final class InsertQueryTest extends HackTest {
       ],
     ]);
   }
+
+  public async function testDupeInsertEscaping(): Awaitable<void> {
+    $conn = static::$conn as nonnull;
+    await $conn->query(<<<'EOT'
+      INSERT INTO table1 (`id`,`name`) VALUES (123456789, 'xÚdfíá()ÊÏMÊÏKòáÂÕÿfl©99ùåp>sQj¤Ø©¸¨©=)7±(I{^PSj\\%Krbv*+#©¶ Ì\0Ma\0a\0¤Ý7\\')
+      ON DUPLICATE KEY UPDATE `name`='xÚdfíá()ÊÏMÊÏKòáÂÕÿfl©99ùåp>sQj¤Ø©¸¨©=)7±(I{^PSj\\%Krbv*+#©¶ Ì\0Ma\0a\0¤Ý7\\'
+EOT
+    );
+    $results = await $conn->query("SELECT * FROM table1");
+    expect($results->rows())->toBeSame(vec[
+      dict[
+        'id' => 123456789,
+        'name' =>
+          "xÚdfíá()ÊÏMÊÏKòáÂÕÿfl©99ùåp>sQj¤Ø©¸¨©=)7±(I{^PSj\%Krbv*+#©¶ Ì\0Ma\0a\0¤Ý7\\",
+      ],
+    ]);
+  }
+
 }
