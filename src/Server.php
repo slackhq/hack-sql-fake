@@ -2,7 +2,7 @@
 
 namespace Slack\SQLFake;
 
-use namespace HH\Lib\C;
+use namespace HH\Lib\{C, Dict};
 
 final class Server {
 
@@ -13,6 +13,12 @@ final class Server {
 
   public static function getAll(): dict<string, this> {
     return static::$instances;
+  }
+
+  public static function getAllTables(): dict<string, dict<string, dict<string, vec<dict<string, mixed>>>>> {
+    return Dict\map(static::getAll(), ($server) ==> {
+      return $server->databases;
+    });
   }
 
   /**
@@ -42,7 +48,7 @@ final class Server {
   public static function cloneByName(string $name, string $clone_name): this {
     $clone = static::get($clone_name);
     if ($clone === null) {
-        throw new SQLFakeRuntimeException("Server $clone_name not found, unable to clone databases and snapshots");
+      throw new SQLFakeRuntimeException("Server $clone_name not found, unable to clone databases and snapshots");
     }
 
     $server = static::getOrCreate($name);
