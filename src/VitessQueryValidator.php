@@ -73,9 +73,11 @@ final class UpdateQueryValidator extends VitessQueryValidator {
         $table_schema = QueryContext::getSchema($database, $table_name);
         $vitess_sharding = $table_schema['vitess_sharding'] ?? null;
 
-		if ($vitess_sharding === null) {
-			throw new SQLFakeVitessQueryViolation(Str\format('Missing Vitess sharding information for: %s', $table_name));
-		}
+	if ($vitess_sharding === null) {
+		// This could either be an unsharded table or a misconfiguration.
+		// Either way, no sharding config to validate, so let's skip it.
+		return;
+	}
 
         $columns = VitessQueryValidator::extractColumnExprNames($set);
 
