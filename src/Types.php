@@ -25,16 +25,16 @@ type token = shape(
 );
 
 enum TokenType: string {
-  NUMERIC_CONSTANT = "Number";
-  STRING_CONSTANT = "String";
-  CLAUSE = "Clause";
-  OPERATOR = "Operator";
-  RESERVED = "Reserved";
-  PAREN = "Paren";
-  SEPARATOR = "Separator";
-  SQLFUNCTION = "Function";
-  IDENTIFIER = "Identifier";
-  NULL_CONSTANT = "Null";
+  NUMERIC_CONSTANT = 'Number';
+  STRING_CONSTANT = 'String';
+  CLAUSE = 'Clause';
+  OPERATOR = 'Operator';
+  RESERVED = 'Reserved';
+  PAREN = 'Paren';
+  SEPARATOR = 'Separator';
+  SQLFUNCTION = 'Function';
+  IDENTIFIER = 'Identifier';
+  NULL_CONSTANT = 'Null';
 }
 
 enum JoinType: string {
@@ -56,8 +56,8 @@ enum Verbosity: int as int {
 }
 
 enum JoinOperator: string {
-  ON = "ON";
-  USING = "USING";
+  ON = 'ON';
+  USING = 'USING';
 }
 
 enum SortDirection: string {
@@ -100,8 +100,8 @@ type table_schema = shape(
   /**
    * Table name as it exists in the database
    */
-  "name" => string,
-  "fields" => Container<
+  'name' => string,
+  'fields' => Container<
     shape(
       'name' => string,
       'type' => DataType,
@@ -112,14 +112,14 @@ type table_schema = shape(
       ?'default' => string,
     ),
   >,
-  "indexes" => Container<
+  'indexes' => Container<
     shape(
       'name' => string,
       'type' => string,
       'fields' => Container<string>,
     ),
   >,
-  ?"vitess_sharding" => shape(
+  ?'vitess_sharding' => shape(
     'keyspace' => string,
     'sharding_key' => string,
   ),

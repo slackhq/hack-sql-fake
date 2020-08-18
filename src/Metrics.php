@@ -155,7 +155,7 @@ abstract final class Metrics {
     $function = $entry['function'] ?? '';
     $class = $entry['class'] ?? '';
 
-    $formatted = "";
+    $formatted = '';
 
     // my_file.php
     if (!Str\is_empty($file)) {

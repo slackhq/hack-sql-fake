@@ -71,7 +71,7 @@ final class SQLParser {
         throw new SQLFakeParseException("Unexpected {$token['value']}");
     }
 
-    throw new SQLFakeParseException("Parse error: unexpected end of input");
+    throw new SQLFakeParseException('Parse error: unexpected end of input');
   }
 
   <<__Memoize>>
@@ -156,7 +156,7 @@ final class SQLParser {
         // the * character is special because it's sometimes an operator and most of the time it means "all columns"
         $k = C\last_key($out);
         if ($k === null) {
-          throw new SQLFakeParseException("Parse error: unexpected *");
+          throw new SQLFakeParseException('Parse error: unexpected *');
         }
         $previous = $out[$k];
         $out[$k] = $previous;
@@ -345,7 +345,7 @@ final class SQLParser {
       $hint_type = $next['value'];
       $next = $tokens[$pointer] ?? null;
       if ($next === null || !C\contains_key(keyset['INDEX', 'KEY'], $next['value'])) {
-        throw new SQLFakeParseException("Expected INDEX or KEY in index hint");
+        throw new SQLFakeParseException('Expected INDEX or KEY in index hint');
       }
 
       $pointer++;
@@ -356,14 +356,14 @@ final class SQLParser {
           $pointer--;
           return $pointer;
         }
-        throw new SQLFakeParseException("Expected expected FOR or index list in index hint");
+        throw new SQLFakeParseException('Expected expected FOR or index list in index hint');
       }
 
       if ($next['value'] === 'FOR') {
         $pointer++;
         $next = $tokens[$pointer] ?? null;
         if ($next === null) {
-          throw new SQLFakeParseException("Expected JOIN, ORDER BY, or GROUP BY after FOR in index hint");
+          throw new SQLFakeParseException('Expected JOIN, ORDER BY, or GROUP BY after FOR in index hint');
         } else if ($next['value'] === 'JOIN') {
           //this is fine
           $pointer++;
@@ -372,13 +372,13 @@ final class SQLParser {
           $pointer++;
           $next = $tokens[$pointer] ?? null;
           if ($next === null || $next['value'] !== 'BY') {
-            throw new SQLFakeParseException("Expected BY in index hint after GROUP or ORDER");
+            throw new SQLFakeParseException('Expected BY in index hint after GROUP or ORDER');
           }
 
           $pointer++;
           $next = $tokens[$pointer] ?? null;
         } else {
-          throw new SQLFakeParseException("Expected JOIN, ORDER BY, or GROUP BY after FOR in index hint");
+          throw new SQLFakeParseException('Expected JOIN, ORDER BY, or GROUP BY after FOR in index hint');
         }
       }
 
@@ -388,23 +388,23 @@ final class SQLParser {
           $pointer--;
           return $pointer;
         }
-        throw new SQLFakeParseException("Expected index expression after index hint");
+        throw new SQLFakeParseException('Expected index expression after index hint');
       }
 
       $closing_paren_pointer = SQLParser::findMatchingParen($pointer, $tokens);
       $arg_tokens = Vec\slice($tokens, $pointer + 1, $closing_paren_pointer - $pointer - 1);
       if (!C\count($arg_tokens)) {
-        throw new SQLFakeParseException("Expected at least one argument to index hint");
+        throw new SQLFakeParseException('Expected at least one argument to index hint');
       }
       $count = 0;
       foreach ($arg_tokens as $arg) {
         $count++;
         if ($count % 2 === 1) {
           if ($arg['type'] !== TokenType::IDENTIFIER) {
-            throw new SQLFakeParseException("Expected identifier in index hint");
+            throw new SQLFakeParseException('Expected identifier in index hint');
           }
         } else if ($arg['value'] !== ',') {
-          throw new SQLFakeParseException("Expected , or ) after index hint");
+          throw new SQLFakeParseException('Expected , or ) after index hint');
         }
       }
 
@@ -435,7 +435,7 @@ final class SQLParser {
         $next_pointer++;
         $next = $tokens[$next_pointer] ?? null;
         if ($next === null) {
-          throw new SQLFakeParseException("Expected keyword after FOR");
+          throw new SQLFakeParseException('Expected keyword after FOR');
         }
         // skip over FOR UPDATE
         if ($next['value'] === 'UPDATE') {
@@ -449,7 +449,7 @@ final class SQLParser {
         foreach ($expected as $index => $keyword) {
           $next = $tokens[$next_pointer + $index + 1] ?? null;
           if ($next === null || $next['value'] !== $keyword) {
-            throw new SQLFakeParseException("Unexpected keyword near LOCK");
+            throw new SQLFakeParseException('Unexpected keyword near LOCK');
           }
         }
         return $pointer + 4;

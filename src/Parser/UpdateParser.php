@@ -24,22 +24,30 @@ final class UpdateParser {
 
     // if we got here, the first token had better be a UPDATE
     if ($this->tokens[$this->pointer]['value'] !== 'UPDATE') {
-      throw new SQLFakeParseException("Parser error: expected UPDATE");
+      throw new SQLFakeParseException('Parser error: expected UPDATE');
     }
     $this->pointer++;
+
+    // IGNORE can come next and indicates duplicate keys should be ignored
+    $ignore_dupes = false;
+    if ($this->tokens[$this->pointer]['value'] === 'IGNORE') {
+      $ignore_dupes = true;
+      $this->pointer++;
+    }
+
     $count = C\count($this->tokens);
 
     // next token has to be a table name
     $token = $this->tokens[$this->pointer];
     if ($token === null || $token['type'] !== TokenType::IDENTIFIER) {
-      throw new SQLFakeParseException("Expected table name after UPDATE");
+      throw new SQLFakeParseException('Expected table name after UPDATE');
     }
 
     $this->pointer = SQLParser::skipIndexHints($this->pointer, $this->tokens);
 
     $table = shape('name' => $token['value'], 'join_type' => JoinType::JOIN);
 
-    $query = new UpdateQuery($table, $this->sql);
+    $query = new UpdateQuery($table, $this->sql, $ignore_dupes);
 
     $this->pointer++;
 

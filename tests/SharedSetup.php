@@ -8,7 +8,7 @@ final class SharedSetup {
 		init($schema, true);
 
 		$pool = new AsyncMysqlConnectionPool(darray[]);
-		$conn = await $pool->connect("example", 1, 'db2', '', '');
+		$conn = await $pool->connect('example', 1, 'db2', '', '');
 
 		// populate database state
 		$database = dict[
@@ -39,6 +39,13 @@ final class SharedSetup {
 				dict['table_3_id' => 2, 'table_4_id' => 1000, 'group_id' => 12345, 'description' => 'association 3'],
 				dict['table_3_id' => 3, 'table_4_id' => 1003, 'group_id' => 0, 'description' => 'association 4'],
 			],
+			'table6' => vec[
+				dict['id' => 1000, 'position' => '5'],
+				dict['id' => 1001, 'position' => '125'],
+				dict['id' => 1002, 'position' => '75'],
+				dict['id' => 1003, 'position' => '625'],
+				dict['id' => 1004, 'position' => '25'],
+			],
 		];
 
 		$conn->getServer()->databases['db2'] = $database;
@@ -52,7 +59,7 @@ final class SharedSetup {
 		init($schema, true);
 
 		$pool = new AsyncMysqlConnectionPool(darray[]);
-		$vitess_conn = await $pool->connect("example2", 2, 'vitess', '', '');
+		$vitess_conn = await $pool->connect('example2', 2, 'vitess', '', '');
 
 		$vitess_dbs = dict[
 			'vt_table1' => vec[
@@ -328,6 +335,32 @@ const dict<string, dict<string, table_schema>> TEST_SCHEMA = dict[
 					'type' => 'INDEX',
 					'fields' => keyset['test_type'],
 				),
+			],
+		),
+		'table6' => shape(
+			'name' => 'table6',
+			'fields' => vec[
+				shape(
+					'name' => 'id',
+					'type' => DataType::BIGINT,
+					'length' => 20,
+					'null' => false,
+					'hack_type' => 'int',
+				),
+				shape(
+					'name' => 'position',
+					'type' => DataType::VARCHAR,
+					'length' => 255,
+					'null' => false,
+					'hack_type' => 'string',
+				),
+			],
+			'indexes' => vec[
+				shape(
+					'name' => 'PRIMARY',
+					'type' => 'PRIMARY',
+					'fields' => keyset['id'],
+				)
 			],
 		),
 		'association_table' => shape(

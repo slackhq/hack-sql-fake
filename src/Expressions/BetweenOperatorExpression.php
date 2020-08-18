@@ -26,7 +26,7 @@ final class BetweenOperatorExpression extends Expression {
     $start = $this->start;
     $end = $this->end;
     if ($start === null || $end === null) {
-      throw new SQLFakeRuntimeException("Attempted to evaluate incomplete BETWEEN expression");
+      throw new SQLFakeRuntimeException('Attempted to evaluate incomplete BETWEEN expression');
     }
 
     // any part of the between clause could be a column or a literal, so check each one
@@ -70,7 +70,7 @@ final class BetweenOperatorExpression extends Expression {
 
   public function foundAnd(): void {
     if ($this->and || !$this->start) {
-      throw new SQLFakeParseException("Unexpected AND");
+      throw new SQLFakeParseException('Unexpected AND');
     }
     $this->and = true;
   }
@@ -94,7 +94,7 @@ final class BetweenOperatorExpression extends Expression {
     } else if ($this->and && !$this->end) {
       $this->end = $expr;
     } else {
-      throw new SQLFakeParseException("Parse error: unexpected token in BETWEEN statement");
+      throw new SQLFakeParseException('Parse error: unexpected token in BETWEEN statement');
     }
   }
 

@@ -23,7 +23,7 @@ final class DeleteParser {
 
     // if we got here, the first token had better be a DELETE
     if ($this->tokens[$this->pointer]['value'] !== 'DELETE') {
-      throw new SQLFakeParseException("Parser error: expected DELETE");
+      throw new SQLFakeParseException('Parser error: expected DELETE');
     }
     $this->pointer++;
     $count = C\count($this->tokens);
@@ -48,7 +48,7 @@ final class DeleteParser {
               $this->pointer++;
               $token = $this->tokens[$this->pointer];
               if ($token === null || $token['type'] !== TokenType::IDENTIFIER) {
-                throw new SQLFakeParseException("Expected table name after FROM");
+                throw new SQLFakeParseException('Expected table name after FROM');
               }
               $table = shape(
                 'name' => $token['value'],
@@ -109,7 +109,7 @@ final class DeleteParser {
     }
 
     if ($query->fromClause === null) {
-      throw new SQLFakeParseException("Expected FROM in DELETE statement");
+      throw new SQLFakeParseException('Expected FROM in DELETE statement');
     }
 
     return $query;

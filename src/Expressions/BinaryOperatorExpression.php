@@ -45,13 +45,13 @@ final class BinaryOperatorExpression extends Expression {
   ): bool {
 
     $left_elems = $left->evaluate($row, $conn);
-    invariant($left_elems is vec<_>, "RowExpression must return vec");
+    invariant($left_elems is vec<_>, 'RowExpression must return vec');
 
     $right_elems = $right->evaluate($row, $conn);
-    invariant($right_elems is vec<_>, "RowExpression must return vec");
+    invariant($right_elems is vec<_>, 'RowExpression must return vec');
 
     if (C\count($left_elems) !== C\count($right_elems)) {
-      throw new SQLFakeRuntimeException("Mismatched column count in row comparison expression");
+      throw new SQLFakeRuntimeException('Mismatched column count in row comparison expression');
     }
 
     $last_index = C\last_key($left_elems);
@@ -110,7 +110,7 @@ final class BinaryOperatorExpression extends Expression {
     }
 
     if ($right === null) {
-      throw new SQLFakeRuntimeException("Attempted to evaluate BinaryOperatorExpression with no right operand");
+      throw new SQLFakeRuntimeException('Attempted to evaluate BinaryOperatorExpression with no right operand');
     }
 
     $l_value = $left->evaluate($row, $conn);
@@ -148,25 +148,27 @@ final class BinaryOperatorExpression extends Expression {
         }
       case Operator::GREATER_THAN:
         if ($as_string) {
-          return ((string)$l_value > (string)$r_value) ? 1 : 0 ^ $this->negatedInt;
+          return (((Str\compare((string)$l_value, (string)$r_value)) > 0) ? 1 : 0) ^ $this->negatedInt;
         } else {
           return ((int)$l_value > (int)$r_value) ? 1 : 0 ^ $this->negatedInt;
         }
       case Operator::GREATER_THAN_EQUALS:
         if ($as_string) {
-          return ((string)$l_value >= (string)$r_value) ? 1 : 0 ^ $this->negatedInt;
+          $comparison = Str\compare((string)$l_value, (string)$r_value);
+          return (($comparison > 0 || $comparison === 0) ? 1 : 0) ^ $this->negatedInt;
         } else {
           return ((int)$l_value >= (int)$r_value) ? 1 : 0 ^ $this->negatedInt;
         }
       case Operator::LESS_THAN:
         if ($as_string) {
-          return ((string)$l_value < (string)$r_value) ? 1 : 0 ^ $this->negatedInt;
+          return (((Str\compare((string)$l_value, (string)$r_value)) < 0) ? 1 : 0) ^ $this->negatedInt;
         } else {
           return ((int)$l_value < (int)$r_value) ? 1 : 0 ^ $this->negatedInt;
         }
       case Operator::LESS_THAN_EQUALS:
         if ($as_string) {
-          return ((string)$l_value <= (string)$r_value) ? 1 : 0 ^ $this->negatedInt;
+          $comparison = Str\compare((string)$l_value, (string)$r_value);
+          return (($comparison < 0 || $comparison === 0) ? 1 : 0) ^ $this->negatedInt;
         } else {
           return ((int)$l_value <= (int)$r_value) ? 1 : 0 ^ $this->negatedInt;
         }
@@ -209,7 +211,7 @@ final class BinaryOperatorExpression extends Expression {
       case Operator::LIKE:
         $left_string = (string)$left->evaluate($row, $conn);
         if (!$right is ConstantExpression) {
-          throw new SQLFakeRuntimeException("LIKE pattern should be a constant string");
+          throw new SQLFakeRuntimeException('LIKE pattern should be a constant string');
         }
         $pattern = (string)$r_value;
 
@@ -226,6 +228,9 @@ final class BinaryOperatorExpression extends Expression {
           $pattern = Str\strip_suffix($pattern, '%');
         }
 
+        // escape all + characters
+        $pattern = \preg_quote($pattern, '/');
+
         // replace only unescaped % and _ characters to make regex
         $pattern = Regex\replace($pattern, re"/(?<!\\\)%/", '.*?');
         $pattern = Regex\replace($pattern, re"/(?<!\\\)_/", '.');
@@ -236,7 +241,7 @@ final class BinaryOperatorExpression extends Expression {
         return ((bool)\preg_match($regex, $left_string) ? 1 : 0) ^ $this->negatedInt;
       case Operator::IS:
         if (!$right is ConstantExpression) {
-          throw new SQLFakeRuntimeException("Unsupported right operand for IS keyword");
+          throw new SQLFakeRuntimeException('Unsupported right operand for IS keyword');
         }
         $val = $left->evaluate($row, $conn);
 
@@ -248,7 +253,7 @@ final class BinaryOperatorExpression extends Expression {
 
         // you can also do IS TRUE, IS FALSE, or IS UNKNOWN but I haven't implemented that yet mostly because those come through the parser as "RESERVED" rather than const expressions
 
-        throw new SQLFakeRuntimeException("Unsupported right operand for IS keyword");
+        throw new SQLFakeRuntimeException('Unsupported right operand for IS keyword');
       case Operator::RLIKE:
       case Operator::REGEXP:
         $left_string = (string)$left->evaluate($row, $conn);
@@ -331,7 +336,7 @@ final class BinaryOperatorExpression extends Expression {
   <<__Override>>
   public function setNextChild(Expression $expr, bool $overwrite = false): void {
     if ($this->operator === null || ($this->right && !$overwrite)) {
-      throw new SQLFakeParseException("Parse error");
+      throw new SQLFakeParseException('Parse error');
     }
     $this->right = $expr;
   }
@@ -343,7 +348,7 @@ final class BinaryOperatorExpression extends Expression {
 
   public function getRightOrThrow(): Expression {
     if ($this->right === null) {
-      throw new SQLFakeParseException("Parse error: attempted to resolve unbound expression");
+      throw new SQLFakeParseException('Parse error: attempted to resolve unbound expression');
     }
     return $this->right;
   }

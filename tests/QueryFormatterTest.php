@@ -23,20 +23,20 @@ final class QueryFormatterTest extends HackTest {
 	}
 
 	public async function testInvalidValue(): Awaitable<void> {
-		expect(() ==> QueryFormatter::formatQuery("SELECT %d", '1'))->toThrow(
+		expect(() ==> QueryFormatter::formatQuery('SELECT %d', '1'))->toThrow(
 			SQLFakeParseException::class,
 			'string value not valid for %d',
 		);
 	}
 
 	public async function testIdentifierTuples(): Awaitable<void> {
-		$qf = QueryFormatter::formatQuery("SELECT %C FROM %T", tuple('tab1', 'col1', 'myalias'), tuple('db1', 'tab1'));
-		expect($qf)->toBeSame("SELECT `tab1`.`col1` AS `myalias` FROM `db1`.`tab1`");
+		$qf = QueryFormatter::formatQuery('SELECT %C FROM %T', tuple('tab1', 'col1', 'myalias'), tuple('db1', 'tab1'));
+		expect($qf)->toBeSame('SELECT `tab1`.`col1` AS `myalias` FROM `db1`.`tab1`');
 	}
 
 	public async function testStringList(): Awaitable<void> {
 		$qf = QueryFormatter::formatQuery(
-			"SELECT * FROM t1 WHERE name IN (%Ls) OR id IN (%Ld)",
+			'SELECT * FROM t1 WHERE name IN (%Ls) OR id IN (%Ld)',
 			keyset['foo', 'bar', 'baz'],
 			keyset[100, 101, 102],
 		);
