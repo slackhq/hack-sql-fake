@@ -13,7 +13,7 @@ final class InsertQueryTest extends HackTest {
   public static async function beforeFirstTestAsync(): Awaitable<void> {
     init(TEST_SCHEMA, true);
     $pool = new AsyncMysqlConnectionPool(darray[]);
-    static::$conn = await $pool->connect("example", 1, 'db1', '', '');
+    static::$conn = await $pool->connect('example', 1, 'db1', '', '');
     // black hole logging
     Logger::setHandle(new \Facebook\CLILib\TestLib\StringOutput());
   }
