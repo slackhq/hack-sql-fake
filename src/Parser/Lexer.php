@@ -82,7 +82,8 @@ final class SQLLexer {
       // we need to handle sequences that look like comments, but are inside quoted strings. to do that, we also need to know when quoted strings start and end
       // since a comment could contain a quote, and a quote could contain a comment, we can't safely process either first without being aware of the other
       // so first we check if the next token should be escaped, and then if it's a quote character
-      if ($token === '\\') {
+      // checking for !$escape_next here checks for \\\\ sequences
+      if ($token === '\\' && !$escape_next) {
         $escape_next = true;
       } else {
         $escape_next = false;
