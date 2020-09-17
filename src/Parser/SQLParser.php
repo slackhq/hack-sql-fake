@@ -133,7 +133,7 @@ final class SQLParser {
                   $token_replaced .= "\t";
                   break;
                 case '\\':
-                  $token_replaced .= "\\";
+                  $token_replaced .= '\\';
                   break;
                 case '%':
                 case '_':
