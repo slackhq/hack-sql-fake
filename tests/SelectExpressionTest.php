@@ -287,9 +287,9 @@ final class SelectExpressionTest extends HackTest {
 
 	public async function testUnescape(): Awaitable<void> {
 		$conn = static::$conn as nonnull;
-		$results = await $conn->query("SELECT '\\\\foo\'sbar\%\Zbaz\/' as testescape");
+		$results = await $conn->query("SELECT '\\\\foo\'sbar\%\0baz\/' as testescape");
 		expect($results->rows())->toBeSame(vec[
-			dict['testescape' => "\\foo'sbar\%\Zbaz/"],
+			dict['testescape' => "\\foo'sbar\%\0baz/"],
 		]);
 	}
 

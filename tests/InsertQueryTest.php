@@ -313,12 +313,32 @@ final class InsertQueryTest extends HackTest {
       ON DUPLICATE KEY UPDATE `name`='xÚdfíá()ÊÏMÊÏKòáÂÕÿfl©99ùåp>sQj¤Ø©¸¨©=)7±(I{^PSj\\%Krbv*+#©¶ Ì\0Ma\0a\0¤Ý7\\'
 EOT
     );
-    $results = await $conn->query("SELECT * FROM table1");
+    $results = await $conn->query('SELECT * FROM table1');
     expect($results->rows())->toBeSame(vec[
       dict[
         'id' => 123456789,
         'name' =>
           "xÚdfíá()ÊÏMÊÏKòáÂÕÿfl©99ùåp>sQj¤Ø©¸¨©=)7±(I{^PSj\%Krbv*+#©¶ Ì\0Ma\0a\0¤Ý7\\",
+      ],
+    ]);
+  }
+
+  public async function testDupeInsertEscapingNoMangleBinaryWithAddSlashes(): Awaitable<void> {
+    $conn = static::$conn as nonnull;
+    $hex =
+      '78da9391649366eee12829cacf4dcacf4b95147bf0bf75d2a287d30fa432b055a6e6e4e497230b71169726e5261665a22a64909164031ac300c20c0c005c301ea0';
+    $bin = \hex2bin($hex);
+    $bin_for_query = \addslashes($bin);
+    await $conn->query(<<<EOT
+  INSERT INTO table1 (`id`,`name`) VALUES (123456789, '$bin_for_query')
+  ON DUPLICATE KEY UPDATE `name`='$bin_for_query'
+EOT
+    );
+    $results = await $conn->query('SELECT * FROM table1');
+    expect($results->rows())->toBeSame(vec[
+      dict[
+        'id' => 123456789,
+        'name' => "$bin",
       ],
     ]);
   }
