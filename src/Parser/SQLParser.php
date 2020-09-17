@@ -2,7 +2,7 @@
 
 namespace Slack\SQLFake;
 
-use namespace HH\Lib\{C, Regex, Str, Vec};
+use namespace HH\Lib\{C, Str, Vec};
 
 final class SQLParser {
 
