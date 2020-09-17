@@ -110,12 +110,48 @@ final class SQLParser {
         // chop off the quotes before storing the value
         $raw = $token;
         $token = Str\slice($token, 1, Str\length($token) - 2);
+
         // unescape everything except for % and _ (which only get unescaped during LIKE operations)
         // there are a few other special sequnces we leave unescaped like \r, \n, \t, \b, \Z, \0
         // https://dev.mysql.com/doc/refman/5.7/en/string-literals.html
-        // it's possible we need to replace several of these escape sequences with the appropriate unicode character, as
-        // we're doing for \0 here
-        $token = Regex\replace($token, re"/\\\\([^%_rntbZ0])/", '\1') |> Regex\replace($$, re"/\\\\0/", "\0");
+        if (Str\contains($token, '\\')) {
+          $token_replaced = '';
+          $escape_next = false;
+          for ($i = 0; $i < Str\length($token); $i++) {
+            if ($escape_next) {
+              switch ($token[$i]) {
+                case 'r':
+                  $token_replaced .= "\r";
+                  break;
+                case 'n':
+                  $token_replaced .= "\n";
+                  break;
+                case '0':
+                  $token_replaced .= "\0";
+                  break;
+                case 't':
+                  $token_replaced .= "\t";
+                  break;
+                case '\\':
+                  $token_replaced .= "\\";
+                  break;
+                case '%':
+                case '_':
+                  # these stay unescaped unless used in LIKE
+                  $token_replaced .= "\\{$token[$i]}";
+                  break;
+                default:
+                  $token_replaced .= $token[$i];
+              }
+              $escape_next = false;
+            } else if ($token[$i] === '\\') {
+              $escape_next = true;
+            } else {
+              $token_replaced .= $token[$i];
+            }
+          }
+          $token = $token_replaced;
+        }
         $out[] = shape(
           'type' => TokenType::STRING_CONSTANT,
           'value' => $token,
