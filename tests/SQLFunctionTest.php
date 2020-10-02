@@ -36,12 +36,14 @@ final class SQLFunctionTest extends HackTest {
 		$results = await $conn->query('select group_id, count(*) from association_table group by 1');
 		expect($results->rows())->toBeSame($expected, 'with positional reference in group_by');
 
-		$results =
-			await $conn->query('select group_id, count(*) from association_table group by association_table.group_id');
+		$results = await $conn->query(
+			'select group_id, count(*) from association_table group by association_table.group_id',
+		);
 		expect($results->rows())->toBeSame($expected, 'with column and alias reference in group_by');
 
-		$results =
-			await $conn->query('select group_id, count(1) from association_table group by association_table.group_id');
+		$results = await $conn->query(
+			'select group_id, count(1) from association_table group by association_table.group_id',
+		);
 		expect($results->rows())->toBeSame(
 			vec[dict['group_id' => 12345, 'count(1)' => 3], dict['group_id' => 0, 'count(1)' => 1]],
 			'with count(1) instead of count(*)',
@@ -58,8 +60,9 @@ final class SQLFunctionTest extends HackTest {
 
 	public async function testCountDistinct(): Awaitable<void> {
 		$conn = static::$conn as nonnull;
-		$results =
-			await $conn->query('select group_id, count(DISTINCT table_3_id) from association_table group by group_id');
+		$results = await $conn->query(
+			'select group_id, count(DISTINCT table_3_id) from association_table group by group_id',
+		);
 		expect($results->rows())->toBeSame(
 			vec[
 				dict['group_id' => 12345, 'count(DISTINCT table_3_id)' => 2],
@@ -192,9 +195,7 @@ final class SQLFunctionTest extends HackTest {
 			'single delimiter',
 		);
 
-		$results = await $conn->query(
-			"SELECT SUBSTRING_INDEX('username@fake@example.com', '@', 0) as nothing",
-		);
+		$results = await $conn->query("SELECT SUBSTRING_INDEX('username@fake@example.com', '@', 0) as nothing");
 		expect($results->rows())->toBeSame(
 			vec[
 				dict['nothing' => ''],
@@ -202,9 +203,7 @@ final class SQLFunctionTest extends HackTest {
 			'zero index',
 		);
 
-		$results = await $conn->query(
-			"SELECT SUBSTRING_INDEX('username@example.com', '@', -4) as full",
-		);
+		$results = await $conn->query("SELECT SUBSTRING_INDEX('username@example.com', '@', -4) as full");
 		expect($results->rows())->toBeSame(
 			vec[
 				dict['full' => 'username@example.com'],
@@ -212,9 +211,7 @@ final class SQLFunctionTest extends HackTest {
 			'handle index lower than expected',
 		);
 
-		$results = await $conn->query(
-			"SELECT SUBSTRING_INDEX('username@example.com', '@', 4) as full",
-		);
+		$results = await $conn->query("SELECT SUBSTRING_INDEX('username@example.com', '@', 4) as full");
 		expect($results->rows())->toBeSame(
 			vec[
 				dict['full' => 'username@example.com'],
@@ -340,6 +337,34 @@ final class SQLFunctionTest extends HackTest {
 			dict['id' => 1002, 'description' => 'desc2'],
 			dict['id' => 1004, 'description' => 'desc4'],
 		]);
+	}
+
+	public async function testReplace(): Awaitable<void> {
+		$conn = static::$conn as nonnull;
+		$results = await $conn->query("SELECT REPLACE(name, 'name', 'NAME') as replaced FROM table3 WHERE id IN (1,2)");
+		expect($results->rows())->toBeSame(
+			vec[dict['replaced' => 'NAME1'], dict['replaced' => 'NAME2']],
+			'substring exists',
+		);
+		$results = await $conn->query("SELECT REPLACE(name, 'Name', 'NAME') as replaced FROM table3 WHERE id IN (1,2)");
+		expect($results->rows())->toBeSame(
+			vec[dict['replaced' => 'name1'], dict['replaced' => 'name2']],
+			'substring does not exist',
+		);
+	}
+
+	public async function testJSONValid(): Awaitable<void> {
+		$conn = static::$conn as nonnull;
+		$results = await $conn->query("SELECT JSON_VALID('null') as valid");
+		expect($results->rows())->toBeSame(vec[dict['valid' => 1]], 'null');
+		$results = await $conn->query("SELECT JSON_VALID('{\"key\": \"value\"}') as valid");
+		expect($results->rows())->toBeSame(vec[dict['valid' => 1]], 'object');
+		$results = await $conn->query("SELECT JSON_VALID('[{\"key\": \"value\"}]') as valid");
+		expect($results->rows())->toBeSame(vec[dict['valid' => 1]], 'array');
+		$results = await $conn->query("SELECT JSON_VALID(' ') as valid");
+		expect($results->rows())->toBeSame(vec[dict['valid' => 0]], 'empty');
+		$results = await $conn->query("SELECT JSON_VALID('arbitrary_string') as valid");
+		expect($results->rows())->toBeSame(vec[dict['valid' => 0]], 'arbitrary non-JSON string');
 	}
 
 	<<__Override>>

@@ -8,12 +8,12 @@ use namespace HH\Lib\{C, Math, Str};
  * emulates a call to a built-in MySQL function
  * we implement as many as we want to in Hack
  */
-final class FunctionExpression extends Expression {
+class FunctionExpression extends Expression {
 
-  private string $functionName;
+  protected string $functionName;
   protected bool $evaluatesGroups = true;
 
-  public function __construct(private token $token, private vec<Expression> $args, private bool $distinct) {
+  public function __construct(private token $token, protected vec<Expression> $args, private bool $distinct) {
     $this->type = $token['type'];
     $this->precedence = 0;
     $this->functionName = $token['value'];
@@ -71,6 +71,8 @@ final class FunctionExpression extends Expression {
         return $this->sqlGreatest($row, $conn);
       case 'VALUES':
         return $this->sqlValues($row, $conn);
+      case 'REPLACE':
+        return $this->sqlReplace($row, $conn);
 
       // GROUP_CONCAT might be a nice one to implement but it does have a lot of params and isn't really used in our codebase
     }
@@ -465,6 +467,18 @@ final class FunctionExpression extends Expression {
     // a bit hacky here, override so that the expression pulls the value from the sql_fake_values.* fields set in Query::applySet
     $arg->prefixColumnExpression('sql_fake_values.');
     return $arg->evaluate($row, $conn);
+  }
+
+  private function sqlReplace(row $row, AsyncMysqlConnection $conn): string {
+    $row = $this->maybeUnrollGroupedDataset($row);
+    $args = $this->args;
+    if (C\count($args) !== 3) {
+      throw new SQLFakeRuntimeException('MySQL REPLACE() function must be called with three arguments');
+    }
+    return Str\replace_every(
+      (string)$args[0]->evaluate($row, $conn),
+      dict[(string)$args[1]->evaluate($row, $conn) => (string)$args[2]->evaluate($row, $conn)],
+    );
   }
 
   <<__Override>>

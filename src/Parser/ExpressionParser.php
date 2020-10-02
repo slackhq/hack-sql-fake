@@ -177,7 +177,10 @@ final class ExpressionParser {
         // move the pointer forward to the end of the parentheses
         $this->pointer = $closing_paren_pointer;
 
-        $fn = new FunctionExpression($token, $args, $distinct);
+        $fn = Str\starts_with($token['value'], 'JSON_')
+          ? new JSONFunctionExpression($token, $args, $distinct)
+          : new FunctionExpression($token, $args, $distinct);
+
         return $fn;
       default:
         throw new SQLFakeNotImplementedException("Not implemented: {$token['value']}");
