@@ -200,6 +200,7 @@ final class SQLParser {
           !C\contains_key(
             keyset[
               TokenType::NUMERIC_CONSTANT,
+              TokenType::BOOLEAN_CONSTANT,
               TokenType::STRING_CONSTANT,
               TokenType::NULL_CONSTANT,
               TokenType::IDENTIFIER,
@@ -235,6 +236,7 @@ final class SQLParser {
           !C\contains_key(
             keyset[
               TokenType::NUMERIC_CONSTANT,
+              TokenType::BOOLEAN_CONSTANT,
               TokenType::STRING_CONSTANT,
               TokenType::NULL_CONSTANT,
               TokenType::IDENTIFIER,
@@ -268,13 +270,13 @@ final class SQLParser {
         );
       } else if ($token_upper === 'TRUE') {
         $out[] = shape(
-          'type' => TokenType::NUMERIC_CONSTANT,
+          'type' => TokenType::BOOLEAN_CONSTANT,
           'value' => '1',
           'raw' => $token,
         );
       } else if ($token_upper === 'FALSE') {
         $out[] = shape(
-          'type' => TokenType::NUMERIC_CONSTANT,
+          'type' => TokenType::BOOLEAN_CONSTANT,
           'value' => '0',
           'raw' => $token,
         );

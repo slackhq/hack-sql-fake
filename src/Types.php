@@ -35,6 +35,7 @@ enum TokenType: string {
   SQLFUNCTION = 'Function';
   IDENTIFIER = 'Identifier';
   NULL_CONSTANT = 'Null';
+  BOOLEAN_CONSTANT = 'Boolean';
 }
 
 enum JoinType: string {
@@ -231,3 +232,25 @@ type server_config = shape(
   // name of a database in table configuration to copy schema from
   ?'inherit_schema_from' => string,
 );
+
+// The only purpose of this is to retain the fact that this is a JSON type value
+class WrappedJSON {
+  public function __construct(public mixed $json) {}
+
+  public function __toString(): string {
+    return \json_encode($this->json);
+  }
+
+  // null, num, bool & string (quoted) don't need wrapping
+  public static function wrapIfNecessary(mixed $thing): mixed {
+    if ($thing is null || $thing is num || $thing is bool) {
+      return $thing;
+    }
+
+    if ($thing is string) {
+      return \json_encode($thing);
+    }
+
+    return new WrappedJSON($thing);
+  }
+}

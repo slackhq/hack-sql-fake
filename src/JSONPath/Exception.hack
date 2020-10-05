@@ -1,4 +1,3 @@
-<?php
 /**
  * Copyright 2018 Alessio Linares
  *
@@ -15,16 +14,19 @@
  * limitations under the License.
  */
 
-namespace JsonPath;
-
 /**
- * Exception that is raised when a error is found in the given JSONPath
+ * Based on code from https://github.com/Galbar/JsonPath-PHP
  *
- * @uses Exception
+ * Modified by maintainers of hack-sql-fake as needed
  */
-class InvalidJsonPathException extends \Exception
-{
-    private $token;
+
+namespace Slack\SQLFake\JSONPath;
+
+class JSONException extends \Exception {}
+final class InvalidJSONException extends JSONException {}
+final class DivergentJSONPathSetException extends JSONException {}
+final class InvalidJSONPathException extends JSONException {
+    private string $token;
 
     /**
      * Class constructor
@@ -33,8 +35,8 @@ class InvalidJsonPathException extends \Exception
      *
      * @return void
      */
-    public function __construct($token)
-    {
-        parent::__construct("Error in JSONPath near '" . $token . "'", 0, null);
+    public function __construct(string $token) {
+        $this->token = $token;
+        parent::__construct("Error in JSONPath near '".$token."'", 0, null);
     }
 }

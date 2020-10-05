@@ -1,6 +1,6 @@
 vendor
 www.pid
-.DS_STORE
+.DS_Store
 *.orig
 *~
 composer.lock

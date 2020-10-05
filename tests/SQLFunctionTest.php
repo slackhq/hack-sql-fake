@@ -3,7 +3,7 @@
 namespace Slack\SQLFake;
 
 use function Facebook\FBExpect\expect;
-use type Facebook\HackTest\HackTest;
+use type Facebook\HackTest\{HackTest};
 
 final class SQLFunctionTest extends HackTest {
 	private static ?AsyncMysqlConnection $conn;
@@ -351,20 +351,6 @@ final class SQLFunctionTest extends HackTest {
 			vec[dict['replaced' => 'name1'], dict['replaced' => 'name2']],
 			'substring does not exist',
 		);
-	}
-
-	public async function testJSONValid(): Awaitable<void> {
-		$conn = static::$conn as nonnull;
-		$results = await $conn->query("SELECT JSON_VALID('null') as valid");
-		expect($results->rows())->toBeSame(vec[dict['valid' => 1]], 'null');
-		$results = await $conn->query("SELECT JSON_VALID('{\"key\": \"value\"}') as valid");
-		expect($results->rows())->toBeSame(vec[dict['valid' => 1]], 'object');
-		$results = await $conn->query("SELECT JSON_VALID('[{\"key\": \"value\"}]') as valid");
-		expect($results->rows())->toBeSame(vec[dict['valid' => 1]], 'array');
-		$results = await $conn->query("SELECT JSON_VALID(' ') as valid");
-		expect($results->rows())->toBeSame(vec[dict['valid' => 0]], 'empty');
-		$results = await $conn->query("SELECT JSON_VALID('arbitrary_string') as valid");
-		expect($results->rows())->toBeSame(vec[dict['valid' => 0]], 'arbitrary non-JSON string');
 	}
 
 	<<__Override>>

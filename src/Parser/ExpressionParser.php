@@ -145,6 +145,7 @@ final class ExpressionParser {
 
     switch ($token['type']) {
       case TokenType::NUMERIC_CONSTANT:
+      case TokenType::BOOLEAN_CONSTANT:
       case TokenType::STRING_CONSTANT:
       case TokenType::NULL_CONSTANT:
         return new ConstantExpression($token);
@@ -263,6 +264,7 @@ final class ExpressionParser {
           }
           break;
         case TokenType::NUMERIC_CONSTANT:
+        case TokenType::BOOLEAN_CONSTANT:
         case TokenType::NULL_CONSTANT:
         case TokenType::STRING_CONSTANT:
         case TokenType::SQLFUNCTION:

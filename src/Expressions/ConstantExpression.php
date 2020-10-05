@@ -25,13 +25,16 @@ final class ConstantExpression extends Expression {
           return (float)$token['value'];
         }
         return (int)$token['value'];
+      case TokenType::BOOLEAN_CONSTANT:
+        return (int)$token['value'];
       case TokenType::STRING_CONSTANT:
         return (string)$token['value'];
       case TokenType::NULL_CONSTANT:
         return null;
       default:
-        throw
-          new SQLFakeRuntimeException("Attempted to assign invalid token type {$token['type']} to Constant Expression");
+        throw new SQLFakeRuntimeException(
+          "Attempted to assign invalid token type {$token['type']} to Constant Expression",
+        );
     }
   }
 
