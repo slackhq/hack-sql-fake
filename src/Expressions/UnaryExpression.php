@@ -20,7 +20,7 @@ final class UnaryExpression extends Expression {
   }
 
   <<__Override>>
-  public function evaluate(row $row, AsyncMysqlConnection $conn): mixed {
+  public function evaluateImpl(row $row, AsyncMysqlConnection $conn): mixed {
     if ($this->subject === null) {
       throw new SQLFakeRuntimeException('Attempted to evaluate unary operation with no operand');
     }

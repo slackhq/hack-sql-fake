@@ -94,7 +94,7 @@ final class BinaryOperatorExpression extends Expression {
   }
 
   <<__Override>>
-  public function evaluate(row $row, AsyncMysqlConnection $conn): mixed {
+  public function evaluateImpl(row $row, AsyncMysqlConnection $conn): mixed {
     $right = $this->right;
     $left = $this->left;
 
@@ -106,7 +106,7 @@ final class BinaryOperatorExpression extends Expression {
       // oh fun! a row comparison, e.g. (col1, col2, col3) > (1, 2, 3)
       // these are handled somewhat differently from all other binary operands since you need to loop and compare each element
       // also we cast to int because that's how MySQL would return these
-      return (int)($this->evaluateRowComparison($left, $right, $row, $conn));
+      return $this->evaluateRowComparison($left, $right, $row, $conn);
     }
 
     if ($right === null) {
@@ -127,50 +127,50 @@ final class BinaryOperatorExpression extends Expression {
     switch ($op) {
       case Operator::AND:
         if ((bool)$l_value && (bool)$r_value) {
-          return (int)!$this->negated;
+          return !$this->negated;
         }
-        return (int)$this->negated;
+        return $this->negated;
       case Operator::OR:
         if ((bool)$l_value || (bool)$r_value) {
-          return (int)!$this->negated;
+          return !$this->negated;
         }
-        return (int)$this->negated;
+        return $this->negated;
       case Operator::EQUALS:
         // maybe do some stuff with data types here
         // comparing strings: gotta think about collation and case sensitivity!
-        return ($l_value == $r_value) ? 1 : 0 ^ $this->negatedInt;
+        return (bool)(($l_value == $r_value) ? 1 : 0 ^ $this->negatedInt);
       case Operator::LESS_THAN_GREATER_THAN:
       case Operator::BANG_EQUALS:
         if ($as_string) {
-          return ((string)$l_value != (string)$r_value) ? 1 : 0 ^ $this->negatedInt;
+          return (bool)(((string)$l_value != (string)$r_value) ? 1 : 0 ^ $this->negatedInt);
         } else {
-          return ((int)$l_value != (int)$r_value) ? 1 : 0 ^ $this->negatedInt;
+          return (bool)(((int)$l_value != (int)$r_value) ? 1 : 0 ^ $this->negatedInt);
         }
       case Operator::GREATER_THAN:
         if ($as_string) {
-          return (((Str\compare((string)$l_value, (string)$r_value)) > 0) ? 1 : 0) ^ $this->negatedInt;
+          return (bool)((((Str\compare((string)$l_value, (string)$r_value)) > 0) ? 1 : 0) ^ $this->negatedInt);
         } else {
-          return ((int)$l_value > (int)$r_value) ? 1 : 0 ^ $this->negatedInt;
+          return (bool)(((int)$l_value > (int)$r_value) ? 1 : 0 ^ $this->negatedInt);
         }
       case Operator::GREATER_THAN_EQUALS:
         if ($as_string) {
           $comparison = Str\compare((string)$l_value, (string)$r_value);
-          return (($comparison > 0 || $comparison === 0) ? 1 : 0) ^ $this->negatedInt;
+          return (bool)((($comparison > 0 || $comparison === 0) ? 1 : 0) ^ $this->negatedInt);
         } else {
-          return ((int)$l_value >= (int)$r_value) ? 1 : 0 ^ $this->negatedInt;
+          return (bool)(((int)$l_value >= (int)$r_value) ? 1 : 0 ^ $this->negatedInt);
         }
       case Operator::LESS_THAN:
         if ($as_string) {
-          return (((Str\compare((string)$l_value, (string)$r_value)) < 0) ? 1 : 0) ^ $this->negatedInt;
+          return (bool)((((Str\compare((string)$l_value, (string)$r_value)) < 0) ? 1 : 0) ^ $this->negatedInt);
         } else {
-          return ((int)$l_value < (int)$r_value) ? 1 : 0 ^ $this->negatedInt;
+          return (bool)(((int)$l_value < (int)$r_value) ? 1 : 0 ^ $this->negatedInt);
         }
       case Operator::LESS_THAN_EQUALS:
         if ($as_string) {
           $comparison = Str\compare((string)$l_value, (string)$r_value);
-          return (($comparison < 0 || $comparison === 0) ? 1 : 0) ^ $this->negatedInt;
+          return (bool)((($comparison < 0 || $comparison === 0) ? 1 : 0) ^ $this->negatedInt);
         } else {
-          return ((int)$l_value <= (int)$r_value) ? 1 : 0 ^ $this->negatedInt;
+          return (bool)(((int)$l_value <= (int)$r_value) ? 1 : 0 ^ $this->negatedInt);
         }
       case Operator::ASTERISK:
       case Operator::PERCENT:
@@ -238,7 +238,7 @@ final class BinaryOperatorExpression extends Expression {
         $regex = '/'.$start_pattern.$pattern.$end_pattern.'/s';
 
         // xor here, so if negated is true and regex matches then we return false
-        return ((bool)\preg_match($regex, $left_string) ? 1 : 0) ^ $this->negatedInt;
+        return (bool)(((bool)\preg_match($regex, $left_string) ? 1 : 0) ^ $this->negatedInt);
       case Operator::IS:
         if (!$right is ConstantExpression) {
           throw new SQLFakeRuntimeException('Unsupported right operand for IS keyword');
@@ -248,7 +248,7 @@ final class BinaryOperatorExpression extends Expression {
         $r = $r_value;
 
         if ($r === null) {
-          return ($val === null ? 1 : 0) ^ $this->negatedInt;
+          return (bool)(($val === null ? 1 : 0) ^ $this->negatedInt);
         }
 
         // you can also do IS TRUE, IS FALSE, or IS UNKNOWN but I haven't implemented that yet mostly because those come through the parser as "RESERVED" rather than const expressions
@@ -267,7 +267,7 @@ final class BinaryOperatorExpression extends Expression {
         $regex = '/'.$pattern.'/'.$case_insensitive;
 
         // xor here, so if negated is true and regex matches then we return false etc.
-        return ((bool)\preg_match($regex, $left_string) ? 1 : 0) ^ $this->negatedInt;
+        return (bool)(((bool)\preg_match($regex, $left_string) ? 1 : 0) ^ $this->negatedInt);
       case Operator::AMPERSAND:
         return (int)$l_value & (int)$r_value;
       case Operator::DOUBLE_AMPERSAND:

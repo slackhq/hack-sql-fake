@@ -2,7 +2,7 @@
 
 namespace Slack\SQLFake;
 
-use namespace HH\Lib\{Dict, Str, Vec};
+use namespace HH\Lib\Str;
 
 /**
  * The query running interface
@@ -32,26 +32,16 @@ abstract final class SQLCommandProcessor {
       VitessQueryValidator::validate($query, $conn);
     }
 
-    $results = null;
     if ($query is SelectQuery) {
-      $results = tuple($query->execute($conn), 0);
+      return tuple($query->execute($conn), 0);
     } else if ($query is UpdateQuery) {
-      $results = tuple(vec[], $query->execute($conn));
+      return tuple(vec[], $query->execute($conn));
     } else if ($query is DeleteQuery) {
-      $results = tuple(vec[], $query->execute($conn));
+      return tuple(vec[], $query->execute($conn));
     } else if ($query is InsertQuery) {
-      $results = tuple(vec[], $query->execute($conn));
+      return tuple(vec[], $query->execute($conn));
     } else {
       throw new SQLFakeNotImplementedException('Unhandled query type: '.\get_class($query));
     }
-
-    return self::prepareResultsForExternalConsumption($results);
-  }
-
-  private static function prepareResultsForExternalConsumption((dataset, int) $results): (dataset, int) {
-    return tuple(
-      Vec\map($results[0], $row ==> Dict\map($row, $v ==> $v is WrappedJSON ? $v->__toString() : $v)),
-      $results[1],
-    );
   }
 }

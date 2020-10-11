@@ -233,22 +233,31 @@ type server_config = shape(
   ?'inherit_schema_from' => string,
 );
 
-// The only purpose of this is to retain the fact that this is a JSON type value
+// Wrapped values to retain original type information
 class WrappedJSON {
-  public function __construct(public mixed $json) {}
+  public function __construct(private mixed $json) {}
 
-  public function __toString(): string {
+  public function unwrap(): mixed {
+    $value = $this->json;
+    if ($value is null || $value is num || $value is bool) {
+      return $value;
+    }
+
+    return $this->asString();
+  }
+
+  public function asString(): string {
     return \json_encode($this->json);
   }
 
-  // null, num, bool & string (quoted) don't need wrapping
+  public function rawValue(): mixed {
+    return $this->json;
+  }
+
+  // null & num don't need wrapping
   public static function wrapIfNecessary(mixed $thing): mixed {
     if ($thing is null || $thing is num || $thing is bool) {
       return $thing;
-    }
-
-    if ($thing is string) {
-      return \json_encode($thing);
     }
 
     return new WrappedJSON($thing);

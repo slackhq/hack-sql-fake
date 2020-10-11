@@ -18,7 +18,7 @@ final class SubqueryExpression extends Expression {
    * Evaluate the subquery, passing the current row from the outer query along
    * for correlated subqueries (not currently supported)
    */
-  public function evaluate(row $row, AsyncMysqlConnection $conn): dataset {
+  public function evaluateImpl(row $row, AsyncMysqlConnection $conn): dataset {
     return $this->query->execute($conn, $row);
   }
 

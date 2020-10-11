@@ -26,7 +26,7 @@ final class ConstantExpression extends Expression {
         }
         return (int)$token['value'];
       case TokenType::BOOLEAN_CONSTANT:
-        return (int)$token['value'];
+        return (bool)$token['value'];
       case TokenType::STRING_CONSTANT:
         return (string)$token['value'];
       case TokenType::NULL_CONSTANT:
@@ -39,7 +39,7 @@ final class ConstantExpression extends Expression {
   }
 
   <<__Override>>
-  public function evaluate(row $_row, AsyncMysqlConnection $_conn): mixed {
+  public function evaluateImpl(row $_row, AsyncMysqlConnection $_conn): mixed {
     return $this->value;
   }
 

@@ -15,7 +15,7 @@ final class RowExpression extends Expression {
   }
 
   <<__Override>>
-  public function evaluate(row $row, AsyncMysqlConnection $conn): mixed {
+  public function evaluateImpl(row $row, AsyncMysqlConnection $conn): mixed {
 
     $result = vec[];
 

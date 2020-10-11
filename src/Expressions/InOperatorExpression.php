@@ -20,7 +20,7 @@ final class InOperatorExpression extends Expression {
   }
 
   <<__Override>>
-  public function evaluate(row $row, AsyncMysqlConnection $conn): mixed {
+  public function evaluateImpl(row $row, AsyncMysqlConnection $conn): bool {
     $inList = $this->inList;
     if ($inList === null || C\count($inList) === 0) {
       throw new SQLFakeParseException('Parse error: empty IN list');

@@ -24,47 +24,56 @@ final class JSONFunctionTest extends HackTest {
     public static async function testJSONValidProvider(): Awaitable<vec<mixed>> {
         return vec[
             // Valid
-            tuple('null'),
-            tuple('{"key": "value"}'),
-            tuple('[{"key": "value"}]'),
-            tuple('""'),
-            tuple('true'),
-            tuple('false'),
-            tuple('2'),
+            tuple("'null'", 1),
+            tuple("'{\"key\": \"value\"}'", 1),
+            tuple("'[{\"key\": \"value\"}]'", 1),
+            tuple("'\"\"'", 1),
+            tuple("'true'", 1),
+            tuple("'false'", 1),
+            tuple("'2'", 1),
 
             // Invalid
-            tuple(' ', false),
-            tuple('arbitrary_string', false),
+            tuple("' '", 0),
+            tuple("'arbitrary_string'", 0),
+            tuple('NULL', null),
+            tuple('2', 0),
+            tuple('TRUE', 0),
         ];
     }
 
     <<DataProvider('testJSONValidProvider')>>
-    public async function testJSONValid(string $json, bool $valid = true): Awaitable<void> {
+    public async function testJSONValid(string $json, ?int $expected): Awaitable<void> {
         $conn = static::$conn as nonnull;
-        $results = await $conn->query("SELECT JSON_VALID('{$json}') as valid");
+        $results = await $conn->query("SELECT JSON_VALID($json) as valid");
 
-        $validString = $valid ? 'valid' : 'invalid';
-        expect($results->rows())->toBeSame(vec[dict['valid' => $valid ? 1 : 0]], "{$json} is {$validString}");
+        $expectedString = $expected is null ? 'NULL' : (string)$expected;
+        expect($results->rows())->toBeSame(vec[dict['valid' => $expected]], "JSON_VALID({$json}) => {$expectedString}");
     }
 
     public static async function testJSONQuoteProvider(): Awaitable<vec<mixed>> {
         return vec[
-            tuple('null', '"null"'),
-            tuple('a', '"a"'),
-            tuple('{"a":"c"}', '"{\"a\":\"c\"}"'),
-            tuple('[1, """]', '"[1, \"\"\"]"'),
-            tuple('[1, "\\\\"]', '"[1, \"\\\\\"]"'), // In PHP \\ represents \ in single & double quoted strings
-            tuple('►', '"►"'), // MySQL doesn't seem to escape these
-            tuple("2\n2", '"2\\n2"'), // Escapes newline
-            tuple('22'.\chr(8), '"22\\b"'), // Escapes backspace character
+            tuple('null', null),
+            tuple("'null'", '"null"'),
+            tuple("'a'", '"a"'),
+            tuple("'{\"a\":\"c\"}'", '"{\"a\":\"c\"}"'),
+            tuple("'[1, \"\"\"]'", '"[1, \"\"\"]"'),
+            tuple("'[1, \"\\\\\"]'", '"[1, \"\\\\\"]"'), // In PHP \\ represents \ in single & double quoted strings
+            tuple("'►'", '"►"'), // MySQL doesn't seem to escape these
+            tuple("'2\n2'", '"2\\n2"'), // Escapes newline
+            tuple("'".'22'.\chr(8)."'", '"22\\b"'), // Escapes backspace character
         ];
     }
 
     <<DataProvider('testJSONQuoteProvider')>>
-    public async function testJSONQuote(string $input, string $expected): Awaitable<void> {
+    public async function testJSONQuote(string $input, ?string $expected): Awaitable<void> {
         $conn = static::$conn as nonnull;
-        $results = await $conn->query("SELECT JSON_QUOTE('{$input}') as quoted");
-        expect($results->rows())->toBeSame(vec[dict['quoted' => $expected]], "{$input} => {$expected}");
+        $results = await $conn->query("SELECT JSON_QUOTE({$input}) as quoted");
+
+        $expectedString = $expected is null ? 'NULL' : $expected;
+        expect($results->rows())->toBeSame(
+            vec[dict['quoted' => $expected]],
+            "JSON_QUOTE({$input}) => {$expectedString}",
+        );
     }
 
     public static async function testJSONUnquoteProvider(): Awaitable<vec<mixed>> {
@@ -121,7 +130,7 @@ final class JSONFunctionTest extends HackTest {
             // valid
             tuple(shape('json' => '{"a": {"b": "test"}}', 'paths' => vec["'$.a.b'"]), shape('value' => '"test"')),
             tuple(shape('json' => '{"a": {"b": 2}}', 'paths' => vec["'$.a.b'"]), shape('value' => 2)),
-            tuple(shape('json' => '{"a": {"b": true}}', 'paths' => vec["'$.a.b'"]), shape('value' => true)),
+            tuple(shape('json' => '{"a": {"b": true}}', 'paths' => vec["'$.a.b'"]), shape('value' => 1)),
             tuple(
                 shape('json' => '{"a": {"b": 2, "c": "test"}}', 'paths' => vec["'$.a.b'", '\'$."a"."c"\'']),
                 shape('value' => '[2,"test"]'),
@@ -271,29 +280,63 @@ final class JSONFunctionTest extends HackTest {
 
     public static async function testJSONFunctionCompositionProvider(): Awaitable<vec<mixed>> {
         return vec[
-            tuple("JSON_EXTRACT(JSON_EXTRACT('{\"a\":true}', '$'), '$.a')", true),
-            tuple("JSON_REPLACE(JSON_EXTRACT('{\"a\":{\"b\": 2}}', '$.a'), '$.b', true)", '{"b":true}'),
+            tuple("JSON_EXTRACT(JSON_EXTRACT('{\"a\":true}', '$'), '$.a')", shape('value' => 1)),
+            tuple(
+                "JSON_REPLACE(JSON_EXTRACT('{\"a\":{\"b\": 2}}', '$.a'), '$.b', true)",
+                shape('value' => '{"b":true}'),
+            ),
             tuple(
                 "JSON_REPLACE('[0,1]', '$[1]', REPLACE(JSON_UNQUOTE(JSON_EXTRACT('{\"a\":{\"b\": \"test\"}}', '$.a.b')), 'te', 're'))",
-                '[0,"rest"]',
+                shape('value' => '[0,"rest"]'),
             ),
+            tuple("JSON_REPLACE('{\"b\":2}', '$.b', 1 < 2)", shape('value' => '{"b":true}')),
+            tuple(
+                "JSON_REPLACE('[0,1]', '$[1]', JSON_EXTRACT('{\"a\": \"test\"}', '$.a'))",
+                shape('value' => '[0,"test"]'),
+            ),
+            tuple(
+                "JSON_REPLACE('{\"a\":2}', JSON_UNQUOTE(JSON_EXTRACT('{\"b\":\"$.a\"}', '$.b')), 4)",
+                shape('value' => '{"a":4}'),
+            ),
+            tuple("JSON_UNQUOTE(JSON_EXTRACT('{\"a\": true}', '$.a'))", shape('value' => 'true')),
+            tuple("JSON_UNQUOTE(JSON_EXTRACT('{\"a\": \"test\"}', '$.a'))", shape('value' => 'test')),
+            tuple("JSON_UNQUOTE(JSON_EXTRACT('{\"a\": 5}', '$.a'))", shape('value' => '5')),
 
-            // This is broken right now due to 1 < 2 returning int & no way to knowing it's boolean
-            // tuple("JSON_REPLACE('{\"b\":2}', '$.b', 1 < 2)", '{"b":true}'),
-
-            // This is broken due to quoting issue with JSON_EXTRACT
-            // JSON_EXTRACT always returns a quoted string in sql-fake (if returning a string), but MySQL unquotes the string
-            // if used in something like JSON_REPLACE (this unquoting functionality does not exist in sql-fake).
-            // The following will get double quoted and end up producing [0,"\\"test\\""]
-            // tuple("JSON_REPLACE('[0,1]', '$[1]', JSON_EXTRACT('{\"a\": \"test\"}', '$.a'))", '[0,"test"]'),
+            // exceptional
+            tuple(
+                "JSON_QUOTE(JSON_EXTRACT('{\"a\":\"test\"}', '$.a'))", // JSON_EXTRACT output as JSON_QUOTE arg
+                shape('exceptional' => true),
+            ),
+            tuple(
+                "JSON_REPLACE('{\"a\":2}', JSON_EXTRACT('{\"b\":\"$.a\"}', '$.b'), 2)", //JSON_REPLACE path doesn't support JSON_EXTRACT
+                shape('exceptional' => true),
+            ),
         ];
     }
 
     <<DataProvider('testJSONFunctionCompositionProvider')>>
-    public async function testJSONFunctionComposition(string $sql, mixed $expected): Awaitable<void> {
-        $conn = static::$conn as nonnull;
+    public async function testJSONFunctionComposition(
+        string $sql,
+        shape(?'exceptional' => bool, ?'value' => mixed) $output,
+    ): Awaitable<void> {
+        $exceptional = $output['exceptional'] ?? false;
 
-        $results = await $conn->query('SELECT '.$sql.'AS expected');
-        expect($results->rows())->toBeSame(vec[dict['expected' => $expected]]);
+        $conn = static::$conn as nonnull;
+        $sql = 'SELECT '.$sql.' AS expected';
+
+        if (!$exceptional) {
+            invariant(Shapes::keyExists($output, 'value'), 'expected value must be present in non-exceptional cases');
+            $results = await $conn->query($sql);
+            expect($results->rows())->toBeSame(vec[dict['expected' => $output['value']]]);
+            return;
+        }
+
+        $exceptionThrown = false;
+        try {
+            $results = await $conn->query($sql);
+        } catch (SQLFakeRuntimeException $e) {
+            $exceptionThrown = true;
+        }
+        expect($exceptionThrown)->toBeTrue('exception was not thrown');
     }
 }

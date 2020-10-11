@@ -4,6 +4,11 @@ namespace Slack\SQLFake;
 
 use namespace HH\Lib\C;
 
+type ExpressionEvaluationOpts = shape(
+  ?'unwrap_json' => bool,
+  ?'bool_as_int' => bool,
+);
+
 /*
 * An ExpressionParser Expression is something that can be evaluated one row at a time
 * Evaluating it will yield a constant value.
@@ -45,10 +50,33 @@ abstract class Expression {
    */
   public abstract function isWellFormed(): bool;
 
+
+  // This is not the method to override by the concrete Expression subclasses ()
+  public function evaluate(
+    row $row,
+    AsyncMysqlConnection $conn,
+    ExpressionEvaluationOpts $opts = shape('unwrap_json' => true, 'bool_as_int' => true),
+  ): mixed {
+    $unwrapJSON = $opts['unwrap_json'] ?? true;
+    $boolAsInt = $opts['bool_as_int'] ?? true;
+
+    $result = $this->evaluateImpl($row, $conn);
+
+    if ($result is WrappedJSON) {
+      $result = $unwrapJSON ? $result->unwrap() : $result;
+    }
+
+    if ($result is bool) {
+      return $boolAsInt ? (int)$result : $result;
+    }
+
+    return $result;
+  }
+
   /**
    * a lot of times you just want the value
    */
-  public abstract function evaluate(row $row, AsyncMysqlConnection $conn): mixed;
+  public abstract function evaluateImpl(row $row, AsyncMysqlConnection $conn): mixed;
 
   /**
    * when evaluating an expression in a Select, we want its name to use as the column name

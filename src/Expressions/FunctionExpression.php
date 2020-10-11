@@ -23,7 +23,7 @@ class FunctionExpression extends Expression {
   }
 
   <<__Override>>
-  public function evaluate(row $row, AsyncMysqlConnection $conn): mixed {
+  public function evaluateImpl(row $row, AsyncMysqlConnection $conn): mixed {
 
     switch ($this->functionName) {
       case 'COUNT':
