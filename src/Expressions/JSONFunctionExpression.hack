@@ -126,11 +126,11 @@ final class JSONFunctionExpression extends BaseFunctionExpression {
             throw new SQLFakeRuntimeException('MySQL JSON_EXTRACT() function doc has incorrect type');
         }
 
-        $jsonPaths = Vec\map(
+        $jsonPathWithNulls = Vec\map(
             Vec\slice($args, 1),
             $a ==> {
                 $evaled = $a->evaluate($row, $conn, self::RETAIN_JSON_EVAL_OPTS);
-                if (!($evaled is string)) {
+                if ($evaled is nonnull && !($evaled is string)) {
                     throw new SQLFakeRuntimeException(
                         'MySQL JSON_EXTRACT() function encountered non string JSON path argument',
                     );
@@ -138,6 +138,11 @@ final class JSONFunctionExpression extends BaseFunctionExpression {
                 return $evaled;
             },
         );
+
+        $jsonPaths = Vec\filter_nulls($jsonPathWithNulls);
+        if (C\count($jsonPaths) !== C\count($jsonPathWithNulls)) {
+            return null;
+        }
 
         $results = vec[];
         try {
@@ -192,12 +197,12 @@ final class JSONFunctionExpression extends BaseFunctionExpression {
             throw new SQLFakeRuntimeException('MySQL JSON_EXTRACT() function doc has incorrect type');
         }
 
-        $jsonPathValuePairs = Vec\slice($args, 1)
+        $replacementsWithNulls = Vec\slice($args, 1)
             |> Vec\map($$, $a ==> $a->evaluate($row, $conn, self::RETAIN_ALL_EVAL_OPTS))
             |> Vec\chunk($$, 2)
             |> Vec\map($$, $v ==> {
                 $path = $v[0];
-                if (!($path is string)) {
+                if ($path is nonnull && !($path is string)) {
                     throw new SQLFakeRuntimeException('MySQL JSON_REPLACE() function encountered non string JSON path');
                 }
 
@@ -208,10 +213,22 @@ final class JSONFunctionExpression extends BaseFunctionExpression {
                 return shape('path' => $path, 'value' => $value);
             });
 
+        $replacements = vec[];
+        // Doing it this way to please typechecker that replacements doesn't have any NULL path
+        foreach ($replacementsWithNulls as $replacement) {
+            $path = $replacement['path'];
+            if ($path is nonnull) {
+                $replacements[] = shape('path' => $path, 'value' => $replacement['value']);
+            }
+        }
+        if (C\count($replacements) !== C\count($replacementsWithNulls)) {
+            return null;
+        }
+
         try {
             $current = new JSONPath\JSONObject($json);
 
-            foreach ($jsonPathValuePairs as $replacement) {
+            foreach ($replacements as $replacement) {
                 $current = $current->replace($replacement['path'], $replacement['value'])->value;
             }
 

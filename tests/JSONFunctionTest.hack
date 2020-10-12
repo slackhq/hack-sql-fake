@@ -98,6 +98,7 @@ final class JSONFunctionTest extends HackTest {
 
     public static async function testJSONUnquoteProvider(): Awaitable<vec<mixed>> {
         return vec[
+            tuple('null', shape('value' => null)),
             tuple('"null"', shape('value' => 'null')),
             tuple('"a"', shape('value' => 'a')),
             tuple("'\\\\'", shape('value' => '\\')), // no-op
@@ -118,7 +119,7 @@ final class JSONFunctionTest extends HackTest {
     <<DataProvider('testJSONUnquoteProvider')>>
     public async function testJSONUnquote(
         string $input,
-        shape(?'exceptional' => bool, ?'value' => string) $output,
+        shape(?'exceptional' => bool, ?'value' => ?string) $output,
     ): Awaitable<void> {
         $exceptional = $output['exceptional'] ?? false;
 
@@ -129,9 +130,10 @@ final class JSONFunctionTest extends HackTest {
         if (!$exceptional) {
             invariant(Shapes::keyExists($output, 'value'), 'expected value must be present in non-exceptional cases');
             $results = await $conn->query($sql);
+            $expectedString = $output['value'] is null ? 'NULL' : $output['value'];
             expect($results->rows())->toBeSame(
                 vec[dict['unquoted' => $output['value']]],
-                "{$input} => {$output['value']}",
+                "{$input} => {$expectedString}",
             );
             return;
         }
@@ -143,7 +145,8 @@ final class JSONFunctionTest extends HackTest {
         return vec[
             // valid
             tuple(shape('json' => null, 'paths' => vec["'$.a'"]), shape('value' => null)),
-            tuple(shape('json' => 'null', 'paths' => vec["'$'"]), shape('value' => 'null')),
+            tuple(shape('json' => null, 'paths' => vec["'$.a'"]), shape('value' => null)),
+            tuple(shape('json' => '{"a": {"b": "test"}}', 'paths' => vec['NULL']), shape('value' => null)),
             tuple(shape('json' => '{"a": {"b": "test"}}', 'paths' => vec["'$.a.b'"]), shape('value' => '"test"')),
             tuple(shape('json' => '{"a": {"b": 2}}', 'paths' => vec["'$.a.b'"]), shape('value' => '2')),
             tuple(shape('json' => '{"a": {"b": true}}', 'paths' => vec["'$.a.b'"]), shape('value' => 'true')),
@@ -210,42 +213,50 @@ final class JSONFunctionTest extends HackTest {
     public static async function testJSONReplaceProvider(): Awaitable<vec<mixed>> {
         return vec[
             tuple(
-                shape('json' => null, 'replacements' => vec[shape('path' => '$.a', 'value' => '2')]),
+                shape('json' => 'null', 'replacements' => vec[shape('path' => "'$.a'", 'value' => '2')]),
                 shape('value' => null),
             ),
             tuple(
-                shape('json' => 'null', 'replacements' => vec[shape('path' => '$.a', 'value' => '2')]),
+                shape('json' => "'{}'", 'replacements' => vec[shape('path' => 'NULL', 'value' => '2')]),
+                shape('value' => null),
+            ),
+            tuple(
+                shape('json' => "'[1]'", 'replacements' => vec[shape('path' => "'$[0]'", 'value' => 'NULL')]),
+                shape('value' => '[null]'),
+            ),
+            tuple(
+                shape('json' => "'null'", 'replacements' => vec[shape('path' => "'$.a'", 'value' => '2')]),
                 shape('value' => 'null'),
             ),
             tuple(
                 shape(
-                    'json' => '{"a":{"b":"test"}}',
-                    'replacements' => vec[shape('path' => '$.a.b', 'value' => 2)],
+                    'json' => "'{\"a\":{\"b\":\"test\"}}'",
+                    'replacements' => vec[shape('path' => "'$.a.b'", 'value' => '2')],
                 ),
                 shape('value' => '{"a":{"b":2}}'),
             ),
             tuple(
                 shape(
-                    'json' => '2',
-                    'replacements' => vec[shape('path' => '$.a', 'value' => 45)],
+                    'json' => "'2'",
+                    'replacements' => vec[shape('path' => "'$.a'", 'value' => '45')],
                 ),
                 shape('value' => '2'),
             ),
             // no-op
             tuple(
                 shape(
-                    'json' => '{"a": {"b":"test"}}',
-                    'replacements' => vec[shape('path' => '$.b', 'value' => 45)],
+                    'json' => "'{\"a\": {\"b\":\"test\"}}'",
+                    'replacements' => vec[shape('path' => "'$.b'", 'value' => '45')],
                 ),
                 shape('value' => '{"a":{"b":"test"}}'),
             ),
             // multiple
             tuple(
                 shape(
-                    'json' => '{"a": [1,2]}',
+                    'json' => "'{\"a\": [1,2]}'",
                     'replacements' => vec[
-                        shape('path' => '$.a[0]', 'value' => '3'),
-                        shape('path' => '$.a[1]', 'value' => '4'),
+                        shape('path' => "'$.a[0]'", 'value' => '3'),
+                        shape('path' => "'$.a[1]'", 'value' => '4'),
                     ],
                 ),
                 shape('value' => '{"a":[3,4]}'),
@@ -253,10 +264,10 @@ final class JSONFunctionTest extends HackTest {
             // successive replacements work off interim object
             tuple(
                 shape(
-                    'json' => '{"a": [1,2]}',
+                    'json' => "'{\"a\": [1,2]}'",
                     'replacements' => vec[
-                        shape('path' => '$.a[0]', 'value' => '3'),
-                        shape('path' => '$.a[0]', 'value' => '4'),
+                        shape('path' => "'$.a[0]'", 'value' => '3'),
+                        shape('path' => "'$.a[0]'", 'value' => '4'),
                     ],
                 ),
                 shape('value' => '{"a":[4,2]}'),
@@ -266,7 +277,7 @@ final class JSONFunctionTest extends HackTest {
 
     <<DataProvider('testJSONReplaceProvider')>>
     public async function testJSONReplace(
-        shape('json' => ?string, 'replacements' => vec<shape('path' => string, 'value' => string)>) $input,
+        shape('json' => string, 'replacements' => vec<shape('path' => string, 'value' => string)>) $input,
         shape(?'exceptional' => bool, ?'value' => string) $output,
     ): Awaitable<void> {
         $exceptional = $output['exceptional'] ?? false;
@@ -275,14 +286,13 @@ final class JSONFunctionTest extends HackTest {
         $replacementsSql = C\reduce(
             $input['replacements'],
             ($acc, $r) ==> {
-                $current = Str\format('\'%s\', %s', $r['path'], $r['value']);
+                $current = Str\format('%s, %s', $r['path'], $r['value']);
                 return !Str\is_empty($acc) ? Str\format('%s, %s', $acc, $current) : $current;
             },
             '',
         );
 
-        $json = $input['json'] is null ? 'NULL' : "'{$input['json']}'";
-        $sql = "SELECT JSON_REPLACE({$json}, {$replacementsSql}) as replaced";
+        $sql = "SELECT JSON_REPLACE({$input['json']}, {$replacementsSql}) as replaced";
 
         if (!$exceptional) {
             invariant(Shapes::keyExists($output, 'value'), 'expected value must be present in non-exceptional cases');
