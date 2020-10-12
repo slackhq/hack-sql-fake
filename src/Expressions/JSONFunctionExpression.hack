@@ -7,7 +7,7 @@ use namespace Slack\SQLFake\JSONPath;
  * emulates a call to a built-in MySQL JSON function
  * we implement as many as we want to in Hack
  */
-final class JSONFunctionExpression extends FunctionExpression {
+final class JSONFunctionExpression extends BaseFunctionExpression {
     const ExpressionEvaluationOpts RETAIN_ALL_EVAL_OPTS = shape(
         'unwrap_json' => false,
         'bool_as_int' => false,
