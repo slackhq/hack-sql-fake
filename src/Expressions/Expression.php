@@ -5,7 +5,7 @@ namespace Slack\SQLFake;
 use namespace HH\Lib\C;
 
 type ExpressionEvaluationOpts = shape(
-  ?'unwrap_json' => bool,
+  ?'encode_json' => bool,
   ?'bool_as_int' => bool,
 );
 
@@ -55,15 +55,15 @@ abstract class Expression {
   public function evaluate(
     row $row,
     AsyncMysqlConnection $conn,
-    ExpressionEvaluationOpts $opts = shape('unwrap_json' => true, 'bool_as_int' => true),
+    ExpressionEvaluationOpts $opts = shape('encode_json' => true, 'bool_as_int' => true),
   ): mixed {
-    $unwrapJSON = $opts['unwrap_json'] ?? true;
+    $encodeJSON = $opts['encode_json'] ?? true;
     $boolAsInt = $opts['bool_as_int'] ?? true;
 
     $result = $this->evaluateImpl($row, $conn);
 
     if ($result is WrappedJSON) {
-      $result = $unwrapJSON ? $result->unwrap() : $result;
+      $result = $encodeJSON ? $result->asString() : $result;
     }
 
     if ($result is bool) {

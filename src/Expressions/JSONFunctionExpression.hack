@@ -8,8 +8,12 @@ use namespace Slack\SQLFake\JSONPath;
  * we implement as many as we want to in Hack
  */
 final class JSONFunctionExpression extends BaseFunctionExpression {
+    const ExpressionEvaluationOpts RETAIN_JSON_EVAL_OPTS = shape(
+        'encode_json' => false,
+    );
+
     const ExpressionEvaluationOpts RETAIN_ALL_EVAL_OPTS = shape(
-        'unwrap_json' => false,
+        'encode_json' => false,
         'bool_as_int' => false,
     );
 
@@ -62,7 +66,7 @@ final class JSONFunctionExpression extends BaseFunctionExpression {
             throw new SQLFakeRuntimeException('MySQL JSON_QUOTE() function must be called with one argument');
         }
 
-        $value = $args[0]->evaluate($row, $conn, self::RETAIN_ALL_EVAL_OPTS);
+        $value = $args[0]->evaluate($row, $conn, self::RETAIN_JSON_EVAL_OPTS);
         if ($value is null) {
             return null;
         }
@@ -81,13 +85,9 @@ final class JSONFunctionExpression extends BaseFunctionExpression {
             throw new SQLFakeRuntimeException('MySQL JSON_UNQUOTE() function must be called with one argument');
         }
 
-        $value = $args[0]->evaluate($row, $conn, shape('unwrap_json' => false));
+        $value = $args[0]->evaluate($row, $conn);
         if ($value is null) {
             return null;
-        }
-
-        if ($value is WrappedJSON) {
-            $value = $value->asString();
         }
 
         if (!($value is string)) {
@@ -119,6 +119,9 @@ final class JSONFunctionExpression extends BaseFunctionExpression {
         }
 
         $json = $args[0]->evaluate($row, $conn);
+        if ($json is null) {
+            return null;
+        }
         if (!($json is string)) {
             throw new SQLFakeRuntimeException('MySQL JSON_EXTRACT() function doc has incorrect type');
         }
@@ -126,7 +129,7 @@ final class JSONFunctionExpression extends BaseFunctionExpression {
         $jsonPaths = Vec\map(
             Vec\slice($args, 1),
             $a ==> {
-                $evaled = $a->evaluate($row, $conn, self::RETAIN_ALL_EVAL_OPTS);
+                $evaled = $a->evaluate($row, $conn, self::RETAIN_JSON_EVAL_OPTS);
                 if (!($evaled is string)) {
                     throw new SQLFakeRuntimeException(
                         'MySQL JSON_EXTRACT() function encountered non string JSON path argument',
@@ -143,7 +146,10 @@ final class JSONFunctionExpression extends BaseFunctionExpression {
             if (C\count($jsonPaths) === 1) {
                 // This is the only case, we can return the raw value instead of wrapping in vec[]
                 $result = $jsonObject->get($jsonPaths[0]);
-                return new WrappedJSON($result);
+                if ($result is null) {
+                    return null;
+                }
+                return new WrappedJSON($result->value);
             }
 
             $results = C\reduce(
@@ -153,7 +159,7 @@ final class JSONFunctionExpression extends BaseFunctionExpression {
                     if ($result is null) {
                         return $acc;
                     }
-                    $result = ($result is vec<_>) ? $result : vec[$result];
+                    $result = ($result->value is vec<_>) ? $result->value : vec[$result->value];
                     return Vec\concat($acc, $result);
                 },
                 vec[],
@@ -179,6 +185,9 @@ final class JSONFunctionExpression extends BaseFunctionExpression {
         }
 
         $json = $args[0]->evaluate($row, $conn);
+        if ($json is null) {
+            return null;
+        }
         if (!($json is string)) {
             throw new SQLFakeRuntimeException('MySQL JSON_EXTRACT() function doc has incorrect type');
         }
@@ -203,7 +212,7 @@ final class JSONFunctionExpression extends BaseFunctionExpression {
             $current = new JSONPath\JSONObject($json);
 
             foreach ($jsonPathValuePairs as $replacement) {
-                $current = $current->replace($replacement['path'], $replacement['value']);
+                $current = $current->replace($replacement['path'], $replacement['value'])->value;
             }
 
             return new WrappedJSON($current->getValue());

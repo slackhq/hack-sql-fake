@@ -101,6 +101,7 @@ final class JSONObjectTest extends HackTest {
       tuple('$.store.book[-4, -2, -1]', shape('exceptional' => true)),
       tuple('$.store.bicycle.price', shape('value' => vec[19.95])),
       tuple('$."store".bicycle."price"', shape('value' => vec[19.95])),
+      tuple('$."store".bicycle.model', shape('value' => vec[null])),
       tuple('$.store.bicycle.sku-number', shape('value' => vec['BCCLE-0001-RD'])),
       tuple(
         '$.store.bicycle',
@@ -205,18 +206,23 @@ final class JSONObjectTest extends HackTest {
     $jsonObject = new JSONObject($this->json);
     if (!$exceptional) {
       invariant(Shapes::keyExists($output, 'value'), 'expected value must be present in non-exceptional cases');
-      expect($jsonObject->get($jsonPath))->toEqual($output['value'], $jsonPath);
+
+      $value = $output['value'];
+      $results = $jsonObject->get($jsonPath);
+
+
+      if ($value is nonnull) {
+        expect($results)->toNotBeNull();
+        invariant($results is nonnull, 'just making typechecker happy');
+        expect($results->value)->toEqual($output['value'], $jsonPath);
+      } else {
+        expect($results)->toBeNull();
+      }
+
       return;
     }
 
-    $exceptionThrown = false;
-    try {
-      $jsonObject->get($jsonPath);
-    } catch (JSONException $e) {
-      $exceptionThrown = true;
-    }
-
-    expect($exceptionThrown)->toBeTrue();
+    expect(() ==> $jsonObject->get($jsonPath))->toThrow(JSONException::class);
   }
 
   public static async function testSmartGetProvider(): Awaitable<vec<mixed>> {
@@ -268,18 +274,22 @@ final class JSONObjectTest extends HackTest {
     $jsonObject = new JSONObject($this->json, true);
     if (!$exceptional) {
       invariant(Shapes::keyExists($output, 'value'), 'expected value must be present in non-exceptional cases');
-      expect($jsonObject->get($jsonPath))->toEqual($output['value'], $jsonPath);
+
+      $value = $output['value'];
+      $results = $jsonObject->get($jsonPath);
+
+      if ($value is nonnull) {
+        expect($results)->toNotBeNull();
+        invariant($results is nonnull, 'just making typechecker happy');
+        expect($results->value)->toEqual($output['value'], $jsonPath);
+      } else {
+        expect($results)->toBeNull();
+      }
+
       return;
     }
 
-    $exceptionThrown = false;
-    try {
-      $jsonObject->get($jsonPath);
-    } catch (JSONException $e) {
-      $exceptionThrown = true;
-    }
-
-    expect($exceptionThrown)->toBeTrue();
+    expect(() ==> $jsonObject->get($jsonPath))->toThrow(JSONException::class);
   }
 
   public static async function testReplaceProvider(): Awaitable<vec<mixed>> {
@@ -423,18 +433,11 @@ final class JSONObjectTest extends HackTest {
     if (!$exceptional) {
       invariant(Shapes::keyExists($output, 'value'), 'expected value must be present in non-exceptional cases');
       $result = $jsonObject->replace($jsonPath, $value);
-      expect($result->getValue())->toEqual($output['value'], $jsonPath);
+      expect($result->value->getValue())->toEqual($output['value'], $jsonPath);
       return;
     }
 
-    $exceptionThrown = false;
-    try {
-      $jsonObject->replace($jsonPath, $value);
-    } catch (JSONException $e) {
-      $exceptionThrown = true;
-    }
-
-    expect($exceptionThrown)->toBeTrue();
+    expect(() ==> $jsonObject->replace($jsonPath, $value))->toThrow(JSONException::class);
   }
 
   public static async function testConstructorErrorsProvider(): Awaitable<vec<mixed>> {
@@ -448,13 +451,6 @@ final class JSONObjectTest extends HackTest {
 
   <<DataProvider('testConstructorErrorsProvider')>>
   public async function testConstructErrors(mixed $json): Awaitable<void> {
-    $exceptionThrown = false;
-    try {
-      new JSONObject($json);
-    } catch (JSONException $e) {
-      $exceptionThrown = true;
-    }
-
-    expect($exceptionThrown)->toBeTrue();
+    expect(() ==> new JSONObject($json))->toThrow(JSONException::class);
   }
 }

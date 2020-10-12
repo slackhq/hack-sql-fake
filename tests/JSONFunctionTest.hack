@@ -52,28 +52,48 @@ final class JSONFunctionTest extends HackTest {
 
     public static async function testJSONQuoteProvider(): Awaitable<vec<mixed>> {
         return vec[
-            tuple('null', null),
-            tuple("'null'", '"null"'),
-            tuple("'a'", '"a"'),
-            tuple("'{\"a\":\"c\"}'", '"{\"a\":\"c\"}"'),
-            tuple("'[1, \"\"\"]'", '"[1, \"\"\"]"'),
-            tuple("'[1, \"\\\\\"]'", '"[1, \"\\\\\"]"'), // In PHP \\ represents \ in single & double quoted strings
-            tuple("'►'", '"►"'), // MySQL doesn't seem to escape these
-            tuple("'2\n2'", '"2\\n2"'), // Escapes newline
-            tuple("'".'22'.\chr(8)."'", '"22\\b"'), // Escapes backspace character
+            tuple('null', shape('value' => null)),
+            tuple("'null'", shape('value' => '"null"')),
+            tuple("'a'", shape('value' => '"a"')),
+            tuple("'{\"a\":\"c\"}'", shape('value' => '"{\"a\":\"c\"}"')),
+            tuple("'[1, \"\"\"]'", shape('value' => '"[1, \"\"\"]"')),
+            tuple(
+                "'[1, \"\\\\\"]'",
+                shape('value' => '"[1, \"\\\\\"]"'),
+            ), // In PHP \\ represents \ in single & double quoted strings
+            tuple("'►'", shape('value' => '"►"')), // MySQL doesn't seem to escape these
+            tuple("'2\n2'", shape('value' => '"2\\n2"')), // Escapes newline
+            tuple("'".'22'.\chr(8)."'", shape('value' => '"22\\b"')), // Escapes backspace character
+
+            // invalid
+            tuple('TRUE', shape('exceptional' => true)),
+            tuple('45', shape('exceptional' => true)),
         ];
     }
 
     <<DataProvider('testJSONQuoteProvider')>>
-    public async function testJSONQuote(string $input, ?string $expected): Awaitable<void> {
-        $conn = static::$conn as nonnull;
-        $results = await $conn->query("SELECT JSON_QUOTE({$input}) as quoted");
+    public async function testJSONQuote(
+        string $input,
+        shape(?'exceptional' => bool, ?'value' => ?string) $output,
+    ): Awaitable<void> {
+        $exceptional = $output['exceptional'] ?? false;
 
-        $expectedString = $expected is null ? 'NULL' : $expected;
-        expect($results->rows())->toBeSame(
-            vec[dict['quoted' => $expected]],
-            "JSON_QUOTE({$input}) => {$expectedString}",
-        );
+        $conn = static::$conn as nonnull;
+
+        $sql = "SELECT JSON_QUOTE({$input}) as quoted";
+
+        if (!$exceptional) {
+            invariant(Shapes::keyExists($output, 'value'), 'expected value must be present in non-exceptional cases');
+            $results = await $conn->query($sql);
+            $expectedString = $output['value'] is null ? 'NULL' : $output['value'];
+            expect($results->rows())->toBeSame(
+                vec[dict['quoted' => $output['value']]],
+                "JSON_QUOTE({$input}) => {$expectedString}",
+            );
+            return;
+        }
+
+        expect(async () ==> await $conn->query($sql))->toThrow(SQLFakeRuntimeException::class);
     }
 
     public static async function testJSONUnquoteProvider(): Awaitable<vec<mixed>> {
@@ -116,21 +136,17 @@ final class JSONFunctionTest extends HackTest {
             return;
         }
 
-        $exceptionThrown = false;
-        try {
-            $results = await $conn->query($sql);
-        } catch (SQLFakeRuntimeException $e) {
-            $exceptionThrown = true;
-        }
-        expect($exceptionThrown)->toBeTrue();
+        expect(async () ==> await $conn->query($sql))->toThrow(SQLFakeRuntimeException::class);
     }
 
     public static async function testJSONExtractProvider(): Awaitable<vec<mixed>> {
         return vec[
             // valid
+            tuple(shape('json' => null, 'paths' => vec["'$.a'"]), shape('value' => null)),
+            tuple(shape('json' => 'null', 'paths' => vec["'$'"]), shape('value' => 'null')),
             tuple(shape('json' => '{"a": {"b": "test"}}', 'paths' => vec["'$.a.b'"]), shape('value' => '"test"')),
-            tuple(shape('json' => '{"a": {"b": 2}}', 'paths' => vec["'$.a.b'"]), shape('value' => 2)),
-            tuple(shape('json' => '{"a": {"b": true}}', 'paths' => vec["'$.a.b'"]), shape('value' => 1)),
+            tuple(shape('json' => '{"a": {"b": 2}}', 'paths' => vec["'$.a.b'"]), shape('value' => '2')),
+            tuple(shape('json' => '{"a": {"b": true}}', 'paths' => vec["'$.a.b'"]), shape('value' => 'true')),
             tuple(
                 shape('json' => '{"a": {"b": 2, "c": "test"}}', 'paths' => vec["'$.a.b'", '\'$."a"."c"\'']),
                 shape('value' => '[2,"test"]'),
@@ -170,14 +186,16 @@ final class JSONFunctionTest extends HackTest {
 
     <<DataProvider('testJSONExtractProvider')>>
     public async function testJSONExtract(
-        shape('json' => string, 'paths' => vec<string>) $input,
+        shape('json' => ?string, 'paths' => vec<string>) $input,
         shape(?'value' => string, ?'exceptional' => bool) $output,
     ): Awaitable<void> {
         $exceptional = $output['exceptional'] ?? false;
         $conn = static::$conn as nonnull;
 
         $pathsSql = Str\join($input['paths'], ', ');
-        $sql = "SELECT JSON_EXTRACT('{$input['json']}', {$pathsSql}) as extracted";
+
+        $json = $input['json'] is null ? 'NULL' : "'{$input['json']}'";
+        $sql = "SELECT JSON_EXTRACT({$json}, {$pathsSql}) as extracted";
 
         if (!$exceptional) {
             invariant(Shapes::keyExists($output, 'value'), 'expected value must be present in non-exceptional cases');
@@ -186,17 +204,19 @@ final class JSONFunctionTest extends HackTest {
             return;
         }
 
-        $exceptionThrown = false;
-        try {
-            $results = await $conn->query($sql);
-        } catch (SQLFakeRuntimeException $e) {
-            $exceptionThrown = true;
-        }
-        expect($exceptionThrown)->toBeTrue();
+        expect(async () ==> await $conn->query($sql))->toThrow(SQLFakeRuntimeException::class);
     }
 
     public static async function testJSONReplaceProvider(): Awaitable<vec<mixed>> {
         return vec[
+            tuple(
+                shape('json' => null, 'replacements' => vec[shape('path' => '$.a', 'value' => '2')]),
+                shape('value' => null),
+            ),
+            tuple(
+                shape('json' => 'null', 'replacements' => vec[shape('path' => '$.a', 'value' => '2')]),
+                shape('value' => 'null'),
+            ),
             tuple(
                 shape(
                     'json' => '{"a":{"b":"test"}}',
@@ -209,7 +229,7 @@ final class JSONFunctionTest extends HackTest {
                     'json' => '2',
                     'replacements' => vec[shape('path' => '$.a', 'value' => 45)],
                 ),
-                shape('value' => 2),
+                shape('value' => '2'),
             ),
             // no-op
             tuple(
@@ -246,7 +266,7 @@ final class JSONFunctionTest extends HackTest {
 
     <<DataProvider('testJSONReplaceProvider')>>
     public async function testJSONReplace(
-        shape('json' => string, 'replacements' => vec<shape('path' => string, 'value' => string)>) $input,
+        shape('json' => ?string, 'replacements' => vec<shape('path' => string, 'value' => string)>) $input,
         shape(?'exceptional' => bool, ?'value' => string) $output,
     ): Awaitable<void> {
         $exceptional = $output['exceptional'] ?? false;
@@ -260,7 +280,9 @@ final class JSONFunctionTest extends HackTest {
             },
             '',
         );
-        $sql = "SELECT JSON_REPLACE('{$input['json']}', {$replacementsSql}) as replaced";
+
+        $json = $input['json'] is null ? 'NULL' : "'{$input['json']}'";
+        $sql = "SELECT JSON_REPLACE({$json}, {$replacementsSql}) as replaced";
 
         if (!$exceptional) {
             invariant(Shapes::keyExists($output, 'value'), 'expected value must be present in non-exceptional cases');
@@ -269,27 +291,29 @@ final class JSONFunctionTest extends HackTest {
             return;
         }
 
-        $exceptionThrown = false;
-        try {
-            $results = await $conn->query($sql);
-        } catch (SQLFakeRuntimeException $e) {
-            $exceptionThrown = true;
-        }
-        expect($exceptionThrown)->toBeTrue();
+        expect(async () ==> await $conn->query($sql))->toThrow(SQLFakeRuntimeException::class);
     }
 
     public static async function testJSONFunctionCompositionProvider(): Awaitable<vec<mixed>> {
         return vec[
-            tuple("JSON_EXTRACT(JSON_EXTRACT('{\"a\":true}', '$'), '$.a')", shape('value' => 1)),
+            // JSON as doc for JSON_EXTRACT
+            tuple("JSON_EXTRACT(JSON_EXTRACT('{\"a\":true}', '$'), '$.a')", shape('value' => 'true')),
+            tuple("JSON_EXTRACT(JSON_EXTRACT('[true]', '$[0]'), '$')", shape('value' => 'true')),
+
+            // JSON as doc for JSON_REPLACE
             tuple(
                 "JSON_REPLACE(JSON_EXTRACT('{\"a\":{\"b\": 2}}', '$.a'), '$.b', true)",
                 shape('value' => '{"b":true}'),
             ),
+            tuple("JSON_REPLACE(JSON_EXTRACT(\"[false]\", '$[0]'), '$.a', 'test')", shape('value' => 'false')),
+
             tuple(
                 "JSON_REPLACE('[0,1]', '$[1]', REPLACE(JSON_UNQUOTE(JSON_EXTRACT('{\"a\":{\"b\": \"test\"}}', '$.a.b')), 'te', 're'))",
                 shape('value' => '[0,"rest"]'),
             ),
             tuple("JSON_REPLACE('{\"b\":2}', '$.b', 1 < 2)", shape('value' => '{"b":true}')),
+
+            // JSON value as replacement in JSON_REPLACE
             tuple(
                 "JSON_REPLACE('[0,1]', '$[1]', JSON_EXTRACT('{\"a\": \"test\"}', '$.a'))",
                 shape('value' => '[0,"test"]'),
@@ -303,14 +327,12 @@ final class JSONFunctionTest extends HackTest {
             tuple("JSON_UNQUOTE(JSON_EXTRACT('{\"a\": 5}', '$.a'))", shape('value' => '5')),
 
             // exceptional
-            tuple(
-                "JSON_QUOTE(JSON_EXTRACT('{\"a\":\"test\"}', '$.a'))", // JSON_EXTRACT output as JSON_QUOTE arg
-                shape('exceptional' => true),
-            ),
-            tuple(
-                "JSON_REPLACE('{\"a\":2}', JSON_EXTRACT('{\"b\":\"$.a\"}', '$.b'), 2)", //JSON_REPLACE path doesn't support JSON_EXTRACT
-                shape('exceptional' => true),
-            ),
+            // JSON_EXTRACT output as JSON_QUOTE arg
+            tuple("JSON_QUOTE(JSON_EXTRACT('{\"a\":\"test\"}', '$.a'))", shape('exceptional' => true)),
+            // JSON as path for JSON_EXTRACT
+            tuple("JSON_EXTRACT('[true]', JSON_EXTRACT('[\"$[0]\"]', '$[0]'))", shape('exceptional' => true)),
+            // JSON as path for JSON_REPLACE
+            tuple("JSON_REPLACE('{\"a\":2}', JSON_EXTRACT('{\"b\":\"$.a\"}', '$.b'), 2)", shape('exceptional' => true)),
         ];
     }
 
@@ -331,12 +353,6 @@ final class JSONFunctionTest extends HackTest {
             return;
         }
 
-        $exceptionThrown = false;
-        try {
-            $results = await $conn->query($sql);
-        } catch (SQLFakeRuntimeException $e) {
-            $exceptionThrown = true;
-        }
-        expect($exceptionThrown)->toBeTrue('exception was not thrown');
+        expect(async () ==> await $conn->query($sql))->toThrow(SQLFakeRuntimeException::class);
     }
 }

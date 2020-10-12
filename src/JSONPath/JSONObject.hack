@@ -31,6 +31,10 @@ type ObjectAtPath = shape(
     'path' => ExplodedPathType,
 );
 
+class WrappedResult<T> {
+    public function __construct(public T $value) {}
+}
+
 /**
  * This is a [JSONPath](http://goessner.net/articles/JsonPath/) like implementation for PHP.
  * It only aims to support JSONPath as implemented/supported by MySQL.
@@ -152,9 +156,9 @@ class JSONObject {
      *
      * @return mixed (vec<mixed> | mixed)
      */
-    public function get(string $jsonPath): mixed {
+    public function get(string $jsonPath): ?WrappedResult<mixed> {
         if (Str\trim($jsonPath) === self::TOK_ROOT) {
-            return $this->jsonObject;
+            return new WrappedResult($this->jsonObject);
         }
 
         $this->hasDiverged = false;
@@ -166,10 +170,10 @@ class JSONObject {
         }
 
         if ($this->smartGet && !$this->hasDiverged) {
-            return $result[0]['object'];
+            return new WrappedResult($result[0]['object']);
         }
 
-        return Vec\map($result, $r ==> $r['object']);
+        return new WrappedResult(Vec\map($result, $r ==> $r['object']));
     }
 
     /**
@@ -184,9 +188,9 @@ class JSONObject {
      *
      * @return mixed
      */
-    public function replace(string $jsonPath, mixed $value): JSONObject {
+    public function replace(string $jsonPath, mixed $value): WrappedResult<JSONObject> {
         if (Str\trim($jsonPath) === self::TOK_ROOT) {
-            return new JSONObject(\json_encode($value));
+            return new WrappedResult(new JSONObject(\json_encode($value)));
         }
 
         $this->hasDiverged = false;
@@ -201,7 +205,7 @@ class JSONObject {
             $value,
         );
 
-        return new JSONObject(\json_encode($out));
+        return new WrappedResult(new JSONObject(\json_encode($out)));
     }
 
     private static function pathMatched(vec<ExplodedPathType> $paths, ExplodedPathType $path): bool {

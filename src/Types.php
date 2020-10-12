@@ -237,29 +237,11 @@ type server_config = shape(
 class WrappedJSON {
   public function __construct(private mixed $json) {}
 
-  public function unwrap(): mixed {
-    $value = $this->json;
-    if ($value is null || $value is num || $value is bool) {
-      return $value;
-    }
-
-    return $this->asString();
-  }
-
   public function asString(): string {
     return \json_encode($this->json);
   }
 
   public function rawValue(): mixed {
     return $this->json;
-  }
-
-  // null & num don't need wrapping
-  public static function wrapIfNecessary(mixed $thing): mixed {
-    if ($thing is null || $thing is num || $thing is bool) {
-      return $thing;
-    }
-
-    return new WrappedJSON($thing);
   }
 }
