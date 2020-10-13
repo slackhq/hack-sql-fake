@@ -92,7 +92,8 @@ final class JSONObjectTest extends HackTest {
           "name": "Movie 1",
           "director": "Director 1"
         }
-      ]
+      ],
+      "$under_$-score3d": 2
     }
   ';
 
@@ -103,6 +104,11 @@ final class JSONObjectTest extends HackTest {
       tuple('$."store".bicycle."price"', shape('value' => vec[19.95])),
       tuple('$."store".bicycle.model', shape('value' => vec[null])),
       tuple('$.store.bicycle.sku-number', shape('value' => vec['BCCLE-0001-RD'])),
+      tuple('$.store.bicycle."sku-number"', shape('value' => vec['BCCLE-0001-RD'])),
+      tuple('$.$under_$-score3d', shape('value' => vec[2])),
+      tuple('$."$under_$-score3d"', shape('value' => vec[2])),
+      tuple('$.-$under_$-score3d', shape('exceptional' => true)),
+      tuple('$.0$under_$-score3d', shape('exceptional' => true)),
       tuple(
         '$.store.bicycle',
         shape(
@@ -119,6 +125,9 @@ final class JSONObjectTest extends HackTest {
       ),
       tuple('$.store.bicycl', shape('value' => null)),
       tuple('$.store.book[*].price', shape('value' => vec[8.95, 12.99, 8.99, 22.99])),
+      tuple('$.store.book[0][price]', shape('exceptional' => true)),
+      tuple('$.store.book[0]["price"]', shape('exceptional' => true)),
+      tuple('$.store.book.0', shape('exceptional' => true)),
       tuple('$.store.book[7]', shape('value' => null)),
       tuple('$.store.book[1, 2].price', shape('exceptional' => true)),
       tuple('$.store.book[*][category, author]', shape('exceptional' => true)),

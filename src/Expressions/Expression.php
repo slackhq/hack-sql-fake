@@ -52,7 +52,7 @@ abstract class Expression {
 
 
   // This is not the method to override by the concrete Expression subclasses ()
-  public function evaluate(
+  final public function evaluate(
     row $row,
     AsyncMysqlConnection $conn,
     ExpressionEvaluationOpts $opts = shape('encode_json' => true, 'bool_as_int' => true),

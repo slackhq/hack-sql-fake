@@ -22,7 +22,7 @@
 
 namespace Slack\SQLFake\JSONPath;
 
-use namespace HH\Lib\{C, Str, Vec};
+use namespace HH\Lib\{C, Regex, Str, Vec};
 
 type ExplodedPathType = vec<arraykey>;
 
@@ -82,13 +82,6 @@ class WrappedResult<T> {
  *
  */
 class JSONObject {
-    // Child regex
-    const RE_CHILD_NAME_INCLUDING_WILDCARD = '/^\.(("?)[\w\_\$^\d][\w\-\$]*(\2)|\*)(.*)/u';
-    const RE_RECURSIVE_SELECTOR = '/^\*\*([\w\_\$^\d][\w\-\$]*|\*)(.*)/u';
-
-    // Array expressions
-    const RE_ARRAY_INDEX = '/^\[(\*|\d+)\](.*)$/';
-
     // Tokens
     const TOK_ROOT = '$';
     const TOK_SELECTOR_BEGIN = '[';
@@ -238,15 +231,16 @@ class JSONObject {
     }
 
     private static function matchArrayIndex(string $jsonPath): ?shape('index' => string, 'rest' => string) {
-        if (Str\is_empty($jsonPath) || $jsonPath[0] != self::TOK_SELECTOR_BEGIN) {
+        if (Str\is_empty($jsonPath) || $jsonPath[0] !== self::TOK_SELECTOR_BEGIN) {
             return null;
         }
 
-        $matches = null;
-        if (\preg_match_with_matches(self::RE_ARRAY_INDEX, $jsonPath, inout $matches)) {
+        $array_idx_regex = re"/^\[(?<index>\*|\d+)\](?<rest>.*)$/";
+        $matched = Regex\first_match($jsonPath, $array_idx_regex);
+        if ($matched) {
             return shape(
-                'index' => $matches[1],
-                'rest' => $matches[2],
+                'index' => $matched['index'],
+                'rest' => $matched['rest'],
             );
         }
 
@@ -258,16 +252,18 @@ class JSONObject {
             return null;
         }
 
-        $matches = null;
-        if (\preg_match_with_matches(self::RE_CHILD_NAME_INCLUDING_WILDCARD, $jsonPath, inout $matches)) {
+        $child_name_regex = re"/^\.(?<child>(?<quote0>\"?)[[:alpha:]_$][\w-$]*(?<quote1>\\2)|\*)(?<rest>.*)$/";
+        $matched = Regex\first_match($jsonPath, $child_name_regex);
+
+        if ($matched) {
             // Remove double quotedness if matched
-            $child = ($matches[2] === '"' && $matches[3] === '"')
-                ? Str\strip_prefix($matches[1], '"') |> Str\strip_suffix($$, '"')
-                : $matches[1];
+            $child = ($matched['quote0'] === '"' && $matched['quote1'] === '"')
+                ? Str\strip_prefix($matched['child'], '"') |> Str\strip_suffix($$, '"')
+                : $matched['child'];
 
             return shape(
                 'child' => $child,
-                'rest' => $matches[4],
+                'rest' => $matched['rest'],
             );
         }
 
