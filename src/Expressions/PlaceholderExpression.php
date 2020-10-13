@@ -16,7 +16,7 @@ final class PlaceholderExpression extends Expression {
   }
 
   <<__Override>>
-  public function evaluate(row $_row, AsyncMysqlConnection $_conn): mixed {
+  public function evaluateImpl(row $_row, AsyncMysqlConnection $_conn): mixed {
     throw new SQLFakeRuntimeException('Attempted to evaluate placeholder expression!');
   }
 

@@ -35,6 +35,7 @@ enum TokenType: string {
   SQLFUNCTION = 'Function';
   IDENTIFIER = 'Identifier';
   NULL_CONSTANT = 'Null';
+  BOOLEAN_CONSTANT = 'Boolean';
 }
 
 enum JoinType: string {
@@ -231,3 +232,16 @@ type server_config = shape(
   // name of a database in table configuration to copy schema from
   ?'inherit_schema_from' => string,
 );
+
+// Wrapped values to retain original type information
+class WrappedJSON {
+  public function __construct(private mixed $json) {}
+
+  public function asString(): string {
+    return \json_encode($this->json);
+  }
+
+  public function rawValue(): mixed {
+    return $this->json;
+  }
+}

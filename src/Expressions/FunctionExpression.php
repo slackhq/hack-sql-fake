@@ -8,22 +8,10 @@ use namespace HH\Lib\{C, Math, Str};
  * emulates a call to a built-in MySQL function
  * we implement as many as we want to in Hack
  */
-final class FunctionExpression extends Expression {
-
-  private string $functionName;
-  protected bool $evaluatesGroups = true;
-
-  public function __construct(private token $token, private vec<Expression> $args, private bool $distinct) {
-    $this->type = $token['type'];
-    $this->precedence = 0;
-    $this->functionName = $token['value'];
-    $this->name = $token['value'];
-    /*HH_FIXME[4110] Open issue #24 should resolve what to do here.*/
-    $this->operator = (string)$this->type;
-  }
+final class FunctionExpression extends BaseFunctionExpression {
 
   <<__Override>>
-  public function evaluate(row $row, AsyncMysqlConnection $conn): mixed {
+  public function evaluateImpl(row $row, AsyncMysqlConnection $conn): mixed {
 
     switch ($this->functionName) {
       case 'COUNT':
@@ -71,6 +59,8 @@ final class FunctionExpression extends Expression {
         return $this->sqlGreatest($row, $conn);
       case 'VALUES':
         return $this->sqlValues($row, $conn);
+      case 'REPLACE':
+        return $this->sqlReplace($row, $conn);
 
       // GROUP_CONCAT might be a nice one to implement but it does have a lot of params and isn't really used in our codebase
     }
@@ -78,25 +68,8 @@ final class FunctionExpression extends Expression {
     throw new SQLFakeRuntimeException('Function '.$this->functionName.' not implemented yet');
   }
 
-  public function functionName(): string {
-    return $this->functionName;
-  }
-
   public function isAggregate(): bool {
     return C\contains_key(keyset['COUNT', 'SUM', 'MIN', 'MAX', 'AVG'], $this->functionName);
-  }
-
-  <<__Override>>
-  public function isWellFormed(): bool {
-    return true;
-  }
-
-  /**
-   * helper for functions which take one expression as an argument
-   */
-  private function getExpr(): Expression {
-    invariant(C\count($this->args) === 1, 'expression must have one argument');
-    return C\firstx($this->args);
   }
 
   private function sqlCount(row $rows, AsyncMysqlConnection $conn): int {
@@ -467,18 +440,15 @@ final class FunctionExpression extends Expression {
     return $arg->evaluate($row, $conn);
   }
 
-  <<__Override>>
-  public function __debugInfo(): dict<string, mixed> {
-    $args = vec[];
-    foreach ($this->args as $arg) {
-      $args[] = \var_dump($arg, true);
+  private function sqlReplace(row $row, AsyncMysqlConnection $conn): string {
+    $row = $this->maybeUnrollGroupedDataset($row);
+    $args = $this->args;
+    if (C\count($args) !== 3) {
+      throw new SQLFakeRuntimeException('MySQL REPLACE() function must be called with three arguments');
     }
-    return dict[
-      'type' => (string)$this->type,
-      'functionName' => $this->functionName,
-      'args' => $args,
-      'name' => $this->name,
-      'distinct' => $this->distinct,
-    ];
+    return Str\replace_every(
+      (string)$args[0]->evaluate($row, $conn),
+      dict[(string)$args[1]->evaluate($row, $conn) => (string)$args[2]->evaluate($row, $conn)],
+    );
   }
 }

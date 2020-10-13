@@ -27,6 +27,7 @@ final class SetParser {
 
       switch ($token['type']) {
         case TokenType::NUMERIC_CONSTANT:
+        case TokenType::BOOLEAN_CONSTANT:
         case TokenType::STRING_CONSTANT:
         case TokenType::NULL_CONSTANT:
         case TokenType::OPERATOR:

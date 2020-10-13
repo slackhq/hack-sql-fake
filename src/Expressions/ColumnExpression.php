@@ -41,7 +41,7 @@ final class ColumnExpression extends Expression {
   }
 
   <<__Override>>
-  public function evaluate(row $row, AsyncMysqlConnection $_conn): mixed {
+  public function evaluateImpl(row $row, AsyncMysqlConnection $_conn): mixed {
     // for the "COUNT(*)" case, just return 1
     // we don't actually implement "*" in this library, the select processer handles that
     if ($this->name === '*') {

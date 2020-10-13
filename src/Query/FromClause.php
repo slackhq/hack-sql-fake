@@ -64,6 +64,8 @@ final class FromClause {
         }
       }
 
+      invariant($res is KeyedContainer<_, _>, 'evaluated result of SubqueryExpression must be dataset');
+
       $new_dataset = vec[];
       if ($schema !== null) {
         // if schema is set, order the fields in the right order on each row
@@ -73,6 +75,8 @@ final class FromClause {
         }
 
         foreach ($res as $row) {
+          invariant($row is dict<_, _>, 'each item in evaluated result of SubqueryExpression must be row');
+
           $m = dict[];
           foreach ($ordered_fields as $field) {
             if (!C\contains_key($row, $field)) {
@@ -84,6 +88,8 @@ final class FromClause {
         }
       } else {
         foreach ($res as $row) {
+          invariant($row is dict<_, _>, 'each item in evaluated result of SubqueryExpression must be row');
+
           $m = dict[];
           foreach ($row as $key => $val) {
             $m["{$name}.{$key}"] = $val;

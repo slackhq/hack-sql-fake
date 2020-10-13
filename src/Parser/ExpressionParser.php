@@ -145,6 +145,7 @@ final class ExpressionParser {
 
     switch ($token['type']) {
       case TokenType::NUMERIC_CONSTANT:
+      case TokenType::BOOLEAN_CONSTANT:
       case TokenType::STRING_CONSTANT:
       case TokenType::NULL_CONSTANT:
         return new ConstantExpression($token);
@@ -177,7 +178,10 @@ final class ExpressionParser {
         // move the pointer forward to the end of the parentheses
         $this->pointer = $closing_paren_pointer;
 
-        $fn = new FunctionExpression($token, $args, $distinct);
+        $fn = Str\starts_with($token['value'], 'JSON_')
+          ? new JSONFunctionExpression($token, $args, $distinct)
+          : new FunctionExpression($token, $args, $distinct);
+
         return $fn;
       default:
         throw new SQLFakeNotImplementedException("Not implemented: {$token['value']}");
@@ -260,6 +264,7 @@ final class ExpressionParser {
           }
           break;
         case TokenType::NUMERIC_CONSTANT:
+        case TokenType::BOOLEAN_CONSTANT:
         case TokenType::NULL_CONSTANT:
         case TokenType::STRING_CONSTANT:
         case TokenType::SQLFUNCTION:

@@ -22,7 +22,7 @@ final class BetweenOperatorExpression extends Expression {
   }
 
   <<__Override>>
-  public function evaluate(row $row, AsyncMysqlConnection $conn): mixed {
+  public function evaluateImpl(row $row, AsyncMysqlConnection $conn): bool {
     $start = $this->start;
     $end = $this->end;
     if ($start === null || $end === null) {
@@ -47,7 +47,7 @@ final class BetweenOperatorExpression extends Expression {
       $eval = $subject >= $start && $subject <= $end;
     }
 
-    return ($this->negated ? !$eval : $eval) ? 1 : 0;
+    return ($this->negated ? !$eval : $eval) ? true : false;
   }
 
   <<__Override>>
