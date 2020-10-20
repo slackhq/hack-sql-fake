@@ -234,7 +234,7 @@ final class JSONObjectTest extends HackTest {
     expect(() ==> $jsonObject->get($jsonPath))->toThrow(JSONException::class);
   }
 
-  public static async function testSmartGetProvider(): Awaitable<vec<mixed>> {
+  public static async function testGetWithUnwrapProvider(): Awaitable<vec<mixed>> {
     return vec[
       tuple('$.store.bicycle.price', shape('value' => 19.95)),
       tuple('$."store".bicycle."price"', shape('value' => 19.95)),
@@ -273,19 +273,19 @@ final class JSONObjectTest extends HackTest {
     ];
   }
 
-  <<DataProvider('testSmartGetProvider')>>
-  public async function testSmartGet(
+  <<DataProvider('testGetWithUnwrapProvider')>>
+  public async function testGetWithUnwrap(
     string $jsonPath,
     shape(?'exceptional' => bool, ?'value' => mixed) $output,
   ): Awaitable<void> {
     $exceptional = $output['exceptional'] ?? false;
 
-    $jsonObject = new JSONObject($this->json, true);
+    $jsonObject = new JSONObject($this->json);
     if (!$exceptional) {
       invariant(Shapes::keyExists($output, 'value'), 'expected value must be present in non-exceptional cases');
 
       $value = $output['value'];
-      $results = $jsonObject->get($jsonPath);
+      $results = $jsonObject->get($jsonPath, shape('unwrap' => true));
 
       if ($value is nonnull) {
         expect($results)->toNotBeNull();
@@ -298,7 +298,7 @@ final class JSONObjectTest extends HackTest {
       return;
     }
 
-    expect(() ==> $jsonObject->get($jsonPath))->toThrow(JSONException::class);
+    expect(() ==> $jsonObject->get($jsonPath, shape('unwrap' => true)))->toThrow(JSONException::class);
   }
 
   public static async function testReplaceProvider(): Awaitable<vec<mixed>> {
@@ -447,6 +447,132 @@ final class JSONObjectTest extends HackTest {
     }
 
     expect(() ==> $jsonObject->replace($jsonPath, $value))->toThrow(JSONException::class);
+  }
+
+  public static async function testKeysProvider(): Awaitable<vec<mixed>> {
+    return vec[
+      tuple(shape('json' => dict[]), shape('value' => vec[])),
+      tuple(shape('json' => dict['a' => 2, 'b' => 3]), shape('value' => vec['a', 'b'])),
+      tuple(
+        shape('json' => dict['upper' => dict['a' => 2, 'b' => 3]], 'path' => '$.upper'),
+        shape('value' => vec['a', 'b']),
+      ),
+      tuple(shape('json' => vec[dict['a' => 2, 'b' => 3]], 'path' => '$[0]'), shape('value' => vec['a', 'b'])),
+      tuple(shape('json' => dict['c' => dict['a' => 2, 'b' => 3]], 'path' => '$.c'), shape('value' => vec['a', 'b'])),
+
+      // pointing to non-object
+      tuple(shape('json' => vec[dict['a' => 2, 'b' => 3]]), shape('value' => null)),
+      tuple(shape('json' => vec[dict['a' => 2, 'b' => 3]], 'path' => '$[0].a'), shape('value' => null)),
+      tuple(shape('json' => vec[dict['a' => '2', 'b' => 3]], 'path' => '$[0].a'), shape('value' => null)),
+      tuple(shape('json' => vec[dict['a' => null, 'b' => 3]], 'path' => '$[0].a'), shape('value' => null)),
+
+      // divergent
+      tuple(
+        shape('json' => vec[dict['a' => null, 'b' => 3]], 'path' => '$[*]'),
+        shape('exception' => DivergentJSONPathSetException::class),
+      ),
+
+      // invalid path
+      tuple(
+        shape('json' => vec[dict['a' => null, 'b' => 3]], 'path' => '$[sdfsf]'),
+        shape('exception' => InvalidJSONPathException::class),
+      ),
+    ];
+  }
+
+  <<DataProvider('testKeysProvider')>>
+  public async function testKeys(
+    shape('json' => mixed, ?'path' => string) $input,
+    shape(?'exception' => classname<JSONException>, ?'value' => vec<string>) $output,
+  ): Awaitable<void> {
+    $jsonPath = $input['path'] ?? null;
+    $exception = $output['exception'] ?? null;
+
+    $jsonObject = new JSONObject($input['json']);
+    if (!$exception) {
+      invariant(Shapes::keyExists($output, 'value'), 'expected value must be present in non-exceptional cases');
+      $result = $jsonPath ? $jsonObject->keys($jsonPath) : $jsonObject->keys();
+
+      $expected = $output['value'];
+      if ($expected is nonnull) {
+        expect($result)->toNotBeNull();
+        invariant($result is nonnull, 'expect statement above verified that this is not null');
+        expect($result->value)->toEqual($output['value'], $jsonPath ?? 'no JSON path');
+      } else {
+        expect($result)->toBeNull($jsonPath ?? 'no JSON path');
+      }
+
+      return;
+    }
+
+    expect(() ==> $jsonPath ? $jsonObject->keys($jsonPath) : $jsonObject->keys())->toThrow($exception);
+  }
+
+  public static async function testLengthProvider(): Awaitable<vec<mixed>> {
+    return vec[
+      // pointing to object
+      tuple(shape('json' => dict[]), shape('value' => 0)),
+      tuple(shape('json' => vec[dict['a' => dict['b' => 2], 'c' => 3]], 'path' => '$[0]'), shape('value' => 2)),
+      tuple(shape('json' => vec[dict['a' => dict['b' => 2], 'c' => 3]], 'path' => '$[0].a'), shape('value' => 1)),
+
+      // pointing to vector
+      tuple(shape('json' => vec[2, vec[1]]), shape('value' => 2)),
+      tuple(shape('json' => vec[vec[2, 3], 3, 3], 'path' => '$[0]'), shape('value' => 2)),
+      tuple(shape('json' => dict['a' => vec[true, false, true]], 'path' => '$.a'), shape('value' => 3)),
+
+      // pointing to scalar
+      tuple(shape('json' => '"string"'), shape('value' => 1)),
+      tuple(shape('json' => 'true'), shape('value' => 1)),
+      tuple(shape('json' => '1'), shape('value' => 1)),
+      tuple(shape('json' => 'null'), shape('value' => 1)),
+      tuple(shape('json' => dict['a' => 'string'], 'path' => '$.a'), shape('value' => 1)),
+      tuple(shape('json' => dict['a' => false], 'path' => '$.a'), shape('value' => 1)),
+      tuple(shape('json' => dict['a' => 1], 'path' => '$.a'), shape('value' => 1)),
+      tuple(shape('json' => dict['a' => null], 'path' => '$.a'), shape('value' => 1)),
+
+      // pointing to nothing
+      tuple(shape('json' => '{}', 'path' => '$.a'), shape('value' => null)),
+
+      // divergent
+      tuple(
+        shape('json' => vec[dict['a' => null, 'b' => 3]], 'path' => '$[*]'),
+        shape('exception' => DivergentJSONPathSetException::class),
+      ),
+
+      // invalid path
+      tuple(
+        shape('json' => vec[dict['a' => null, 'b' => 3]], 'path' => '$[sdf]'),
+        shape('exception' => InvalidJSONPathException::class),
+      ),
+    ];
+  }
+
+  <<DataProvider('testLengthProvider')>>
+  public async function testLength(
+    shape('json' => mixed, ?'path' => string) $input,
+    shape(?'exception' => classname<JSONException>, ?'value' => ?int) $output,
+  ): Awaitable<void> {
+    $jsonPath = $input['path'] ?? null;
+    $exception = $output['exception'] ?? null;
+
+    $jsonObject = new JSONObject($input['json']);
+    if (!$exception) {
+      invariant(Shapes::keyExists($output, 'value'), 'expected value must be present in non-exceptional cases');
+
+      $result = $jsonPath ? $jsonObject->length($jsonPath) : $jsonObject->length();
+      $expected = $output['value'];
+      if ($expected is nonnull) {
+        expect($result)->toNotBeNull();
+        invariant($result is nonnull, 'expect statement above verified that this is not null');
+        expect($result->value)->toEqual($output['value'], $jsonPath ?? 'no JSON path');
+      } else {
+        expect($result)->toBeNull($jsonPath ?? 'no JSON path');
+      }
+
+      return;
+    }
+
+    expect(() ==> $jsonPath ? $jsonObject->length($jsonPath) : $jsonObject->length())->toThrow($exception);
   }
 
   public static async function testConstructorErrorsProvider(): Awaitable<vec<mixed>> {

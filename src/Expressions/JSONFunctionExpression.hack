@@ -17,6 +17,8 @@ final class JSONFunctionExpression extends BaseFunctionExpression {
         'bool_as_int' => false,
     );
 
+    const JSONPath\GetOptions UNWRAP_JSON_PATH_RESULTS = shape('unwrap' => true);
+
     <<__Override>>
     public function evaluateImpl(row $row, AsyncMysqlConnection $conn): mixed {
         switch ($this->functionName) {
@@ -30,6 +32,10 @@ final class JSONFunctionExpression extends BaseFunctionExpression {
                 return $this->sqlJSONExtract($row, $conn);
             case 'JSON_REPLACE':
                 return $this->sqlJSONReplace($row, $conn);
+            case 'JSON_KEYS':
+                return $this->sqlJSONKeys($row, $conn);
+            case 'JSON_LENGTH':
+                return $this->sqlJSONLength($row, $conn);
         }
 
         throw new SQLFakeRuntimeException('Function '.$this->functionName.' not implemented yet');
@@ -109,7 +115,7 @@ final class JSONFunctionExpression extends BaseFunctionExpression {
     }
 
     // Returns null, num or WrappedJSON
-    private function sqlJSONExtract(row $row, AsyncMysqlConnection $conn): mixed {
+    private function sqlJSONExtract(row $row, AsyncMysqlConnection $conn): ?WrappedJSON {
         $row = $this->maybeUnrollGroupedDataset($row);
         $args = $this->args;
         if (C\count($args) < 2) {
@@ -146,11 +152,11 @@ final class JSONFunctionExpression extends BaseFunctionExpression {
 
         $results = vec[];
         try {
-            $jsonObject = new JSONPath\JSONObject($json, true);
+            $jsonObject = new JSONPath\JSONObject($json);
 
             if (C\count($jsonPaths) === 1) {
                 // This is the only case, we can return the raw value instead of wrapping in vec[]
-                $result = $jsonObject->get($jsonPaths[0]);
+                $result = $jsonObject->get($jsonPaths[0], self::UNWRAP_JSON_PATH_RESULTS);
                 if ($result is null) {
                     return null;
                 }
@@ -160,7 +166,7 @@ final class JSONFunctionExpression extends BaseFunctionExpression {
             $results = C\reduce(
                 $jsonPaths,
                 ($acc, $path) ==> {
-                    $result = $jsonObject->get($path);
+                    $result = $jsonObject->get($path, self::UNWRAP_JSON_PATH_RESULTS);
                     if ($result is null) {
                         return $acc;
                     }
@@ -180,7 +186,7 @@ final class JSONFunctionExpression extends BaseFunctionExpression {
         return new WrappedJSON($results);
     }
 
-    private function sqlJSONReplace(row $row, AsyncMysqlConnection $conn): mixed {
+    private function sqlJSONReplace(row $row, AsyncMysqlConnection $conn): ?WrappedJSON {
         $row = $this->maybeUnrollGroupedDataset($row);
         $args = $this->args;
         if (C\count($args) % 2 !== 1) {
@@ -235,6 +241,82 @@ final class JSONFunctionExpression extends BaseFunctionExpression {
             return new WrappedJSON($current->getValue());
         } catch (JSONPath\JSONException $e) {
             throw new SQLFakeRuntimeException('MySQL JSON_REPLACE() function encountered error: '.$e->getMessage());
+        }
+    }
+
+    private function sqlJSONKeys(row $row, AsyncMysqlConnection $conn): ?WrappedJSON {
+        $row = $this->maybeUnrollGroupedDataset($row);
+        $args = $this->args;
+
+        $argCount = C\count($args);
+        if ($argCount < 1) {
+            throw new SQLFakeRuntimeException(
+                'MySQL JSON_KEYS() function must be called with at least 1 JSON document & optionally 1 JSON path',
+            );
+        }
+
+        $json = $args[0]->evaluate($row, $conn);
+        if ($json is null) {
+            return null;
+        }
+        if (!($json is string)) {
+            throw new SQLFakeRuntimeException('MySQL JSON_KEYS() function doc has incorrect type');
+        }
+
+        $path = $argCount > 1 ? $args[1]->evaluate($row, $conn, self::RETAIN_JSON_EVAL_OPTS) : '$';
+        if ($path is null) {
+            return null;
+        }
+        if (!($path is string)) {
+            throw new SQLFakeRuntimeException('MySQL JSON_KEYS() function path has incorrect type');
+        }
+
+        try {
+            $keys = (new JSONPath\JSONObject($json))->keys($path);
+            if ($keys is null) {
+                return null;
+            }
+            return new WrappedJSON($keys->value);
+        } catch (JSONPath\JSONException $e) {
+            throw new SQLFakeRuntimeException('MySQL JSON_KEYS() function encountered error: '.$e->getMessage());
+        }
+    }
+
+    private function sqlJSONLength(row $row, AsyncMysqlConnection $conn): ?int {
+        $row = $this->maybeUnrollGroupedDataset($row);
+        $args = $this->args;
+
+        $argCount = C\count($args);
+        if ($argCount < 1) {
+            throw new SQLFakeRuntimeException(
+                'MySQL JSON_LENGTH() function must be called with at least 1 JSON document & optionally 1 JSON path',
+            );
+        }
+
+        $json = $args[0]->evaluate($row, $conn);
+        if ($json is null) {
+            return null;
+        }
+        if (!($json is string)) {
+            throw new SQLFakeRuntimeException('MySQL JSON_LENGTH() function doc has incorrect type');
+        }
+
+        $path = $argCount > 1 ? $args[1]->evaluate($row, $conn, self::RETAIN_JSON_EVAL_OPTS) : '$';
+        if ($path is null) {
+            return null;
+        }
+        if (!($path is string)) {
+            throw new SQLFakeRuntimeException('MySQL JSON_LENGTH() function path has incorrect type');
+        }
+
+        try {
+            $keys = (new JSONPath\JSONObject($json))->length($path);
+            if ($keys is null) {
+                return null;
+            }
+            return $keys->value;
+        } catch (JSONPath\JSONException $e) {
+            throw new SQLFakeRuntimeException('MySQL JSON_LENGTH() function encountered error: '.$e->getMessage());
         }
     }
 }
