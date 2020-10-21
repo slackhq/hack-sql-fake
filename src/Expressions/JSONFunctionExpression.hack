@@ -36,6 +36,8 @@ final class JSONFunctionExpression extends BaseFunctionExpression {
                 return $this->sqlJSONKeys($row, $conn);
             case 'JSON_LENGTH':
                 return $this->sqlJSONLength($row, $conn);
+            case 'JSON_DEPTH':
+                return $this->sqlJSONDepth($row, $conn);
         }
 
         throw new SQLFakeRuntimeException('Function '.$this->functionName.' not implemented yet');
@@ -189,7 +191,8 @@ final class JSONFunctionExpression extends BaseFunctionExpression {
     private function sqlJSONReplace(row $row, AsyncMysqlConnection $conn): ?WrappedJSON {
         $row = $this->maybeUnrollGroupedDataset($row);
         $args = $this->args;
-        if (C\count($args) % 2 !== 1) {
+        $arg_count = C\count($args);
+        if ($arg_count < 3 || $arg_count % 2 !== 1) {
             throw new SQLFakeRuntimeException(
                 'MySQL JSON_REPLACE() function must be called with 1 JSON document & at least 1 JSON path + replacement value pair ',
             );
@@ -317,6 +320,33 @@ final class JSONFunctionExpression extends BaseFunctionExpression {
             return $keys->value;
         } catch (JSONPath\JSONException $e) {
             throw new SQLFakeRuntimeException('MySQL JSON_LENGTH() function encountered error: '.$e->getMessage());
+        }
+    }
+
+    private function sqlJSONDepth(row $row, AsyncMysqlConnection $conn): ?int {
+        $row = $this->maybeUnrollGroupedDataset($row);
+        $args = $this->args;
+
+        $argCount = C\count($args);
+        if ($argCount !== 1) {
+            throw new SQLFakeRuntimeException(
+                'MySQL JSON_DEPTH() function must be called with 1 JSON document argument',
+            );
+        }
+
+        $json = $args[0]->evaluate($row, $conn);
+        if ($json is null) {
+            return null;
+        }
+        if (!($json is string)) {
+            throw new SQLFakeRuntimeException('MySQL JSON_DEPTH() function doc has incorrect type');
+        }
+
+
+        try {
+            return (new JSONPath\JSONObject($json))->depth()->value;
+        } catch (JSONPath\JSONException $e) {
+            throw new SQLFakeRuntimeException('MySQL JSON_DEPTH() function encountered error: '.$e->getMessage());
         }
     }
 }
