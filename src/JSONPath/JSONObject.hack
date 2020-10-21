@@ -239,6 +239,32 @@ class JSONObject {
         return new WrappedResult(1);
     }
 
+    /**
+     * Returns the maximum depth of the value.
+     */
+    public function depth(): WrappedResult<int> {
+        $depth = 0;
+
+        $objects = vec[$this->jsonObject];
+        while (!C\is_empty($objects)) {
+            $children = vec[];
+
+            foreach ($objects as $object) {
+                if ($object is dict<_, _> || $object is vec<_>) {
+                    foreach ($object as $child) {
+                        $children[] = $child;
+                    }
+                }
+            }
+
+            // Each time we enter this while loop, it means we just processed a new level
+            $depth += 1;
+            $objects = $children;
+        }
+
+        return new WrappedResult($depth);
+    }
+
     private static function pathMatched(vec<ExplodedPathType> $paths, ExplodedPathType $path): bool {
         return C\contains($paths, $path);
     }
