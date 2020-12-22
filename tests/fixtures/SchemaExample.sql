@@ -9,7 +9,7 @@ CREATE TABLE `test2` (
   `name` varchar(100) NOT NULL,
   PRIMARY KEY (`id`,`name`),
   KEY `name` (`name`)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=8;
 
 CREATE TABLE `test3` (
   `id` bigint(20) unsigned NOT NULL,

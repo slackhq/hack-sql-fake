@@ -974,7 +974,7 @@ final class CreateTableParser {
 		if (!C\is_empty($tokens) && $tokens[0] === 'KEY_BLOCK_SIZE') {
 			$tokens = Vec\drop($tokens, 1);
 			if ($tokens[0] === '=') {
-				Vec\drop($tokens, 1);
+				$tokens = Vec\drop($tokens, 1);
 			}
 			$index['key_block_size'] = $tokens[0];
 			$tokens = Vec\drop($tokens, 1);
