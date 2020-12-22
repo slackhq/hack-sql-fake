@@ -87,13 +87,18 @@ final class CreateTableParserTest extends HackTest {
 						'name' => 'name',
 					),
 				],
-				'props' => dict[],
+				'props' => dict[
+					'ENGINE' => 'InnoDB',
+					'CHARSET' => 'utf8mb4',
+					'ROW_FORMAT' => 'COMPRESSED',
+					'KEY_BLOCK_SIZE' => '8',
+				],
 				'sql' => 'CREATE TABLE `test2` (
   `id` bigint(20) unsigned NOT NULL,
   `name` varchar(100) NOT NULL,
   PRIMARY KEY (`id`,`name`),
   KEY `name` (`name`)
-);',
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=COMPRESSED KEY_BLOCK_SIZE=8;',
 			),
 			'test3' => shape(
 				'name' => 'test3',
