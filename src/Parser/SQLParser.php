@@ -176,6 +176,7 @@ final class SQLParser {
           Str\ends_with($out[$previous_key]['value'], '.')
         ) {
           $out[$previous_key]['value'] .= $token;
+          $out[$previous_key]['raw'] .= $raw;
           continue;
         }
 
