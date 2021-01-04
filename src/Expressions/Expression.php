@@ -2,8 +2,6 @@
 
 namespace Slack\SQLFake;
 
-use namespace HH\Lib\C;
-
 type ExpressionEvaluationOpts = shape(
   ?'encode_json' => bool,
   ?'bool_as_int' => bool,
@@ -115,10 +113,13 @@ abstract class Expression {
    * this helper lets them extract the first value from the grouping set
    */
   protected function maybeUnrollGroupedDataset(row $rows): row {
-    $first = C\first($rows);
-    if ($first is dict<_, _>) {
-      /* HH_FIXME[4110] generics can't be specified here yet */
-      return $first;
+    // as an optimization, we deliberately don't call C\first
+    foreach ($rows as $row) {
+      if ($row is dict<_, _>) {
+        /* HH_FIXME[4110] generics can't be specified here yet */
+        return $row;
+      }
+      break;
     }
 
     return $rows;
