@@ -6,6 +6,17 @@ this project. If you use this package within your own software as is but don't p
 
 ## Tasks
 
+### Setup
+
+Install [Composer](https://getcomposer.org/) and PHP. Use PHP to run composer and install dependencies in this working copy. This will create and populate the `vendor/` directory. Note that composer cannot be run with HHVM.
+
+```
+# if composer installed locally
+/usr/bin/php composer.phar install
+# if installed globally
+/usr/bin/php /usr/local/bin/composer install
+```
+
 ### Testing
 
 Run unit tests locally using `vendor/bin/hacktest tests/`. Tests are also run automatically on all branches using [Travis CI](https://travis-ci.org/slackhq/hack-sql-fake).
