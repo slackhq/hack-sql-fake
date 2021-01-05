@@ -10,7 +10,6 @@ jobs:
       matrix:
         os: [ ubuntu ]
         hhvm:
-          - '4.56'
           - '4.80'
     runs-on: ${{matrix.os}}-latest
     steps:
