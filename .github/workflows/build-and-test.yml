@@ -36,8 +36,8 @@ jobs:
             DISTRO=$(lsb_release --codename --short)
             sudo add-apt-repository \
               "deb https://dl.hhvm.com/ubuntu ${DISTRO}-${{matrix.hhvm}} main"
-            sudo apt-get update
-            sudo apt-get install -y hhvm --reinstall
+            sudo apt remove hhvm
+            sudo apt-get install -y hhvm
           fi
       - name: Inspect HHVM and Hack versions
         run: |
