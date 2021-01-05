@@ -113,9 +113,6 @@ final class BinaryOperatorExpression extends Expression {
       throw new SQLFakeRuntimeException('Attempted to evaluate BinaryOperatorExpression with no right operand');
     }
 
-    $l_value = $left->evaluate($row, $conn);
-    $r_value = $right->evaluate($row, $conn);
-
     $as_string = $left->getType() == TokenType::STRING_CONSTANT || $right->getType() == TokenType::STRING_CONSTANT;
 
     $op = $this->operator;
@@ -124,17 +121,36 @@ final class BinaryOperatorExpression extends Expression {
       throw new SQLFakeRuntimeException('Attempted to evaluate BinaryOperatorExpression with empty operator');
     }
 
+    // special handling for AND/OR - when possible, return without evaluating $right
+    if ($op === Operator::AND) {
+      $l_value = $left->evaluate($row, $conn);
+      if (!$l_value) {
+        return $this->negated;
+      }
+      $r_value = $right->evaluate($row, $conn);
+      if (!$r_value) {
+        return $this->negated;
+      }
+      return !$this->negated;
+    } else if ($op === Operator::OR) {
+      $l_value = $left->evaluate($row, $conn);
+      if ($l_value) {
+        return !$this->negated;
+      }
+      $r_value = $right->evaluate($row, $conn);
+      if ($r_value) {
+        return !$this->negated;
+      }
+      return $this->negated;
+    }
+
+    $l_value = $left->evaluate($row, $conn);
+    $r_value = $right->evaluate($row, $conn);
+
     switch ($op) {
       case Operator::AND:
-        if ((bool)$l_value && (bool)$r_value) {
-          return !$this->negated;
-        }
-        return $this->negated;
       case Operator::OR:
-        if ((bool)$l_value || (bool)$r_value) {
-          return !$this->negated;
-        }
-        return $this->negated;
+        invariant(false, 'impossible to arrive here');
       case Operator::EQUALS:
         // maybe do some stuff with data types here
         // comparing strings: gotta think about collation and case sensitivity!
