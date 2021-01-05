@@ -91,7 +91,7 @@ final class MultiQueryTest extends HackTest {
 	public static async function beforeFirstTestAsync(): Awaitable<void> {
 		static::$conn = await SharedSetup::initAsync();
 		// block hole logging
-		Logger::setHandle(new \HH\Lib\IO\MemoryHandle());
+		Logger::setHandle(new \Facebook\CLILib\TestLib\StringOutput());
 	}
 
 	<<__Override>>

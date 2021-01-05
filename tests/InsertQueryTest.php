@@ -15,7 +15,7 @@ final class InsertQueryTest extends HackTest {
     $pool = new AsyncMysqlConnectionPool(darray[]);
     static::$conn = await $pool->connect('example', 1, 'db1', '', '');
     // black hole logging
-    Logger::setHandle(new \HH\Lib\IO\MemoryHandle());
+    Logger::setHandle(new \Facebook\CLILib\TestLib\StringOutput());
   }
 
   <<__Override>>

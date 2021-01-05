@@ -22,7 +22,7 @@ final class SelectExpressionTest extends HackTest {
 	public static async function beforeFirstTestAsync(): Awaitable<void> {
 		static::$conn = await SharedSetup::initAsync();
 		// block hole logging
-		Logger::setHandle(new \HH\Lib\IO\MemoryHandle());
+		Logger::setHandle(new \Facebook\CLILib\TestLib\StringOutput());
 	}
 
 	<<__Override>>
@@ -46,9 +46,8 @@ final class SelectExpressionTest extends HackTest {
 
 	public async function testSelectExpressions(): Awaitable<void> {
 		$conn = static::$conn as nonnull;
-		$results = await $conn->query(
-			'SELECT id, group_id as my_fav_group_id, id*1000 as math FROM table3 WHERE group_id=6',
-		);
+		$results =
+			await $conn->query('SELECT id, group_id as my_fav_group_id, id*1000 as math FROM table3 WHERE group_id=6');
 		expect($results->rows())->toBeSame(
 			vec[
 				dict['id' => 4, 'my_fav_group_id' => 6, 'math' => 4000],
@@ -200,9 +199,8 @@ final class SelectExpressionTest extends HackTest {
 
 		// weird this is even valid SQL, and possibly pedantic, but this demonstrates a lot of how
 		// case statements are implemented such that it doesn't blow up on the second THEN or second CASE
-		$results = await $conn->query(
-			"SELECT CASE WHEN 4 = CASE WHEN 1 = 2 THEN 3 ELSE 4 END THEN 'yes' ELSE 'no' END",
-		);
+		$results =
+			await $conn->query("SELECT CASE WHEN 4 = CASE WHEN 1 = 2 THEN 3 ELSE 4 END THEN 'yes' ELSE 'no' END");
 		expect($results->rows())->toBeSame(
 			vec[
 				dict["CASE WHEN 4 = CASE WHEN 1 = 2 THEN 3 ELSE 4 END THEN 'yes' ELSE 'no' END" => 'yes'],
@@ -244,17 +242,7 @@ final class SelectExpressionTest extends HackTest {
 		);
 		expect($results->rows())->toBeSame(
 			vec[
-				dict[
-					'test1' => 1,
-					'test2' => 1,
-					'test3' => 1,
-					'test4' => 1,
-					'test5' => 1,
-					'test6' => 1,
-					'test7' => 0,
-					'test8' => 1,
-					'test9' => 1,
-				],
+				dict['test1' => 1, 'test2' => 1, 'test3' => 1, 'test4' => 1, 'test5' => 1, 'test6' => 1, 'test7' => 0, 'test8' => 1, 'test9' => 1],
 			],
 		);
 	}
@@ -343,9 +331,8 @@ final class SelectExpressionTest extends HackTest {
 
 	public async function testNotParens(): Awaitable<void> {
 		$conn = static::$conn as nonnull;
-		$results = await $conn->query(
-			"SELECT id FROM table3 WHERE group_id=12345 AND NOT (name='name1' OR name='name3')",
-		);
+		$results =
+			await $conn->query("SELECT id FROM table3 WHERE group_id=12345 AND NOT (name='name1' OR name='name3')");
 		expect($results->rows())->toBeSame(vec[
 			dict['id' => 2],
 		]);
