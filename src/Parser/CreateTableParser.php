@@ -352,9 +352,7 @@ final class CreateTableParser {
 		return Str\uppercase($tokens[0]) === $val;
 	}
 
-	private function parseCreateDefinition(
-		inout vec<string> $tokens,
-	): shape(
+	private function parseCreateDefinition(inout vec<string> $tokens): shape(
 		'fields' => vec<parsed_field>,
 		'indexes' => vec<parsed_index>,
 	) {
@@ -521,6 +519,9 @@ final class CreateTableParser {
 
 				# not currently handled
 				return;
+			default:
+				# any other tokens fall through to be parsed below
+				break;
 		}
 
 		$fields[] = $this->parseField($tokens);
@@ -881,8 +882,10 @@ final class CreateTableParser {
 						# Extend the length of the first token to include everything
 						# up through the last in the sequence.
 						$j = $i + C\count($list) - 1;
-						$out_map[] =
-							tuple($source_map[$i][0], ($source_map[$j][0] - $source_map[$i][0]) + $source_map[$j][1]);
+						$out_map[] = tuple(
+							$source_map[$i][0],
+							($source_map[$j][0] - $source_map[$i][0]) + $source_map[$j][1],
+						);
 
 						$i = $j + 1;
 						$found = true;

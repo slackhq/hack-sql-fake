@@ -92,7 +92,7 @@ final class UpdateQueryTest extends HackTest {
 		$results = await $conn->query("SELECT * FROM table3 WHERE name='testupdated'");
 		expect($results->rows())->toBeSame(
 			vec[
-				dict['id' => 77, 'group_id' => 0, 'name' => 'testupdated']
+				dict['id' => 77, 'group_id' => 0, 'name' => 'testupdated'],
 			],
 		);
 	}
@@ -121,7 +121,7 @@ final class UpdateQueryTest extends HackTest {
 	public static async function beforeFirstTestAsync(): Awaitable<void> {
 		static::$conn = await SharedSetup::initAsync();
 		// block hole logging
-		Logger::setHandle(new \Facebook\CLILib\TestLib\StringOutput());
+		Logger::setHandle(new \HH\Lib\IO\MemoryHandle());
 	}
 
 	<<__Override>>
