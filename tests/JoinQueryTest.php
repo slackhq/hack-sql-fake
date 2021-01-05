@@ -91,8 +91,9 @@ final class JoinQueryTest extends HackTest {
 
 	public async function testLeftJoin(): Awaitable<void> {
 		$conn = static::$conn as nonnull;
-		$results =
-			await $conn->query('SELECT id, table_4_id FROM table3 LEFT OUTER JOIN association_table ON id=table_3_id');
+		$results = await $conn->query(
+			'SELECT id, table_4_id FROM table3 LEFT OUTER JOIN association_table ON id=table_3_id',
+		);
 		expect($results->rows())->toBeSame(vec[
 			dict['id' => 1, 'table_4_id' => 1000],
 			dict['id' => 1, 'table_4_id' => 1001],
@@ -151,7 +152,7 @@ final class JoinQueryTest extends HackTest {
 	public static async function beforeFirstTestAsync(): Awaitable<void> {
 		static::$conn = await SharedSetup::initAsync();
 		// block hole logging
-		Logger::setHandle(new \Facebook\CLILib\TestLib\StringOutput());
+		Logger::setHandle(new \HH\Lib\IO\MemoryHandle());
 	}
 
 	<<__Override>>

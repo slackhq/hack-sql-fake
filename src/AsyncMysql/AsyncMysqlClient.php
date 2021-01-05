@@ -24,6 +24,7 @@ final class AsyncMysqlClient extends \AsyncMysqlClient {
 		string $_password,
 		int $_timeout_micros = -1,
 		?\MySSLContextProvider $_ssl_provider = null,
+		int $_tcp_timeout_micros = 0,
 	): Awaitable<\AsyncMysqlConnection> {
 		return new AsyncMysqlConnection($host, $port, $dbname);
 	}

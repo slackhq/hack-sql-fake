@@ -20,8 +20,8 @@ abstract final class Logger {
 
 	protected static function write(string $message): void {
 		if (self::$handle is nonnull) {
-      /*HHAST_FIXME[DontUseAsioJoin]*/
-			\HH\Asio\join(self::$handle->writeAsync($message));
+			/*HHAST_FIXME[DontUseAsioJoin]*/
+			\HH\Asio\join(self::$handle->writeAllAsync($message));
 		} else {
 			\error_log($message);
 		}

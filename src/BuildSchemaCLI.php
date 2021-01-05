@@ -27,7 +27,7 @@ final class BuildSchemaCLI extends CLIWithArguments {
 
 		if (C\is_empty($this->getArguments())) {
 			$program = $this->getArgv()[0];
-			await $terminal->getStdout()->writeAsync(<<<EOT
+			await $terminal->getStdout()->writeAllAsync(<<<EOT
 
 Usage: {$program} [--name DB_SCHEMA] [files...] > schema.hack
 
@@ -49,7 +49,7 @@ EOT
 			if ($match === null) {
 				/* HHAST_IGNORE_ERROR[DontAwaitInALoop] */
 				await $terminal->getStderr()
-					->writeAsync("Expected file name matching [database_name].sql, {$file} does not match");
+					->writeAllAsync("Expected file name matching [database_name].sql, {$file} does not match");
 				return 1;
 			}
 
@@ -59,7 +59,7 @@ EOT
 
 			if ($contents === false) {
 				/* HHAST_IGNORE_ERROR[DontAwaitInALoop] */
-				await $terminal->getStderr()->writeAsync("File could not be loaded: {$contents}");
+				await $terminal->getStderr()->writeAllAsync("File could not be loaded: {$contents}");
 				return 1;
 			}
 
@@ -105,7 +105,7 @@ EOT
 			.
 			$generated;
 
-		await $terminal->getStdout()->writeAsync($generated);
+		await $terminal->getStdout()->writeAllAsync($generated);
 		return 0;
 	}
 }
