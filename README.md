@@ -46,6 +46,10 @@ This package can be installed via composer:
 composer require slack/hack-sql-fake
 ```
 
+### Versioning and Releases
+
+Hack/HHVM is a rapidly evolving ecosystem with frequent breaking changes. As such, release numbers in this project track HHVM version numbers. We aim to support the latest LTS (long term support) release of HHVM on the `main` branch. Long lived branches for other supported HHVM versions may also be maintained. At present, releases for HHVM 4.80, 4.56, and 4.40 are supported. See the https://github.com/slackhq/hack-sql-fake/releases page for compatibility.
+
 ### How it works
 
 SQL Fake works by providing a subclass of [AsyncMysqlConnectionPool](https://docs.hhvm.com/hack/reference/class/AsyncMysqlConnectionPool/), the recommended method of querying MySQL built-in to Hack. A subclass for `AsyncMysqlClient` is provided as well.
