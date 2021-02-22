@@ -88,6 +88,7 @@ EOT
 								'null' => HackBuilderValues::export(),
 								'hack_type' => HackBuilderValues::export(),
 								'default' => HackBuilderValues::export(),
+								'unsigned' => HackBuilderValues::export(),
 							),
 						)),
 					),
@@ -96,8 +97,6 @@ EOT
 			->render();
 
 		$generated = <<<EOT
-<?hh // strict
-
 use type Slack\\SQLFake\\{table_schema, DataType};
 
 
