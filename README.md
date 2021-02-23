@@ -63,11 +63,10 @@ For example, assume you have a class in your source code that manages database c
 ```
 $pool = new Slack\SQLFake\AsyncMysqlConnectionPool(darray[]);
 
-fb_intercept('Db::getConnectionPool', (string $name, mixed $obj, array<mixed> $args, mixed $data, bool &$done) ==> {
+fb_intercept('Db::getConnectionPool', (string $name, mixed $obj, varray<mixed> $args, mixed $data, inout bool $done) ==> {
 	$done = true;
 	return $pool;
-  };
-}
+});
 ```
 
 The rest of your code can operate as normal, using the database in the same way it is used in production.
