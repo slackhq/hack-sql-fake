@@ -4,8 +4,6 @@ namespace Slack\SQLFake;
 
 use namespace HH\Lib\Vec;
 
-/* HHAST_IGNORE_ALL[UnusedParameter] */
-
 <<__MockClass>>
 final class AsyncMysqlConnection extends \AsyncMysqlConnection {
 
@@ -39,8 +37,8 @@ final class AsyncMysqlConnection extends \AsyncMysqlConnection {
   <<__Override>>
   public async function query(
     string $query,
-    int $timeout_micros = -1,
-    dict<string, string> $query_attributes = dict[],
+    int $_timeout_micros = -1,
+    dict<string, string> $_query_attributes = dict[],
   ): Awaitable<AsyncMysqlQueryResult> {
     Logger::log(Verbosity::QUERIES, "SQLFake [verbose]: $query");
 
