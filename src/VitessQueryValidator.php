@@ -63,7 +63,8 @@ final class UpdateQueryValidator extends VitessQueryValidator {
     <<__Override>>
     public function getHandlers(): dict<string, (function(): Awaitable<void>)> {
 		return dict[
-			UnsupportedCases::PRIMARY_VINDEX_COLUMN => inst_meth($this, 'updateChangesPrimaryVindexColumn')
+            // temporarily disabling this until we can fix existing errors
+			// UnsupportedCases::PRIMARY_VINDEX_COLUMN => inst_meth($this, 'updateChangesPrimaryVindexColumn')
 		];
 	}
 
