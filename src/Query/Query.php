@@ -211,16 +211,16 @@ abstract class Query {
           $row = DataIntegrity::coerceToSchema($row, $table_schema);
           $result = DataIntegrity::checkUniqueConstraints($original_table, $row, $table_schema, $row_id);
           if ($result is nonnull) {
-            if($this->ignoreDupes) {
+            if ($this->ignoreDupes) {
               continue;
             }
-            if(!QueryContext::$relaxUniqueConstraints) {
+            if (!QueryContext::$relaxUniqueConstraints) {
               throw new SQLFakeUniqueKeyViolation($result[0]);
             }
           }
-          $original_table[$row_id] = $row;
-          $update_count++;
         }
+        $original_table[$row_id] = $row;
+        $update_count++;
       }
     }
 
