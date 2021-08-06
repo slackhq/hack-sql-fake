@@ -61,11 +61,11 @@ final class FunctionExpression extends BaseFunctionExpression {
         return $this->sqlValues($row, $conn);
       case 'REPLACE':
         return $this->sqlReplace($row, $conn);
-
-      // GROUP_CONCAT might be a nice one to implement but it does have a lot of params and isn't really used in our codebase
+      case 'UNIX_TIMESTAMP':
+        return $this->sqlUnixTimestamp($row, $conn);
+      default:
+        throw new SQLFakeRuntimeException('Function '.$this->functionName.' not implemented yet');
     }
-
-    throw new SQLFakeRuntimeException('Function '.$this->functionName.' not implemented yet');
   }
 
   public function isAggregate(): bool {
@@ -451,4 +451,17 @@ final class FunctionExpression extends BaseFunctionExpression {
       dict[(string)$args[1]->evaluate($row, $conn) => (string)$args[2]->evaluate($row, $conn)],
     );
   }
+
+  private function sqlUnixTimestamp(row $row, AsyncMysqlConnection $conn): int {
+		$row = $this->maybeUnrollGroupedDataset($row);
+
+		$args = $this->args;
+		if (C\count($args) !== 1) {
+			throw new SQLFakeRuntimeException('MySQL UNIX_TIMESTAMP() SQLFake only implemented for 1 argument');
+		}
+
+		$column = $args[0]->evaluate($row, $conn);
+
+		return (int)\strtotime((string)$column);
+	}
 }
