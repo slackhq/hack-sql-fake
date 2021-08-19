@@ -2,7 +2,7 @@
 
 namespace Slack\SQLFake\Printf;
 
-use namespace HH\Lib\{C, Math, SQL, Str, Vec};
+use namespace HH\Lib\{C, Math, Str, Vec};
 
 final class Printf {
   const type TFormatter = (function(

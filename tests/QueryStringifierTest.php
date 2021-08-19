@@ -76,20 +76,20 @@ final class QueryStringifierTest extends HackTest {
 			),
 			tuple(
 				/* HH_FIXME[4038] format_upcase_b() method */
-				new SQL\Query('SELECT %B'), 
+				new SQL\Query('SELECT %B'),
 				"Invalid format specifier, got 'B'",
 			),
 			tuple(
 				new SQL\Query('SELECT %s', static::tellALie<string>(3)),
-				"Expected ?string for specifier %s at index 0, got integer. Query: SELECT %s",
+				'Expected ?string for specifier %s at index 0, got integer. Query: SELECT %s',
 			),
 			tuple(
 				new SQL\Query('SELECT %Ls', static::tellALie<vec<string>>('not a vec')),
-				"Expected vec<string> for specifier %Ls at index 0, got string. Query: SELECT %Ls",
+				'Expected vec<string> for specifier %Ls at index 0, got string. Query: SELECT %Ls',
 			),
 			tuple(
 				new SQL\Query('SELECT %Ls', static::tellALie<vec<string>>(vec[null])),
-				"Expected all elements of vec to be string for specifier %Ls at index 0, got NULL. Query: SELECT %Ls",
+				'Expected all elements of vec to be string for specifier %Ls at index 0, got NULL. Query: SELECT %Ls',
 			),
 			tuple(
 				/* HH_FIXME[4105] Too many arguments */

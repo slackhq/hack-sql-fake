@@ -2,6 +2,8 @@
 
 namespace Slack\SQLFake\_Private;
 
+// HHAST_IGNORE_ALL[CamelCasedMethodsUnderscoredFunctions] just implementing the interface
+
 use namespace HH\Lib\{SQL, Str, Vec};
 
 function comment_string(string $comment): string {
@@ -76,7 +78,7 @@ final class QueryFormat /* implements SQL\QueryFormat */ {
   public function format_upcase_l(): ListFormat {
     return new ListFormat();
   }
-  public function format_upcase_q(SQL\Query $query): string {
+  public function format_upcase_q(SQL\Query $_query): string {
     invariant_violation(
       'There are multiple valid implementation for %s, so you must implement it externally.',
       __METHOD__,

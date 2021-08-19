@@ -16,7 +16,7 @@ final class QueryStringifier {
       $idx = Str\search($format, $dangerous_char);
       if ($idx) {
         throw new SQLFakeParseException(
-          Str\format("Saw dangerous character %s in SQL query. Query: %s", $dangerous_char, $format),
+          Str\format('Saw dangerous character %s in SQL query. Query: %s', $dangerous_char, $format),
         );
       }
     }

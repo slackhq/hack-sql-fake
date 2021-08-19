@@ -6,4 +6,5 @@ www.pid
 composer.lock
 .vscode
 **/*hhast.parser-cache
+.var
 composer.phar
