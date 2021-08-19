@@ -47,6 +47,7 @@ final class Printf {
         $buf .= $char;
         $buf_len = Str\length($buf);
         if (C\contains_key($specifiers, $buf)) {
+          // The `char_idx` is the index of the `%` and the `+ 1` is required, since the `%` is not in `$buf`.
           $out[] = shape('char_idx' => $i - $buf_len, 'length' => $buf_len + 1, 'text' => $buf);
           $buf = '';
           $after_percent = false;
