@@ -137,7 +137,6 @@ abstract class Query {
     }
   }
 
-
   /**
    * Apply the "SET" clause of an UPDATE, or "ON DUPLICATE KEY UPDATE"
    */

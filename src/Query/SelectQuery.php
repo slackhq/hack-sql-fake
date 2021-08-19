@@ -72,7 +72,6 @@ final class SelectQuery extends Query {
       |> $this->processMultiQuery($conn, $$);
   }
 
-
   /**
    * The FROM clause of the query gets processed first, retrieving data from tables, executing subqueries, and handling joins
    * This is also where we build up the $columns list which is commonly used throughout the entire library to map column references to indexes in this dataset
@@ -87,7 +86,6 @@ final class SelectQuery extends Query {
 
     return $from->process($conn, $this->sql);
   }
-
 
   /**
    * Apply the GROUP BY clause to group rows by a set of expressions.
@@ -145,7 +143,6 @@ final class SelectQuery extends Query {
     return $data;
   }
 
-
   /**
    * Generate the result set containing SELECT expressions
    */
@@ -194,7 +191,6 @@ final class SelectQuery extends Query {
           continue;
         }
 
-
         list($name, $val) = $expr->evaluateWithName($row, $conn);
 
         // subquery: unroll the expression to get the value out
@@ -235,7 +231,6 @@ final class SelectQuery extends Query {
     return $out;
   }
 
-
   /**
    * Remove fields that we do not SELECT by, but we do ORDER BY
    */
@@ -275,7 +270,6 @@ final class SelectQuery extends Query {
     // remove the fields we don't want from each row
     return Vec\map($data, $row ==> Dict\filter_keys($row, $field ==> !C\contains_key($remove_fields, $field)));
   }
-
 
   /**
    * Process a query that contains multiple queries such as with UNION, INTERSECT, EXCEPT, UNION ALL

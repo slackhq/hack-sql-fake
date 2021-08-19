@@ -70,7 +70,6 @@ final class ExpressionParser {
   private ?vec<Expression> $selectExpressions;
   private Expression $expression;
 
-
   /**
   * Most of the time, only the first two props are set. List of tokens to iterate on, and column references to index into.
   *
@@ -258,7 +257,6 @@ final class ExpressionParser {
               $expr = $p->build();
             }
           }
-
 
           if ($this->expression is PlaceholderExpression) {
             $this->expression = new BinaryOperatorExpression($expr);

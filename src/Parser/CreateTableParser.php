@@ -135,7 +135,6 @@ final class CreateTableParser {
 				continue;
 			}
 
-
 			# <regular identifier>
 			# <key word>g
 			$match = Regex\first_match($sql, re"![[:alpha:]][[:alnum:]_]*!A", $pos);
@@ -213,9 +212,7 @@ final class CreateTableParser {
 		return $source_map;
 	}
 
-
 	private function walk(vec<string> $tokens, string $sql, vec<(int, int)> $source_map): dict<string, parsed_table> {
-
 
 		#
 		# split into statements
@@ -282,13 +279,11 @@ final class CreateTableParser {
 		return $tables;
 	}
 
-
 	private function parseCreateTable(vec<string> $tokens, string $sql): parsed_table {
 
 		if ($tokens[0] === 'IF NOT EXISTS') {
 			$tokens = Vec\drop($tokens, 1);
 		}
-
 
 		#
 		# name
@@ -296,7 +291,6 @@ final class CreateTableParser {
 
 		$t = $this->vecUnshift(inout $tokens);
 		$name = $this->decodeIdentifier($t);
-
 
 		#
 		# CREATE TABLE x LIKE y
@@ -315,7 +309,6 @@ final class CreateTableParser {
 				'indexes' => vec[],
 			);
 		}
-
 
 		#
 		# create_definition
@@ -343,7 +336,6 @@ final class CreateTableParser {
 
 		return $table;
 	}
-
 
 	private function nextTokenIs(vec<string> $tokens, string $val): bool {
 		return Str\uppercase($tokens[0]) === $val;
@@ -396,7 +388,6 @@ final class CreateTableParser {
 			}
 		}
 
-
 		switch ($tokens[0]) {
 
 			#
@@ -435,13 +426,11 @@ final class CreateTableParser {
 				$this->parseIndexColumns(inout $tokens, inout $index);
 				$this->parseIndexOptions(inout $tokens, inout $index);
 
-
 				if (C\count($tokens)) {
 					$index['more'] = $tokens;
 				}
 				$indexes[] = $index;
 				return;
-
 
 			#
 			# PRIMARY KEY [index_type] (index_col_name,...) [index_option] ...
@@ -465,7 +454,6 @@ final class CreateTableParser {
 				}
 				$indexes[] = $index;
 				return;
-
 
 			# FULLTEXT		[index_name] (index_col_name,...) [index_option] ...
 			# FULLTEXT INDEX	[index_name] (index_col_name,...) [index_option] ...
@@ -506,7 +494,6 @@ final class CreateTableParser {
 				}
 				$indexes[] = $index;
 				return;
-
 
 			# older stuff
 
@@ -597,7 +584,6 @@ final class CreateTableParser {
 				$this->parseFieldZerofill(inout $tokens, inout $f);
 				break;
 
-
 			# REAL[(length,decimals)] [UNSIGNED] [ZEROFILL]
 			case 'REAL':
 			case 'DOUBLE':
@@ -607,7 +593,6 @@ final class CreateTableParser {
 				$this->parseFieldUnsigned(inout $tokens, inout $f);
 				$this->parseFieldZerofill(inout $tokens, inout $f);
 				break;
-
 
 			# DECIMAL[(length[,decimals])] [UNSIGNED] [ZEROFILL]
 			case 'DECIMAL':
@@ -619,7 +604,6 @@ final class CreateTableParser {
 				$this->parseFieldZerofill(inout $tokens, inout $f);
 				break;
 
-
 			# BIT[(length)]
 			# BINARY[(length)]
 			case 'BIT':
@@ -627,7 +611,6 @@ final class CreateTableParser {
 
 				$this->parseFieldLength(inout $tokens, inout $f);
 				break;
-
 
 			# VARBINARY(length)
 			case 'VARBINARY':
@@ -798,7 +781,6 @@ final class CreateTableParser {
 		return $props;
 	}
 
-
 	# Given the source map, extract the tokens from the original sql,
 	# Along the way, simplify parsing by merging certain tokens when
 	# they occur next to each other. MySQL treats these productions
@@ -837,7 +819,6 @@ final class CreateTableParser {
 			'KEY',
 			'UNIQUE',
 		];
-
 
 		$maps = dict[];
 		foreach ($lists as $l) {
@@ -984,7 +965,6 @@ final class CreateTableParser {
 			$tokens = Vec\drop($tokens, 2);
 		}
 	}
-
 
 	#
 	# helper functions for parsing bits of field definitions
