@@ -69,7 +69,6 @@ abstract final class DataIntegrity {
   public static function ensureFieldsPresent(dict<string, mixed> $row, table_schema $schema): dict<string, mixed> {
 
     foreach ($schema['fields'] as $field) {
-
       $field_name = $field['name'];
       $field_type = $field['hack_type'];
       $field_length = $field['length'];
@@ -109,7 +108,6 @@ abstract final class DataIntegrity {
                 $row[$field_name] = (int)$row[$field_name];
               }
             } else {
-
                 $signed = !($field_unsigned);
                 $field_value = (int)$row[$field_name];
 
@@ -211,7 +209,6 @@ abstract final class DataIntegrity {
     $row = self::ensureFieldsPresent($row, $schema);
 
     foreach ($schema['fields'] as $field) {
-
       $field_name = $field['name'];
       $field_type = $field['hack_type'];
 

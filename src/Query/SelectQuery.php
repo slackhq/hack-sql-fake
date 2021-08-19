@@ -97,7 +97,6 @@ final class SelectQuery extends Query {
     $group_by = $this->groupBy;
     $select_expressions = $this->selectExpressions;
     if ($group_by !== null) {
-
       $grouped_data = dict[];
       foreach ($data as $row) {
         $hashes = '';
@@ -230,7 +229,6 @@ final class SelectQuery extends Query {
     }
 
     if (C\contains_key($this->options, 'DISTINCT')) {
-
       return Vec\unique_by($out, (row $row): string ==> Str\join(Vec\map($row, $col ==> (string)$col), '-'));
     }
 
@@ -288,7 +286,6 @@ final class SelectQuery extends Query {
     $row_encoder = (row $row): string ==> Str\join(Vec\map($row, $col ==> (string)$col), '-');
 
     foreach ($this->multiQueries as $sub) {
-
       // invoke the subquery
       $subquery_results = $sub['query']->execute($conn);
 

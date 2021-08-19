@@ -48,7 +48,6 @@ abstract class Expression {
    */
   public abstract function isWellFormed(): bool;
 
-
   // This is not the method to override by the concrete Expression subclasses ()
   final public function evaluate(
     row $row,

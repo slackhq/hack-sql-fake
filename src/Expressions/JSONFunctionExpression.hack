@@ -342,7 +342,6 @@ final class JSONFunctionExpression extends BaseFunctionExpression {
             throw new SQLFakeRuntimeException('MySQL JSON_DEPTH() function doc has incorrect type');
         }
 
-
         try {
             return (new JSONPath\JSONObject($json))->depth()->value;
         } catch (JSONPath\JSONException $e) {

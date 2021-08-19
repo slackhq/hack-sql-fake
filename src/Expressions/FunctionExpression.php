@@ -355,7 +355,6 @@ final class FunctionExpression extends BaseFunctionExpression {
 
     $column = $args[0]->evaluate($row, $conn);
 
-
     //
     // This is the default format from MySQL ‘YYYYY-MM-DD HH:MM:SS’
     //

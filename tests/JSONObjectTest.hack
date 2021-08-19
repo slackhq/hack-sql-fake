@@ -219,7 +219,6 @@ final class JSONObjectTest extends HackTest {
       $value = $output['value'];
       $results = $jsonObject->get($jsonPath);
 
-
       if ($value is nonnull) {
         expect($results)->toNotBeNull();
         invariant($results is nonnull, 'just making typechecker happy');

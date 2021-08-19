@@ -47,7 +47,6 @@ final class SQLLexer {
     $quote = null;
 
     for ($i = 0; $i < $count; $i++) {
-
       $token = $tokens[$i];
 
       // are we inside a comment already?
@@ -121,7 +120,6 @@ final class SQLLexer {
     $i = 0;
 
     while ($i < $tokenCount) {
-
       if (Str\ends_with($tokens[$i], '\\')) {
         $i++;
         if (C\contains_key($tokens, $i)) {
@@ -140,7 +138,6 @@ final class SQLLexer {
     $i = 0;
     $count = C\count($tokens);
     while ($i < $count) {
-
       $token = $tokens[$i];
 
       // single quotes, double quotes, or backticks

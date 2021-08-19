@@ -105,7 +105,6 @@ final class CreateTableParser {
 		$source_map = vec[];
 
 		while ($pos < $len) {
-
 			# <space>
 			# <newline>
 
@@ -265,7 +264,6 @@ final class CreateTableParser {
 			$s = $stmt['tuples'];
 
 			if (Str\uppercase($s[0]) === 'CREATE TABLE') {
-
 				$s = Vec\drop($s, 1);
 
 				$table = $this->parseCreateTable($s, $stmt['sql']);
@@ -273,7 +271,6 @@ final class CreateTableParser {
 			}
 
 			if (Str\uppercase($s[0]) === 'CREATE TEMPORARY TABLE') {
-
 				$s = Vec\drop($s, 1);
 
 				$table = $this->parseCreateTable($s, $stmt['sql']);
@@ -361,7 +358,6 @@ final class CreateTableParser {
 		$indexes = vec[];
 
 		while ($tokens[0] !== ')') {
-
 			$these_tokens = $this->sliceUntilNextField(inout $tokens);
 
 			$this->parseFieldOrKey(inout $these_tokens, inout $fields, inout $indexes);
@@ -386,7 +382,6 @@ final class CreateTableParser {
 		#
 
 		if ($tokens[0] === 'CONSTRAINT') {
-
 			if (
 				$tokens[1] === 'PRIMARY KEY' ||
 				$tokens[1] === 'UNIQUE' ||
@@ -932,7 +927,6 @@ final class CreateTableParser {
 		$tokens = Vec\drop($tokens, 1);
 
 		while (true) {
-
 			$t = $this->vecUnshift(inout $tokens);
 			$col = shape(
 				'name' => $this->decodeIdentifier($t),
@@ -1047,7 +1041,6 @@ final class CreateTableParser {
 
 		$values = vec[];
 		while (C\count($tokens)) {
-
 			if ($tokens[0] === ')') {
 				$tokens = Vec\drop($tokens, 1);
 				return $values;

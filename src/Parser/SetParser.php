@@ -9,7 +9,6 @@ final class SetParser {
 
   public function __construct(private int $pointer, private token_list $tokens) {}
 
-
   public function parse(bool $skip_set = false): (int, vec<BinaryOperatorExpression>) {
 
     // if we got here, the first token had better be a SET
