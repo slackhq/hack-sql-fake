@@ -68,6 +68,7 @@ final class ExpressionParser {
   ];
 
   private ?vec<Expression> $selectExpressions;
+  private Expression $expression;
 
 
   /**
@@ -80,10 +81,15 @@ final class ExpressionParser {
   public function __construct(
     private token_list $tokens,
     private int $pointer = -1,
-    private Expression $expression = new PlaceholderExpression(),
+    ?Expression $expression = null,
     public int $min_precedence = 0,
     private bool $is_child = false,
-  ) {}
+  ) {
+    if ($expression is null) {
+			$expression = new PlaceholderExpression();
+    }
+		$this->expression = $expression;
+  }
 
   /** parses an expression that is inside a delimited list, such as function arguments or row expressions
    * i.e.: [col1, col2, col3]
