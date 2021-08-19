@@ -33,7 +33,7 @@ final class AsyncMysqlConnection extends \AsyncMysqlConnection {
   public function __construct(private string $host, private int $port, private string $dbname, ?QueryStringifier $query_stringifier = null) {
     $this->server = Server::getOrCreate($host);
     $this->result = new AsyncMysqlConnectResult(false);
-    $this->queryStringifier = QueryStringifier::createForTypesafeHack();
+    $this->queryStringifier = $query_stringifier ?? QueryStringifier::createForTypesafeHack();
   }
 
   <<__Override>>
