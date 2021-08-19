@@ -238,6 +238,6 @@ final class QueryStringifier {
     $format->setAccessible(true);
     $args = $ro->getProperty('args');
     $args->setAccessible(true);
-    return tuple($format->getValue($query), $args->getValue($query));
+    return tuple($format->getValue($query), vec($args->getValue($query)));
   }
 }
