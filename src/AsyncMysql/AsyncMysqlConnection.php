@@ -2,7 +2,7 @@
 
 namespace Slack\SQLFake;
 
-use namespace HH\Lib\Vec;
+use namespace HH\Lib\{SQL, Vec};
 
 <<__MockClass>>
 final class AsyncMysqlConnection extends \AsyncMysqlConnection {
@@ -15,6 +15,7 @@ final class AsyncMysqlConnection extends \AsyncMysqlConnection {
    * Not part of the built-in AsyncMysqlConnection
    */
   private Server $server;
+  private QueryStringifier $queryStringifier;
 
   public function getServer(): Server {
     return $this->server;
@@ -29,9 +30,10 @@ final class AsyncMysqlConnection extends \AsyncMysqlConnection {
   }
 
   /* HH_IGNORE_ERROR[3012] I don't want to call parent::construct */
-  public function __construct(private string $host, private int $port, private string $dbname) {
+  public function __construct(private string $host, private int $port, private string $dbname, ?QueryStringifier $query_stringifier = null) {
     $this->server = Server::getOrCreate($host);
     $this->result = new AsyncMysqlConnectResult(false);
+    $this->queryStringifier = QueryStringifier::createForTypesafeHack();
   }
 
   <<__Override>>
@@ -75,9 +77,13 @@ final class AsyncMysqlConnection extends \AsyncMysqlConnection {
   }
 
   <<__Override>>
+  public async function queryAsync(SQL\Query $query): Awaitable<AsyncMysqlQueryResult> {
+    return await $this->query($this->queryStringifier->formatQuery($query));
+  }
+
+  <<__Override>>
   public function queryf(\HH\FormatString<\HH\SQLFormatter> $query, mixed ...$args): Awaitable<AsyncMysqlQueryResult> {
-    $sql = QueryFormatter::formatQuery((string)$query, ...$args);
-    return $this->query($sql);
+    return $this->query(QueryFormatter::formatQuery((string)$query, ...$args));
   }
 
   <<__Override>>

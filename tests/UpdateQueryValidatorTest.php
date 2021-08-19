@@ -25,7 +25,7 @@ final class UpdateQueryValidatorTest extends HackTest {
 
     public async function testUpdateChangesPrimaryVindex(): Awaitable<void> {
         // this is disabled for now
-        return;
+        if ('always true, but opaque to Hack') return;
         $conn = static::$conn as nonnull;
 
         $unsupported_test_cases = vec[
