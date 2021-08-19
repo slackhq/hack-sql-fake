@@ -82,7 +82,7 @@ final class Printf {
       $specifier = $specifiers[$modifier_text];
       if ($specifier['needs_arg']) {
         if ($arg_i === $arg_count) {
-          throw PrintfTooFewArgumentsException::create($format, $arg_count);
+          throw TooFewArgumentsException::create($format, $arg_count);
         }
         $out[] = $specifier['func'](tuple($args[$arg_i], $mod_i, $format, $modifier_text));
         ++$arg_i;
@@ -92,7 +92,7 @@ final class Printf {
     }
 
     if ($arg_i !== $arg_count) {
-      throw PrintTooManyArgumentsException::create($format, $arg_count, $arg_i);
+      throw TooManyArgumentsException::create($format, $arg_count, $arg_i);
     }
 
     return $out;

@@ -23,13 +23,13 @@ final class InvalidFormatSpecifierException extends PrintfException {
   }
 }
 
-final class PrintfTooFewArgumentsException extends PrintfException {
+final class TooFewArgumentsException extends PrintfException {
   public static function create(string $format, int $arguments_provided): this {
     return new static(Str\format('Too few arguments provided, got %d. Format: %s', $arguments_provided, $format));
   }
 }
 
-final class PrintTooManyArgumentsException extends PrintfException {
+final class TooManyArgumentsException extends PrintfException {
   public static function create(string $format, int $arguments_provided, int $arguments_consumed): this {
     return new static(Str\format(
       'Too many arguments provided, got %d, expected %d. Format: %s',
