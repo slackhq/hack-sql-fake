@@ -53,7 +53,6 @@ abstract class Query {
     // sort function applies all ORDER BY criteria to compare two rows
     $sort_fun = (row $a, row $b): int ==> {
       foreach ($order_by as $rule) {
-
         $value_a = $rule['expression']->evaluate($a, $conn);
         $value_b = $rule['expression']->evaluate($b, $conn);
 
@@ -137,7 +136,6 @@ abstract class Query {
       return tuple($database, $table);
     }
   }
-
 
   /**
    * Apply the "SET" clause of an UPDATE, or "ON DUPLICATE KEY UPDATE"

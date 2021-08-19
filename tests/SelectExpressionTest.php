@@ -210,7 +210,6 @@ final class SelectExpressionTest extends HackTest {
 			'nested case',
 		);
 
-
 		$results = await $conn->query(
 			"SELECT id, (CASE WHEN t.id=1 THEN 'First' WHEN t.id=2 then 'Second' END) AS ord FROM table3 t",
 		);
@@ -339,7 +338,6 @@ final class SelectExpressionTest extends HackTest {
 			dict['id' => 3],
 		]);
 	}
-
 
 	public async function testNotParens(): Awaitable<void> {
 		$conn = static::$conn as nonnull;

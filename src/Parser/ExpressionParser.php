@@ -68,7 +68,7 @@ final class ExpressionParser {
   ];
 
   private ?vec<Expression> $selectExpressions;
-
+  private Expression $expression;
 
   /**
   * Most of the time, only the first two props are set. List of tokens to iterate on, and column references to index into.
@@ -80,10 +80,15 @@ final class ExpressionParser {
   public function __construct(
     private token_list $tokens,
     private int $pointer = -1,
-    private Expression $expression = new PlaceholderExpression(),
+    ?Expression $expression = null,
     public int $min_precedence = 0,
     private bool $is_child = false,
-  ) {}
+  ) {
+    if ($expression is null) {
+			$expression = new PlaceholderExpression();
+    }
+		$this->expression = $expression;
+  }
 
   /** parses an expression that is inside a delimited list, such as function arguments or row expressions
    * i.e.: [col1, col2, col3]
@@ -99,7 +104,6 @@ final class ExpressionParser {
     $args = vec[];
 
     while ($pos < $token_count) {
-
       $arg = $tokens[$pos];
 
       if ($arg['value'] === 'DISTINCT' || $arg['value'] === 'DISTINCTROW') {
@@ -154,7 +158,6 @@ final class ExpressionParser {
         // this is because the select may define aliases we can use in these clauses
         // i.e. SELECT something as foo ... GROUP BY foo
         if ($this->selectExpressions is nonnull) {
-
           foreach ($this->selectExpressions as $expr) {
             if ($expr->name === $token['value']) {
               return $expr;
@@ -211,7 +214,6 @@ final class ExpressionParser {
             list($p, $select) = $parser->parse();
             $expr = new SubqueryExpression($select, '');
           } else if ($this->expression is InOperatorExpression) {
-
             $pointer = -1;
             $in_list = vec[];
             $token_count = C\count($arg_tokens);
@@ -255,7 +257,6 @@ final class ExpressionParser {
               $expr = $p->build();
             }
           }
-
 
           if ($this->expression is PlaceholderExpression) {
             $this->expression = new BinaryOperatorExpression($expr);
@@ -363,7 +364,6 @@ final class ExpressionParser {
               }
               $this->expression->negate();
             } else {
-
               // If the new operator has higher precedence, we need to recurse so that it can end up inside the current expression (so it gets evaluated first)
               // Otherwise, we take the entire current expression and nest it inside a new one, which we assume to be Binary for now
 
@@ -441,7 +441,6 @@ final class ExpressionParser {
 
       // possibly break out of the loop depending on next token, operator precedence, child status
       if ($this->expression->isWellFormed()) {
-
         // alias for the expression?
         if ($nextToken['type'] === TokenType::IDENTIFIER) {
           break;

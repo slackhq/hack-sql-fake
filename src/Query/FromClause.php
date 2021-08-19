@@ -40,7 +40,6 @@ final class FromClause {
     $is_first_table = true;
 
     foreach ($this->tables as $table) {
-
       $schema = null;
       if (Shapes::keyExists($table, 'subquery')) {
         $res = $table['subquery']->evaluate(dict[], $conn);

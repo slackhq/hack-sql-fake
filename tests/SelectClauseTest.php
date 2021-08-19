@@ -63,7 +63,6 @@ final class SelectClauseTest extends HackTest {
 			'with backtick quoted identifiers',
 		);
 
-
 		$results = await $conn->query(
 			'SELECT table3.id, table3.group_id as my_fav_group_id FROM `db2`.`table3` WHERE group_id=6',
 		);

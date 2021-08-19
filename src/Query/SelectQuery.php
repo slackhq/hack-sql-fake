@@ -72,7 +72,6 @@ final class SelectQuery extends Query {
       |> $this->processMultiQuery($conn, $$);
   }
 
-
   /**
    * The FROM clause of the query gets processed first, retrieving data from tables, executing subqueries, and handling joins
    * This is also where we build up the $columns list which is commonly used throughout the entire library to map column references to indexes in this dataset
@@ -88,7 +87,6 @@ final class SelectQuery extends Query {
     return $from->process($conn, $this->sql);
   }
 
-
   /**
    * Apply the GROUP BY clause to group rows by a set of expressions.
    * This may also group the rows if the select list contains an aggregate function, which requires an implicit grouping
@@ -97,7 +95,6 @@ final class SelectQuery extends Query {
     $group_by = $this->groupBy;
     $select_expressions = $this->selectExpressions;
     if ($group_by !== null) {
-
       $grouped_data = dict[];
       foreach ($data as $row) {
         $hashes = '';
@@ -145,7 +142,6 @@ final class SelectQuery extends Query {
 
     return $data;
   }
-
 
   /**
    * Generate the result set containing SELECT expressions
@@ -195,7 +191,6 @@ final class SelectQuery extends Query {
           continue;
         }
 
-
         list($name, $val) = $expr->evaluateWithName($row, $conn);
 
         // subquery: unroll the expression to get the value out
@@ -230,13 +225,11 @@ final class SelectQuery extends Query {
     }
 
     if (C\contains_key($this->options, 'DISTINCT')) {
-
       return Vec\unique_by($out, (row $row): string ==> Str\join(Vec\map($row, $col ==> (string)$col), '-'));
     }
 
     return $out;
   }
-
 
   /**
    * Remove fields that we do not SELECT by, but we do ORDER BY
@@ -278,7 +271,6 @@ final class SelectQuery extends Query {
     return Vec\map($data, $row ==> Dict\filter_keys($row, $field ==> !C\contains_key($remove_fields, $field)));
   }
 
-
   /**
    * Process a query that contains multiple queries such as with UNION, INTERSECT, EXCEPT, UNION ALL
    */
@@ -288,7 +280,6 @@ final class SelectQuery extends Query {
     $row_encoder = (row $row): string ==> Str\join(Vec\map($row, $col ==> (string)$col), '-');
 
     foreach ($this->multiQueries as $sub) {
-
       // invoke the subquery
       $subquery_results = $sub['query']->execute($conn);
 

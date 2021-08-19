@@ -19,7 +19,6 @@ final class UpdateParser {
 
   public function __construct(private token_list $tokens, private string $sql) {}
 
-
   public function parse(): UpdateQuery {
 
     // if we got here, the first token had better be a UPDATE

@@ -83,7 +83,7 @@ EOT
 						'fields' => HackBuilderValues::vec(HackBuilderValues::shapeWithPerKeyRendering(
 							shape(
 								'name' => HackBuilderValues::export(),
-								'type' => HackBuilderValues::lambda(($cfg, $str) ==> 'DataType::'.$str),
+								'type' => HackBuilderValues::lambda(($_cfg, $str) ==> 'DataType::'.$str),
 								'length' => HackBuilderValues::export(),
 								'null' => HackBuilderValues::export(),
 								'hack_type' => HackBuilderValues::export(),

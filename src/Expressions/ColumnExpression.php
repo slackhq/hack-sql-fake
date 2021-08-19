@@ -12,7 +12,6 @@ final class ColumnExpression extends Expression {
   private ?string $databaseName;
   private bool $allowFallthrough = false;
 
-
   public function __construct(token $token) {
     $this->type = $token['type'];
     $this->precedence = 0;

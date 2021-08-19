@@ -157,7 +157,6 @@ abstract final class JoinProcessor {
     return $out;
   }
 
-
   /**
    * Somewhat similar to USING clause, but we're just looking for all column names that match between the two tables
    */

@@ -87,7 +87,6 @@ final class SQLParser {
     $out = vec[];
     $count = C\count($tokens);
     foreach ($tokens as $i => $token) {
-
       // skip white space, but tack it onto the tokens in another field for when we need to assemble the expression list
       if (Str\trim($token) === '') {
         $k = C\last_key($out);

@@ -19,7 +19,6 @@ final class SelectParser {
   private string $currentClause = 'SELECT';
   public function __construct(private int $pointer, private token_list $tokens, private string $sql) {}
 
-
   public function parse(): (int, SelectQuery) {
     // if we got here, the first token had better be a SELECT
     $token = $this->tokens[$this->pointer] ?? null;
