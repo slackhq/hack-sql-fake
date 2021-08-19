@@ -46,6 +46,11 @@ final class AsyncMysqlQueryResult extends \AsyncMysqlQueryResult {
   }
 
   <<__Override>>
+  public function dictRowsTyped(): vec<dict<string, mixed>> {
+    return vec($this->rows);
+  }
+
+  <<__Override>>
   public function mapRowsTyped(): Vector<Map<string, mixed>> {
     $out = Vector {};
     foreach ($this->rows as $row) {
