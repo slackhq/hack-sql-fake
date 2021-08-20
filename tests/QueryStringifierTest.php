@@ -76,8 +76,8 @@ final class QueryStringifierTest extends HackTest {
 			),
 			tuple(
 				/* HH_FIXME[4038] format_upcase_b() method */
-				new SQL\Query('SELECT %B'),
-				"Invalid format specifier, got 'B'",
+				new SQL\Query('SELECT %B FROM'),
+				"Invalid format specifier, got 'B '",
 			),
 			tuple(
 				new SQL\Query('SELECT %s', static::tellALie<string>(3)),
