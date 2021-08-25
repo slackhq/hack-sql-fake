@@ -65,10 +65,10 @@ final class QueryStringifierTest extends HackTest {
 
 	public function provideInvalidQueries(): vec<(SQL\Query, string)> {
 		return vec[
-			tuple(new SQL\Query('SELECT "dangerous character"'), 'Saw dangerous character " in SQL query.'),
-			tuple(new SQL\Query("SELECT 'dangerous character'"), 'Saw dangerous character \' in SQL query.'),
-			tuple(new SQL\Query('SELECT `dangerous character`'), 'Saw dangerous character ` in SQL query.'),
-			tuple(new SQL\Query('SELECT ;'), 'Saw dangerous character ; in SQL query.'),
+			tuple(new SQL\Query('SELECT "dangerous character"'), 'Saw dangerous character " in SQL query'),
+			tuple(new SQL\Query("SELECT 'dangerous character'"), 'Saw dangerous character \' in SQL query'),
+			tuple(new SQL\Query('SELECT `dangerous character`'), 'Saw dangerous character ` in SQL query'),
+			tuple(new SQL\Query('SELECT ;'), 'Saw dangerous character ; in SQL query'),
 			tuple(
 				/* HH_FIXME[4038] no format_eof() method */
 				new SQL\Query('SELECT %'),

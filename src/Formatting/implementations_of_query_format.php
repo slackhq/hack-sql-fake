@@ -7,7 +7,7 @@ namespace Slack\SQLFake\_Private;
 use namespace HH\Lib\{SQL, Str, Vec};
 
 function comment_string(string $comment): string {
-  return '/*'.Str\replace($comment, '*/', ' * / ').'*/';
+  return '/*'.Str\replace_every($comment, dict['/*' => '/ * ', '*/' => '* / ']).'*/';
 }
 
 function escape_string(string $string): string {
@@ -45,14 +45,14 @@ final class ListFormat /* implements SQL\ListFormat */ {
   public function format_upcase_c(vec<string> $columns): string {
     return Vec\map($columns, identifier_string<>) |> Str\join($$, ', ');
   }
-  public function format_s(vec<string> $strings): string {
-    return Vec\map($strings, escape_string<>) |> Str\join($$, ', ');
-  }
   public function format_d(vec<int> $ints): string {
     return Str\join($ints, ', ');
   }
   public function format_f(vec<float> $floats): string {
     return Vec\map($floats, float_string<>) |> Str\join($$, ', ');
+  }
+  public function format_s(vec<string> $strings): string {
+    return Vec\map($strings, escape_string<>) |> Str\join($$, ', ');
   }
 }
 

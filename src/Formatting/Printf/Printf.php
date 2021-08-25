@@ -4,7 +4,7 @@ namespace Slack\SQLFake\Printf;
 
 use namespace HH\Lib\{C, Math, Str, Vec};
 
-final class Printf {
+final class Printf implements Formatter {
   const type TFormatter = (function(
     /*tuple*/(mixed /*$arg*/, int /*$modifier_index*/, string /*$format*/, string /*$modifier_text*/),
   ): string);

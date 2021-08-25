@@ -35,7 +35,11 @@ use namespace HH\Lib\{C, Str};
 /**
  * Format a query similar to AsyncMysqlConnection::queryf
  */
-abstract final class QueryFormatter {
+final class QueryFormatter implements Printf\Formatter {
+	public function format(string $format, vec<mixed> $args): string {
+		return static::formatQuery($format, ...$args);
+	}
+
 	public static function formatQuery(string $query, mixed ...$args): string {
 		// string, size, offset
 		// match types: d, f, v, s, m, u
