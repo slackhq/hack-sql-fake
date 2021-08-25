@@ -83,7 +83,8 @@ final class AsyncMysqlConnection extends \AsyncMysqlConnection {
 
   <<__Override>>
   public function queryf(\HH\FormatString<\HH\SQLFormatter> $query, mixed ...$args): Awaitable<AsyncMysqlQueryResult> {
-    return $this->query(QueryFormatter::formatQuery((string)$query, ...$args));
+    invariant($query is string, '\\HH\\FormatString<_> is opaque, but we need it to be a string here.');
+    return $this->query($this->queryStringifier->formatString($query, vec($args)));
   }
 
   <<__Override>>
