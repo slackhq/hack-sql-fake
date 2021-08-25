@@ -98,8 +98,8 @@ final class SelectQueryValidator extends VitessQueryValidator {
     <<__Override>>
     public function getHandlers(): dict<string, (function(): Awaitable<void>)> {
         return dict[
-            UnsupportedCases::GROUP_BY_COLUMNS => inst_meth($this, 'scatterMustContainSelectColumns'),
-            UnsupportedCases::UNIONS => inst_meth($this, 'unionsNotAllowed'),
+            UnsupportedCases::GROUP_BY_COLUMNS => async () ==> await $this->scatterMustContainSelectColumns(),
+            UnsupportedCases::UNIONS => async () ==> await $this->unionsNotAllowed(),
         ];
     }
 
