@@ -108,14 +108,15 @@ final class CreateTableParser {
 			# <space>
 			# <newline>
 
-			$match = Regex\first_match($sql, re"!\s+!A", $pos);
+			$offset_sql = Str\slice($sql, $pos);
+			$match = Regex\first_match($offset_sql, re"!\s+!A");
 			if ($match is nonnull) {
 				$pos += Str\length($match[0]);
 				continue;
 			}
 
 			# <comment>
-			if (Regex\matches($sql, re"!--!A", $pos)) {
+			if (Regex\matches($offset_sql, re"!--!A")) {
 				$p2 = Str\search($sql, "\n", $pos);
 				if ($p2 === null) {
 					$pos = $len;
@@ -125,7 +126,7 @@ final class CreateTableParser {
 				continue;
 			}
 
-			if (Regex\matches($sql, re"!\\*!A", $pos)) {
+			if (Regex\matches($offset_sql, re"!/\\*!A")) {
 				$p2 = Str\search($sql, '*/', $pos);
 				if ($p2 === null) {
 					$pos = $len;
@@ -137,7 +138,7 @@ final class CreateTableParser {
 
 			# <regular identifier>
 			# <key word>g
-			$match = Regex\first_match($sql, re"![[:alpha:]][[:alnum:]_]*!A", $pos);
+			$match = Regex\first_match($offset_sql, re"![[:alpha:]][[:alnum:]_]*!A");
 			if ($match is nonnull) {
 				$source_map[] = tuple($pos, Str\length($match[0] ?? ''));
 				$pos += Str\length($match[0]);
@@ -160,7 +161,7 @@ final class CreateTableParser {
 			#	<unsigned integer> [ <period> [ <unsigned integer> ] ]
 			#	<period> <unsigned integer>
 			#	<unsigned integer> ::= <digit>...
-			$match = Regex\first_match($sql, re"!(\d+\.?\d*|\.\d+)!A", $pos);
+			$match = Regex\first_match($offset_sql, re"!(\d+\.?\d*|\.\d+)!A");
 			if ($match is nonnull) {
 				$source_map[] = tuple($pos, Str\length($match[0]));
 				$pos += Str\length($match[0]);
