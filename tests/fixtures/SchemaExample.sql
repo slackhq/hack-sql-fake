@@ -1,3 +1,5 @@
+/* ' */
+
 CREATE TABLE `test` (
   `id` varchar(255) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
   `value` varchar(255) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
