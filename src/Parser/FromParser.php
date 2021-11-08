@@ -125,7 +125,7 @@ final class FromParser {
         $parser = new SelectParser(0, $subquery_tokens, $subquery_sql);
         list($p, $select) = $parser->parse();
         $expr = new SubqueryExpression($select, '');
-        # only move pointer forward by $p
+        // only move pointer forward by $p
         $this->pointer += $p + 1;
         $next = $this->tokens[$this->pointer] ?? null;
 

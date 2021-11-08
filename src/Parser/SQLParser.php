@@ -136,7 +136,7 @@ final class SQLParser {
                   break;
                 case '%':
                 case '_':
-                  # these stay unescaped unless used in LIKE
+                  // these stay unescaped unless used in LIKE
                   $token_replaced .= "\\{$token[$i]}";
                   break;
                 default:

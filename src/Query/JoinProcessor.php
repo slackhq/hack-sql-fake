@@ -9,7 +9,7 @@ use namespace HH\Lib\{C, Dict, Str};
  */
 abstract final class JoinProcessor {
 
-  # a sentinel to be used as a dict key for null values
+  // a sentinel to be used as a dict key for null values
   const string NULL_SENTINEL = 'SLACK_SQLFAKE_NULL_SENTINEL';
 
   public static function process(
