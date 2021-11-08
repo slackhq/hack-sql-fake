@@ -66,9 +66,9 @@ type parsed_index = shape(
 
 final class CreateTableParser {
 
-	#
-	# the main public interface is very simple
-	#
+	//
+	// the main public interface is very simple
+	//
 
 	public function parse(string $sql): dict<string, parsed_table> {
 		// stashes tokens and source_map in $this
@@ -76,26 +76,26 @@ final class CreateTableParser {
 		return $this->walk($this->tokens, $sql, $this->sourceMap);
 	}
 
-	#
-	# everything below here is private
-	#
+	//
+	// everything below here is private
+	//
 
 	private vec<string> $tokens = vec[];
 	private vec<(int, int)> $sourceMap = vec[];
 
-	#
-	# lex and collapse tokens
-	#
+	//
+	// lex and collapse tokens
+	//
 	private function lex(string $sql): vec<string> {
 		$this->sourceMap = $this->lexImpl($sql);
 		$this->tokens = $this->extractTokens($sql, $this->sourceMap);
 		return $this->tokens;
 	}
 
-	#
-	# simple lexer based on http://www.contrib.andrew.cmu.edu/~shadow/sql/sql1992.txt
-	#
-	# returns a vec of [position, len] tuples for each token
+	//
+	// simple lexer based on http://www.contrib.andrew.cmu.edu/~shadow/sql/sql1992.txt
+	//
+	// returns a vec of [position, len] tuples for each token
 
 	private function lexImpl(string $sql): vec<(int, int)> {
 
@@ -105,8 +105,8 @@ final class CreateTableParser {
 		$source_map = vec[];
 
 		while ($pos < $len) {
-			# <space>
-			# <newline>
+			// <space>
+			// <newline>
 
 			$offset_sql = Str\slice($sql, $pos);
 			$match = Regex\first_match($offset_sql, re"!\s+!A");
@@ -115,7 +115,7 @@ final class CreateTableParser {
 				continue;
 			}
 
-			# <comment>
+			// <comment>
 			if (Regex\matches($offset_sql, re"!--!A")) {
 				$p2 = Str\search($sql, "\n", $pos);
 				if ($p2 === null) {
@@ -136,8 +136,8 @@ final class CreateTableParser {
 				continue;
 			}
 
-			# <regular identifier>
-			# <key word>g
+			// <regular identifier>
+			// <key word>g
 			$match = Regex\first_match($offset_sql, re"![[:alpha:]][[:alnum:]_]*!A");
 			if ($match is nonnull) {
 				$source_map[] = tuple($pos, Str\length($match[0] ?? ''));
@@ -145,7 +145,7 @@ final class CreateTableParser {
 				continue;
 			}
 
-			# backtick quoted field
+			// backtick quoted field
 			if (Str\slice($sql, $pos, 1) === '`') {
 				$p2 = Str\search($sql, '`', $pos + 1);
 				if ($p2 === null) {
@@ -157,10 +157,10 @@ final class CreateTableParser {
 				continue;
 			}
 
-			# <unsigned numeric literal>
-			#	<unsigned integer> [ <period> [ <unsigned integer> ] ]
-			#	<period> <unsigned integer>
-			#	<unsigned integer> ::= <digit>...
+			// <unsigned numeric literal>
+			//	<unsigned integer> [ <period> [ <unsigned integer> ] ]
+			//	<period> <unsigned integer>
+			//	<unsigned integer> ::= <digit>...
 			$match = Regex\first_match($offset_sql, re"!(\d+\.?\d*|\.\d+)!A");
 			if ($match is nonnull) {
 				$source_map[] = tuple($pos, Str\length($match[0]));
@@ -168,12 +168,12 @@ final class CreateTableParser {
 				continue;
 			}
 
-			# <approximate numeric literal> :: <mantissa> E <exponent>
-			# <national character string literal>
-			# <bit string literal>
-			# <hex string literal>
+			// <approximate numeric literal> :: <mantissa> E <exponent>
+			// <national character string literal>
+			// <bit string literal>
+			// <hex string literal>
 
-			# <character string literal>
+			// <character string literal>
 			if ($sql[$pos] === "'" || $sql[$pos] === '"') {
 				$c = $pos + 1;
 				$q = $sql[$pos];
@@ -193,19 +193,19 @@ final class CreateTableParser {
 				continue;
 			}
 
-			# <date string>
-			# <time string>
-			# <timestamp string>
-			# <interval string>
-			# <delimited identifier>
-			# <SQL special character>
-			# <not equals operator>
-			# <greater than or equals operator>
-			# <less than or equals operator>
-			# <concatenation operator>
-			# <double period>
-			# <left bracket>
-			# <right bracket>
+			// <date string>
+			// <time string>
+			// <timestamp string>
+			// <interval string>
+			// <delimited identifier>
+			// <SQL special character>
+			// <not equals operator>
+			// <greater than or equals operator>
+			// <less than or equals operator>
+			// <concatenation operator>
+			// <double period>
+			// <left bracket>
+			// <right bracket>
 			$source_map[] = tuple($pos, 1);
 			$pos++;
 		}
@@ -215,9 +215,9 @@ final class CreateTableParser {
 
 	private function walk(vec<string> $tokens, string $sql, vec<(int, int)> $source_map): dict<string, parsed_table> {
 
-		#
-		# split into statements
-		#
+		//
+		// split into statements
+		//
 
 		$statements = vec[];
 		$temp = vec[];
@@ -252,9 +252,9 @@ final class CreateTableParser {
 			);
 		}
 
-		#
-		# find CREATE TABLE statements
-		#
+		//
+		// find CREATE TABLE statements
+		//
 
 		$tables = dict[];
 
@@ -286,16 +286,16 @@ final class CreateTableParser {
 			$tokens = Vec\drop($tokens, 1);
 		}
 
-		#
-		# name
-		#
+		//
+		// name
+		//
 
 		$t = $this->vecUnshift(inout $tokens);
 		$name = $this->decodeIdentifier($t);
 
-		#
-		# CREATE TABLE x LIKE y
-		#
+		//
+		// CREATE TABLE x LIKE y
+		//
 
 		if ($this->nextTokenIs($tokens, 'LIKE')) {
 			$this->vecUnshift(inout $tokens);
@@ -311,9 +311,9 @@ final class CreateTableParser {
 			);
 		}
 
-		#
-		# create_definition
-		#
+		//
+		// create_definition
+		//
 
 		$fields = vec[];
 		$indexes = vec[];
@@ -356,7 +356,7 @@ final class CreateTableParser {
 			$this->parseFieldOrKey(inout $these_tokens, inout $fields, inout $indexes);
 		}
 
-		$tokens = Vec\drop($tokens, 1); # closing paren
+		$tokens = Vec\drop($tokens, 1); // closing paren
 
 		return shape(
 			'fields' => $fields,
@@ -370,9 +370,9 @@ final class CreateTableParser {
 		inout vec<parsed_index> $indexes,
 	): void {
 
-		#
-		# constraints can come before a few different things
-		#
+		//
+		// constraints can come before a few different things
+		//
 
 		if ($tokens[0] === 'CONSTRAINT') {
 			if (
@@ -391,15 +391,15 @@ final class CreateTableParser {
 
 		switch ($tokens[0]) {
 
-			#
-			# named indexes
-			#
-			# INDEX		[index_name]	[index_type] (index_col_name,...) [index_option] ...
-			# KEY		[index_name]	[index_type] (index_col_name,...) [index_option] ...
-			# UNIQUE	[index_name]	[index_type] (index_col_name,...) [index_option] ...
-			# UNIQUE INDEX	[index_name]	[index_type] (index_col_name,...) [index_option] ...
-			# UNIQUE KEY	[index_name]	[index_type] (index_col_name,...) [index_option] ...
-			#
+			//
+			// named indexes
+			//
+			// INDEX		[index_name]	[index_type] (index_col_name,...) [index_option] ...
+			// KEY		[index_name]	[index_type] (index_col_name,...) [index_option] ...
+			// UNIQUE	[index_name]	[index_type] (index_col_name,...) [index_option] ...
+			// UNIQUE INDEX	[index_name]	[index_type] (index_col_name,...) [index_option] ...
+			// UNIQUE KEY	[index_name]	[index_type] (index_col_name,...) [index_option] ...
+			//
 
 			case 'INDEX':
 			case 'KEY':
@@ -433,9 +433,9 @@ final class CreateTableParser {
 				$indexes[] = $index;
 				return;
 
-			#
-			# PRIMARY KEY [index_type] (index_col_name,...) [index_option] ...
-			#
+			//
+			// PRIMARY KEY [index_type] (index_col_name,...) [index_option] ...
+			//
 
 			case 'PRIMARY KEY':
 
@@ -456,12 +456,12 @@ final class CreateTableParser {
 				$indexes[] = $index;
 				return;
 
-			# FULLTEXT		[index_name] (index_col_name,...) [index_option] ...
-			# FULLTEXT INDEX	[index_name] (index_col_name,...) [index_option] ...
-			# FULLTEXT KEY		[index_name] (index_col_name,...) [index_option] ...
-			# SPATIAL		[index_name] (index_col_name,...) [index_option] ...
-			# SPATIAL INDEX		[index_name] (index_col_name,...) [index_option] ...
-			# SPATIAL KEY		[index_name] (index_col_name,...) [index_option] ...
+			// FULLTEXT		[index_name] (index_col_name,...) [index_option] ...
+			// FULLTEXT INDEX	[index_name] (index_col_name,...) [index_option] ...
+			// FULLTEXT KEY		[index_name] (index_col_name,...) [index_option] ...
+			// SPATIAL		[index_name] (index_col_name,...) [index_option] ...
+			// SPATIAL INDEX		[index_name] (index_col_name,...) [index_option] ...
+			// SPATIAL KEY		[index_name] (index_col_name,...) [index_option] ...
 
 			case 'FULLTEXT':
 			case 'FULLTEXT INDEX':
@@ -496,14 +496,14 @@ final class CreateTableParser {
 				$indexes[] = $index;
 				return;
 
-			# older stuff
+			// older stuff
 
 			case 'CHECK':
 
-				# not currently handled
+				// not currently handled
 				return;
 			default:
-				# any other tokens fall through to be parsed below
+				// any other tokens fall through to be parsed below
 				break;
 		}
 
@@ -557,7 +557,7 @@ final class CreateTableParser {
 
 		switch ($f['type']) {
 
-			# DATE
+			// DATE
 			case 'DATE':
 			case 'TIME':
 			case 'TIMESTAMP':
@@ -569,10 +569,10 @@ final class CreateTableParser {
 			case 'LONGBLOB':
 			case 'JSON':
 
-				# nothing more to read
+				// nothing more to read
 				break;
 
-			# TINYINT[(length)] [UNSIGNED] [ZEROFILL]
+			// TINYINT[(length)] [UNSIGNED] [ZEROFILL]
 			case 'TINYINT':
 			case 'SMALLINT':
 			case 'MEDIUMINT':
@@ -585,7 +585,7 @@ final class CreateTableParser {
 				$this->parseFieldZerofill(inout $tokens, inout $f);
 				break;
 
-			# REAL[(length,decimals)] [UNSIGNED] [ZEROFILL]
+			// REAL[(length,decimals)] [UNSIGNED] [ZEROFILL]
 			case 'REAL':
 			case 'DOUBLE':
 			case 'FLOAT':
@@ -595,7 +595,7 @@ final class CreateTableParser {
 				$this->parseFieldZerofill(inout $tokens, inout $f);
 				break;
 
-			# DECIMAL[(length[,decimals])] [UNSIGNED] [ZEROFILL]
+			// DECIMAL[(length[,decimals])] [UNSIGNED] [ZEROFILL]
 			case 'DECIMAL':
 			case 'NUMERIC':
 
@@ -605,21 +605,21 @@ final class CreateTableParser {
 				$this->parseFieldZerofill(inout $tokens, inout $f);
 				break;
 
-			# BIT[(length)]
-			# BINARY[(length)]
+			// BIT[(length)]
+			// BINARY[(length)]
 			case 'BIT':
 			case 'BINARY':
 
 				$this->parseFieldLength(inout $tokens, inout $f);
 				break;
 
-			# VARBINARY(length)
+			// VARBINARY(length)
 			case 'VARBINARY':
 
 				$this->parseFieldLength(inout $tokens, inout $f);
 				break;
 
-			# CHAR[(length)] [CHARACTER SET charset_name] [COLLATE collation_name]
+			// CHAR[(length)] [CHARACTER SET charset_name] [COLLATE collation_name]
 			case 'CHAR':
 
 				$this->parseFieldLength(inout $tokens, inout $f);
@@ -627,7 +627,7 @@ final class CreateTableParser {
 				$this->parseFieldCollate(inout $tokens, inout $f);
 				break;
 
-			# VARCHAR(length) [CHARACTER SET charset_name] [COLLATE collation_name]
+			// VARCHAR(length) [CHARACTER SET charset_name] [COLLATE collation_name]
 			case 'VARCHAR':
 
 				$this->parseFieldLength(inout $tokens, inout $f);
@@ -635,22 +635,22 @@ final class CreateTableParser {
 				$this->parseFieldCollate(inout $tokens, inout $f);
 				break;
 
-			# TINYTEXT   [BINARY] [CHARACTER SET charset_name] [COLLATE collation_name]
-			# TEXT       [BINARY] [CHARACTER SET charset_name] [COLLATE collation_name]
-			# MEDIUMTEXT [BINARY] [CHARACTER SET charset_name] [COLLATE collation_name]
-			# LONGTEXT   [BINARY] [CHARACTER SET charset_name] [COLLATE collation_name]
+			// TINYTEXT   [BINARY] [CHARACTER SET charset_name] [COLLATE collation_name]
+			// TEXT       [BINARY] [CHARACTER SET charset_name] [COLLATE collation_name]
+			// MEDIUMTEXT [BINARY] [CHARACTER SET charset_name] [COLLATE collation_name]
+			// LONGTEXT   [BINARY] [CHARACTER SET charset_name] [COLLATE collation_name]
 			case 'TINYTEXT':
 			case 'TEXT':
 			case 'MEDIUMTEXT':
 			case 'LONGTEXT':
 
-				# binary
+				// binary
 				$this->parseFieldCharset(inout $tokens, inout $f);
 				$this->parseFieldCollate(inout $tokens, inout $f);
 				break;
 
-			# ENUM(value1,value2,value3,...) [CHARACTER SET charset_name] [COLLATE collation_name]
-			# SET (value1,value2,value3,...) [CHARACTER SET charset_name] [COLLATE collation_name]
+			// ENUM(value1,value2,value3,...) [CHARACTER SET charset_name] [COLLATE collation_name]
+			// SET (value1,value2,value3,...) [CHARACTER SET charset_name] [COLLATE collation_name]
 			case 'ENUM':
 			case 'SET':
 
@@ -663,7 +663,7 @@ final class CreateTableParser {
 				die("Unsupported field type: {$f['type']}");
 		}
 
-		# [NOT NULL | NULL]
+		// [NOT NULL | NULL]
 		if (!C\is_empty($tokens) && Str\uppercase($tokens[0]) === 'NOT NULL') {
 			$f['null'] = false;
 			$tokens = Vec\drop($tokens, 1);
@@ -673,7 +673,7 @@ final class CreateTableParser {
 			$tokens = Vec\drop($tokens, 1);
 		}
 
-		# [DEFAULT default_value]
+		// [DEFAULT default_value]
 		if (!C\is_empty($tokens) && Str\uppercase($tokens[0]) === 'DEFAULT') {
 			$f['default'] = $this->decodeValue($tokens[1]);
 			if ($f['default'] === 'NULL') {
@@ -684,17 +684,17 @@ final class CreateTableParser {
 			$tokens = Vec\drop($tokens, 1);
 		}
 
-		# [AUTO_INCREMENT]
+		// [AUTO_INCREMENT]
 		if (!C\is_empty($tokens) && Str\uppercase($tokens[0]) === 'AUTO_INCREMENT') {
 			$f['auto_increment'] = true;
 			$tokens = Vec\drop($tokens, 1);
 		}
 
-		# [UNIQUE [KEY] | [PRIMARY] KEY]
-		# [COMMENT 'string']
-		# [COLUMN_FORMAT {FIXED|DYNAMIC|DEFAULT}]
-		# [STORAGE {DISK|MEMORY|DEFAULT}]
-		# [reference_definition]
+		// [UNIQUE [KEY] | [PRIMARY] KEY]
+		// [COMMENT 'string']
+		// [COLUMN_FORMAT {FIXED|DYNAMIC|DEFAULT}]
+		// [STORAGE {DISK|MEMORY|DEFAULT}]
+		// [reference_definition]
 
 		if (C\count($tokens)) {
 			$f['more'] = $tokens;
@@ -726,7 +726,7 @@ final class CreateTableParser {
 				case 'ENGINE':
 				case 'AUTO_INCREMENT':
 				case 'AVG_ROW_LENGTH':
-				#case 'CHECKSUM':
+				//case 'CHECKSUM':
 				case 'COMMENT':
 				case 'CONNECTION':
 				case 'DELAY_KEY_WRITE':
@@ -782,11 +782,11 @@ final class CreateTableParser {
 		return $props;
 	}
 
-	# Given the source map, extract the tokens from the original sql,
-	# Along the way, simplify parsing by merging certain tokens when
-	# they occur next to each other. MySQL treats these productions
-	# equally: 'UNIQUE|UNIQUE INDEX|UNIQUE KEY' and if they are
-	# all always a single token it makes parsing easier.
+	// Given the source map, extract the tokens from the original sql,
+	// Along the way, simplify parsing by merging certain tokens when
+	// they occur next to each other. MySQL treats these productions
+	// equally: 'UNIQUE|UNIQUE INDEX|UNIQUE KEY' and if they are
+	// all always a single token it makes parsing easier.
 
 	private function extractTokens(string $sql, vec<(int, int)> $source_map): vec<string> {
 		$lists = keyset[
@@ -856,8 +856,8 @@ final class CreateTableParser {
 					if (!$fail) {
 						$out[] = Str\join($list, ' ');
 
-						# Extend the length of the first token to include everything
-						# up through the last in the sequence.
+						// Extend the length of the first token to include everything
+						// up through the last in the sequence.
 						$j = $i + C\count($list) - 1;
 						$out_map[] = tuple(
 							$source_map[$i][0],
@@ -901,7 +901,7 @@ final class CreateTableParser {
 
 	private function parseIndexColumns(inout vec<string> $tokens, inout parsed_index $index): void {
 
-		# col_name [(length)] [ASC | DESC]
+		// col_name [(length)] [ASC | DESC]
 
 		if ($tokens[0] !== '(') {
 			return;
@@ -939,16 +939,16 @@ final class CreateTableParser {
 				continue;
 			}
 
-			# hmm, an unexpected token
+			// hmm, an unexpected token
 			return;
 		}
 	}
 
 	private function parseIndexOptions(inout vec<string> $tokens, inout parsed_index $index): void {
-		# index_option:
-		#    KEY_BLOCK_SIZE [=] value
-		#  | index_type
-		#  | WITH PARSER parser_name
+		// index_option:
+		//    KEY_BLOCK_SIZE [=] value
+		//  | index_type
+		//  | WITH PARSER parser_name
 
 		if (!C\is_empty($tokens) && $tokens[0] === 'KEY_BLOCK_SIZE') {
 			$tokens = Vec\drop($tokens, 1);
@@ -967,9 +967,9 @@ final class CreateTableParser {
 		}
 	}
 
-	#
-	# helper functions for parsing bits of field definitions
-	#
+	//
+	// helper functions for parsing bits of field definitions
+	//
 
 	private function parseFieldLength(inout vec<string> $tokens, inout parsed_field $f): void {
 		if (!C\is_empty($tokens) && $tokens[0] === '(' && $tokens[2] === ')') {
@@ -1038,7 +1038,7 @@ final class CreateTableParser {
 			if ($tokens[0] === ',') {
 				$tokens = Vec\drop($tokens, 1);
 			} else {
-				# error
+				// error
 				return $values;
 			}
 		}
@@ -1054,9 +1054,9 @@ final class CreateTableParser {
 
 	private function decodeValue(string $token): string {
 
-		#
-		# decode strings
-		#
+		//
+		// decode strings
+		//
 
 		if ($token[0] === "'" || $token[0] === '"') {
 			$map = dict[

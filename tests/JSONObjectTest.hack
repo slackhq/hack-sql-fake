@@ -578,8 +578,6 @@ final class JSONObjectTest extends HackTest {
     return vec[
       tuple(5),
       tuple('{"invalid": json}'),
-      tuple(darray[]),
-      tuple(varray[]),
     ];
   }
 

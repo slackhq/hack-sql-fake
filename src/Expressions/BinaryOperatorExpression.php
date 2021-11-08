@@ -100,7 +100,7 @@ final class BinaryOperatorExpression extends Expression {
 
     if ($left is RowExpression) {
       if (!$right is RowExpression) {
-        throw new SQLFakeRuntimeException("Expected row expression on RHS of {$this->operator} operand");
+        throw new SQLFakeRuntimeException('Expected row expression on RHS of '.(string)$this->operator.' operand');
       }
 
       // oh fun! a row comparison, e.g. (col1, col2, col3) > (1, 2, 3)
@@ -222,7 +222,7 @@ final class BinaryOperatorExpression extends Expression {
           case Operator::DOUBLE_GREATER_THAN:
             return (int)$left_number >> (int)$right_number;
           default:
-            throw new SQLFakeRuntimeException("Operator {$this->operator} recognized but not implemented");
+            throw new SQLFakeRuntimeException('Operator '.(string)$this->operator.' recognized but not implemented');
         }
       case Operator::LIKE:
         $left_string = (string)$left->evaluate($row, $conn);
@@ -299,7 +299,7 @@ final class BinaryOperatorExpression extends Expression {
       case Operator::SOME: // parser does NOT KNOW about this functionality
       //[[fallthrough]] <- note to humans, not to the typechecker, therefore different syntax.
       default:
-        throw new SQLFakeRuntimeException("Operator {$this->operator} not implemented in SQLFake");
+        throw new SQLFakeRuntimeException('Operator '.(string)$this->operator.' not implemented in SQLFake');
     }
   }
 
