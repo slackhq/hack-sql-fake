@@ -61,7 +61,7 @@ final class BinaryOperatorExpression extends Expression {
 
       // in an expression like (1, 2, 3) > (1, 2, 2) we don't need EVERY element on the left to be greater than the right
       // some can be equal. so if we get to one that isn't the last and they're equal, it's safe to keep going
-      if ($le == $re && $index !== $last_index) {
+      if (\HH\Lib\Legacy_FIXME\eq($le, $re) && $index !== $last_index) {
         continue;
       }
 
@@ -81,7 +81,7 @@ final class BinaryOperatorExpression extends Expression {
           return ($le >= $re);
         case Operator::LESS_THAN:
           /* HH_IGNORE_ERROR[4240] assume they have the same types */
-          return ($le < $re);
+          return \HH\Lib\Legacy_FIXME\lt($le, $re);
         case Operator::LESS_THAN_EQUALS:
           /* HH_IGNORE_ERROR[4240] assume they have the same types */
           return ($le <= $re);
@@ -154,39 +154,39 @@ final class BinaryOperatorExpression extends Expression {
       case Operator::EQUALS:
         // maybe do some stuff with data types here
         // comparing strings: gotta think about collation and case sensitivity!
-        return (bool)(($l_value == $r_value) ? 1 : 0 ^ $this->negatedInt);
+        return (bool)(\HH\Lib\Legacy_FIXME\eq($l_value, $r_value) ? 1 : 0 ^ $this->negatedInt);
       case Operator::LESS_THAN_GREATER_THAN:
       case Operator::BANG_EQUALS:
         if ($as_string) {
           return (bool)(((string)$l_value != (string)$r_value) ? 1 : 0 ^ $this->negatedInt);
         } else {
-          return (bool)(((int)$l_value != (int)$r_value) ? 1 : 0 ^ $this->negatedInt);
+          return (bool)(((float)$l_value != (float)$r_value) ? 1 : 0 ^ $this->negatedInt);
         }
       case Operator::GREATER_THAN:
         if ($as_string) {
           return (bool)((((Str\compare((string)$l_value, (string)$r_value)) > 0) ? 1 : 0) ^ $this->negatedInt);
         } else {
-          return (bool)(((int)$l_value > (int)$r_value) ? 1 : 0 ^ $this->negatedInt);
+          return (bool)(((float)$l_value > (float)$r_value) ? 1 : 0 ^ $this->negatedInt);
         }
       case Operator::GREATER_THAN_EQUALS:
         if ($as_string) {
           $comparison = Str\compare((string)$l_value, (string)$r_value);
           return (bool)((($comparison > 0 || $comparison === 0) ? 1 : 0) ^ $this->negatedInt);
         } else {
-          return (bool)(((int)$l_value >= (int)$r_value) ? 1 : 0 ^ $this->negatedInt);
+          return (bool)(((float)$l_value >= (float)$r_value) ? 1 : 0 ^ $this->negatedInt);
         }
       case Operator::LESS_THAN:
         if ($as_string) {
           return (bool)((((Str\compare((string)$l_value, (string)$r_value)) < 0) ? 1 : 0) ^ $this->negatedInt);
         } else {
-          return (bool)(((int)$l_value < (int)$r_value) ? 1 : 0 ^ $this->negatedInt);
+          return (bool)(((float)$l_value < (float)$r_value) ? 1 : 0 ^ $this->negatedInt);
         }
       case Operator::LESS_THAN_EQUALS:
         if ($as_string) {
           $comparison = Str\compare((string)$l_value, (string)$r_value);
           return (bool)((($comparison < 0 || $comparison === 0) ? 1 : 0) ^ $this->negatedInt);
         } else {
-          return (bool)(((int)$l_value <= (int)$r_value) ? 1 : 0 ^ $this->negatedInt);
+          return (bool)(((float)$l_value <= (float)$r_value) ? 1 : 0 ^ $this->negatedInt);
         }
       case Operator::ASTERISK:
       case Operator::PERCENT:
