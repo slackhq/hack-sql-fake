@@ -273,8 +273,9 @@ final class SQLFunctionTest extends HackTest {
 		$results = await $conn->query(
 			'SELECT GREATEST(1, 3, 2) as first, GREATEST(NULL, 2) as second, GREATEST(NULL, NULL, NULL) as third',
 		);
+		// GREATEST returns null if any args are null
 		expect($results->rows())->toBeSame(vec[
-			dict['first' => 3, 'second' => 2, 'third' => null],
+			dict['first' => 3, 'second' => null, 'third' => null],
 		]);
 	}
 

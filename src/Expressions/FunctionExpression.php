@@ -326,6 +326,10 @@ final class FunctionExpression extends BaseFunctionExpression {
     $values = vec[];
     foreach ($this->args as $arg) {
       $val = $arg->evaluate($row, $conn);
+      // MySQL always returns null if ANY argument to this function is null
+      if ($val is null) {
+        return null;
+      }
       $values[] = $val;
     }
 
