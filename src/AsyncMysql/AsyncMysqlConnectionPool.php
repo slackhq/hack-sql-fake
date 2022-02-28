@@ -23,6 +23,7 @@ final class AsyncMysqlConnectionPool extends \AsyncMysqlConnectionPool {
   }
 
   <<__Override>>
+  /* HH_FIXME[4341] temp fix signature changed */
   public async function connect(
     string $host,
     int $port,
@@ -31,7 +32,11 @@ final class AsyncMysqlConnectionPool extends \AsyncMysqlConnectionPool {
     string $_password,
     int $_timeout_micros = -1,
     string $_caller = '',
+    ?\MySSLContextProvider $ssl_context = null,
     int $_tcp_timeout_micros = 0,
+		string $sni_server_name = "",
+		string $server_cert_extensions = "",
+		string $server_cert_values = "",
   ): Awaitable<AsyncMysqlConnection> {
     $this->connectionsRequest++;
     if (C\contains_key(static::$pool, $host)) {

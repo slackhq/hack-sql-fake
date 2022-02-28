@@ -24,6 +24,8 @@ final class AsyncMysqlClient extends \AsyncMysqlClient {
 		?\MySSLContextProvider $_ssl_provider = null,
 		int $_tcp_timeout_micros = 0,
 		string $_sni_server_name = '',
+		string $server_cert_extension = "",
+        string $server_cert_values = "",
 	): Awaitable<\AsyncMysqlConnection> {
 		return new AsyncMysqlConnection($host, $port, $dbname);
 	}
@@ -57,6 +59,4 @@ final class AsyncMysqlClient extends \AsyncMysqlClient {
 		return tuple($conn->connectResult(), $results);
 	}
 
-	<<__Override>>
-	public static function adoptConnection(\AsyncMysqlConnection $_connection): void {}
 }
