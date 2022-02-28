@@ -158,7 +158,7 @@ final class SelectClauseTest extends HackTest {
 		);
 		expect($results->rows())->toBeSame(
 			vec[
-				# by group_id ascending
+				// by group_id ascending
 				dict['table_4_id' => 1003],
 				dict['table_4_id' => 1001],
 			],
