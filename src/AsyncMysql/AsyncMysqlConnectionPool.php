@@ -32,11 +32,11 @@ final class AsyncMysqlConnectionPool extends \AsyncMysqlConnectionPool {
     string $_password,
     int $_timeout_micros = -1,
     string $_caller = '',
-    ?\MySSLContextProvider $ssl_context = null,
+    ?\MySSLContextProvider $_ssl_context = null,
     int $_tcp_timeout_micros = 0,
-		string $sni_server_name = "",
-		string $server_cert_extensions = "",
-		string $server_cert_values = "",
+		string $_sni_server_name = '',
+		string $_server_cert_extensions = '',
+		string $_server_cert_values = '',
   ): Awaitable<AsyncMysqlConnection> {
     $this->connectionsRequest++;
     if (C\contains_key(static::$pool, $host)) {
