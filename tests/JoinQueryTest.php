@@ -58,7 +58,7 @@ final class JoinQueryTest extends HackTest {
 			'SELECT * FROM table3 f JOIN association_table s ON f.id = s.table_3_id AND f.group_id = s.group_id',
 		);
 
-		# there is (intentionally) one row here where the group_ids don't match, so we should see that filtered out here too
+		// there is (intentionally) one row here where the group_ids don't match, so we should see that filtered out here too
 		$expected = Vec\slice($expected, 0, 3);
 		expect($results->rows())->toBeSame($expected, 'with aliases and explicit group_id filter');
 	}

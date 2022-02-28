@@ -16,13 +16,13 @@
   ],
   "require": {
     "hhvm/hhast": "v4.135.1",
-    "hhvm/hsl-experimental": "=4.108.0",
+    "hhvm/hsl-experimental": "^4.108.0",
     "facebook/hack-codegen": "^4.3.12",
     "facebook/hh-clilib": "^2.0.0",
     "hhvm/hhvm-autoload": "^2.0.13|^3.1.4"
   },
   "require-dev": {
     "facebook/fbexpect": "^2.8.0",
-    "hhvm/hacktest": "=2.2.3"
+    "hhvm/hacktest": ">=2.2.3"
   }
 }
