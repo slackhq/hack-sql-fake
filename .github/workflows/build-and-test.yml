@@ -11,7 +11,7 @@ jobs:
         os: [ ubuntu ]
         hhvm:
           - '4.128'
-          - '4.150'
+          - '4.153'
     runs-on: ${{matrix.os}}-latest
     steps:
       - uses: actions/checkout@v2
