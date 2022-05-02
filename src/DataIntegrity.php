@@ -31,13 +31,10 @@ abstract final class DataIntegrity {
       switch ($field_type) {
         case 'int':
           return Str\to_int($default);
-          break;
         case 'double':
           return (float)$default;
-          break;
         default:
           return $default;
-          break;
       }
     } else if ($nullable) {
       return null;
@@ -52,13 +49,10 @@ abstract final class DataIntegrity {
     switch ($field_type) {
       case 'int':
         return 0;
-        break;
       case 'double':
         return 0.0;
-        break;
       default:
         return '';
-        break;
     }
   }
 
@@ -151,7 +145,6 @@ abstract final class DataIntegrity {
                     throw new SQLFakeRuntimeException(
                       "Column '{$field_name}' on '{$schema['name']}' expects a valid '{$field_mysql_type}'",
                     );
-                    break;
                 }
             }
             break;

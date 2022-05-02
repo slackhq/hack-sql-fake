@@ -96,7 +96,6 @@ final class SchemaGenerator {
 
 			default:
 				throw new SQLFakeRuntimeException("type {$field['type']} not supported");
-				break;
 		}
 
 		return $type;

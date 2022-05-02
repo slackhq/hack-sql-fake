@@ -38,8 +38,6 @@ final class UnaryExpression extends Expression {
       default:
         throw new SQLFakeRuntimeException("Unimplemented unary operand {$this->name}");
     }
-
-    return $val;
   }
 
   <<__Override>>

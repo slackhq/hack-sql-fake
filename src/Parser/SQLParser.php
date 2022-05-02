@@ -70,8 +70,6 @@ final class SQLParser {
       default:
         throw new SQLFakeParseException("Unexpected {$token['value']}");
     }
-
-    throw new SQLFakeParseException('Parse error: unexpected end of input');
   }
 
   <<__Memoize>>

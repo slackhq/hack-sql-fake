@@ -178,7 +178,6 @@ final class QueryFormatter implements Printf\Formatter {
 					break;
 				case 'Q':
 					throw new SQLFakeNotImplementedException('%Q not supported in SQLFake');
-					break;
 				default:
 					throw new SQLFakeParseException("unknown % code %$c");
 			}

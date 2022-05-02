@@ -185,7 +185,6 @@ final class SelectParser {
             case 'INTERSECT':
               // return control back to parent, so that if we are at top level we can add this and otherwise not
               return tuple($this->pointer + $incr, $query);
-              break;
             default:
               throw new SQLFakeParseException("Unexpected {$token['value']}");
           }
