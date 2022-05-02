@@ -233,7 +233,7 @@ final class FunctionExpression extends BaseFunctionExpression {
     $delim = (string)$delimiter->evaluate($row, $conn);
 
     // MySQL string positions 1-indexed, PHP strings are 0-indexed. So substract one from pos
-    $pos = $args[2];
+    $pos = $args[2] ?? null;
     if ($pos is nonnull) {
       $count = (int)$pos->evaluate($row, $conn);
       $parts = Str\split($string, $delim);

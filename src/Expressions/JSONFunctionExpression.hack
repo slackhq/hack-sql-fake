@@ -104,7 +104,7 @@ final class JSONFunctionExpression extends BaseFunctionExpression {
 
         // If it begins & ends with ", it must be a valid JSON string literal so use json_decode to validate
         // + decode
-        if ($value is string && Str\starts_with($value, '"') && Str\ends_with($value, '"')) {
+        if (Str\starts_with($value, '"') && Str\ends_with($value, '"')) {
             $unquoted = \json_decode($value);
             if ($unquoted is null || !($unquoted is string)) {
                 throw new SQLFakeRuntimeException('MySQL JSON_UNQUOTE() function received invalid argument');
@@ -167,7 +167,7 @@ final class JSONFunctionExpression extends BaseFunctionExpression {
 
             $results = C\reduce(
                 $jsonPaths,
-                ($acc, $path) ==> {
+                (vec<mixed> $acc, $path) ==> {
                     $result = $jsonObject->get($path, self::UNWRAP_JSON_PATH_RESULTS);
                     if ($result is null) {
                         return $acc;

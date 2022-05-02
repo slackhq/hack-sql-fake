@@ -68,8 +68,8 @@ final class AsyncMysqlConnectionPool extends \AsyncMysqlConnectionPool {
   }
 
   <<__Override>>
-  public function getPoolStats(): darray<string, int> {
-    return darray[
+  public function getPoolStats(): dict<string, int> {
+    return dict[
       'created_pool_connections' => $this->createdPoolConnections,
       'destroyed_pool_connections' => $this->destroyedPoolConnections,
       'connections_request' => $this->connectionsRequest,

@@ -290,7 +290,7 @@ class JSONObject {
 
                 if ($out is vec<_>) {
                     $out[] = $newValue;
-                } else if ($out is dict<_, _>) {
+                } else {
                     $out[$key] = $newValue;
                 }
             }

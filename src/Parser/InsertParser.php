@@ -51,7 +51,7 @@ final class InsertParser {
     }
 
     // next token has to be a table name
-    $token = $this->tokens[$this->pointer];
+    $token = $this->tokens[$this->pointer] ?? null;
     if ($token === null || $token['type'] !== TokenType::IDENTIFIER) {
       throw new SQLFakeParseException('Expected table name after INSERT');
     }
@@ -89,7 +89,7 @@ final class InsertParser {
                   $this->pointer++;
                   $needs_another_plus_plus = false;
                 }
-                $token = $this->tokens[$this->pointer];
+                $token = $this->tokens[$this->pointer] ?? null;
                 // VALUES must be followed by paren and then a list of values
                 if ($token === null || $token['value'] !== '(') {
                   throw new SQLFakeParseException('Expected ( after VALUES');

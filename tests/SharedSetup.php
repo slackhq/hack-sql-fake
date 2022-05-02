@@ -7,7 +7,7 @@ final class SharedSetup {
 		$schema = TEST_SCHEMA;
 		init($schema, true);
 
-		$pool = new AsyncMysqlConnectionPool(darray[]);
+		$pool = new AsyncMysqlConnectionPool(dict[]);
 		$conn = await $pool->connect('example', 1, 'db2', '', '');
 
 		// populate database state
@@ -58,7 +58,7 @@ final class SharedSetup {
 		$schema = VITESS_TEST_SCHEMA;
 		init($schema, true);
 
-		$pool = new AsyncMysqlConnectionPool(darray[]);
+		$pool = new AsyncMysqlConnectionPool(dict[]);
 		$vitess_conn = await $pool->connect('example2', 2, 'vitess', '', '');
 
 		$vitess_dbs = dict[

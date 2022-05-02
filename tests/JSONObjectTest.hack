@@ -482,7 +482,7 @@ final class JSONObjectTest extends HackTest {
   <<DataProvider('testKeysProvider')>>
   public async function testKeys(
     shape('json' => mixed, ?'path' => string) $input,
-    shape(?'exception' => classname<JSONException>, ?'value' => vec<string>) $output,
+    shape(?'exception' => classname<JSONException>, ?'value' => ?vec<string>) $output,
   ): Awaitable<void> {
     $jsonPath = $input['path'] ?? null;
     $exception = $output['exception'] ?? null;

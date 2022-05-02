@@ -37,7 +37,7 @@ final class UpdateParser {
     $count = C\count($this->tokens);
 
     // next token has to be a table name
-    $token = $this->tokens[$this->pointer];
+    $token = $this->tokens[$this->pointer] ?? null;
     if ($token === null || $token['type'] !== TokenType::IDENTIFIER) {
       throw new SQLFakeParseException('Expected table name after UPDATE');
     }

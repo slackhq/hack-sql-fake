@@ -46,7 +46,7 @@ final class DeleteParser {
           switch ($token['value']) {
             case 'FROM':
               $this->pointer++;
-              $token = $this->tokens[$this->pointer];
+              $token = $this->tokens[$this->pointer] ?? null;
               if ($token === null || $token['type'] !== TokenType::IDENTIFIER) {
                 throw new SQLFakeParseException('Expected table name after FROM');
               }

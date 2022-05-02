@@ -216,7 +216,6 @@ final class SelectQuery extends Query {
 
       // Adding any fields needed by the ORDER BY not already returned by the SELECT
       foreach ($order_by_expressions as $order_by) {
-        $row as dict<_, _>;
         list($name, $val) = $order_by['expression']->evaluateWithName(/* HH_FIXME[4110] generics */ $row, $conn);
         $formatted_row[$name] ??= $val;
       }
@@ -250,16 +249,12 @@ final class SelectQuery extends Query {
       if ($name === '*') {
         return $data;
       }
-      if ($name !== null) {
-        $select_field_names[] = $name;
-      }
+      $select_field_names[] = $name;
     }
 
     foreach ($order_by as $o) {
       $name = $o['expression']->name;
-      if ($name !== null) {
-        $order_by_names[] = $name;
-      }
+      $order_by_names[] = $name;
     }
 
     $remove_fields = Keyset\diff($order_by_names, $select_field_names);

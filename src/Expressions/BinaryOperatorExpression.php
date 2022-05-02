@@ -372,12 +372,10 @@ final class BinaryOperatorExpression extends Expression {
   public function traverse(): vec<Expression> {
     $container = vec[];
 
-    if ($this->left is nonnull) {
-      if ($this->left is BinaryOperatorExpression) {
-        $container = Vec\concat($container, $this->left->traverse());
-      } else {
-        $container[] = $this->left;
-      }
+    if ($this->left is BinaryOperatorExpression) {
+      $container = Vec\concat($container, $this->left->traverse());
+    } else {
+      $container[] = $this->left;
     }
 
     if ($this->right is nonnull) {
