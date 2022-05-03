@@ -107,12 +107,12 @@ abstract final class JoinProcessor {
         // TODO: calculating the null placeholder set here is actually complex,
         // we need to get a list of all columns from the schemas for all previous tables in the join sequence
 
-        $null_placeholder = dict[];
-        if ($right_schema !== null) {
-          foreach ($right_schema['fields'] as $field) {
-            $null_placeholder["{$right_table_name}.{$field['name']}"] = null;
-          }
-        }
+        //  $null_placeholder = dict[];
+        //  if ($right_schema !== null) {
+        //    foreach ($right_schema['fields'] as $field) {
+        //      $null_placeholder["{$right_table_name}.{$field['name']}"] = null;
+        //    }
+        //  }
 
         foreach ($right_dataset as $raw) {
           $any_match = false;

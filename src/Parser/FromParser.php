@@ -118,7 +118,6 @@ final class FromParser {
         if (!C\count($subquery_tokens)) {
           throw new SQLFakeParseException('Empty parentheses found');
         }
-        $expr = new PlaceholderExpression();
 
         // this will throw if the first keyword isn't SELECT which is what we want
         $subquery_sql = Vec\map($subquery_tokens, $token ==> $token['value']) |> Str\join($$, ' ');
@@ -143,7 +142,6 @@ final class FromParser {
             }
           }
           $this->pointer++;
-          $next = $this->tokens[$this->pointer] ?? null;
           $subselect = new SelectParser($this->pointer, $this->tokens, '');
           list($p, $q) = $subselect->parse();
           $this->pointer += $p;

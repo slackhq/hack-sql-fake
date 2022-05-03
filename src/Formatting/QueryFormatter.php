@@ -115,7 +115,6 @@ final class QueryFormatter implements Printf\Formatter {
 				case 'V':
 					$row_len = 0;
 					$first_row = true;
-					$first_in_row = true;
 					$param as Container<_>;
 					foreach ($param as $row) {
 						$first_in_row = true;

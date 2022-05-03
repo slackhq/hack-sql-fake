@@ -152,7 +152,6 @@ final class JSONFunctionExpression extends BaseFunctionExpression {
             return null;
         }
 
-        $results = vec[];
         try {
             $jsonObject = new JSONPath\JSONObject($json);
 

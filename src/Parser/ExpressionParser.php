@@ -206,12 +206,11 @@ final class ExpressionParser {
             throw new SQLFakeParseException('Empty parentheses found');
           }
           $this->pointer = $close;
-          $expr = new PlaceholderExpression();
 
           if ($arg_tokens[0]['value'] === 'SELECT') {
             $subquery_sql = Vec\map($arg_tokens, $token ==> $token['value']) |> Str\join($$, ' ');
             $parser = new SelectParser(0, $arg_tokens, $subquery_sql);
-            list($p, $select) = $parser->parse();
+            list($_, $select) = $parser->parse();
             $expr = new SubqueryExpression($select, '');
           } else if ($this->expression is InOperatorExpression) {
             $pointer = -1;
