@@ -80,46 +80,45 @@ final class InsertParser {
             throw new SQLFakeParseException("Unexpected clause {$token['value']}");
           }
 
-          switch ($token['value']) {
-            case 'VALUES':
-              $needs_another_plus_plus = false;
-              do {
-                $this->pointer++;
-                if ($needs_another_plus_plus) {
-                  $this->pointer++;
-                  $needs_another_plus_plus = false;
-                }
-                $token = $this->tokens[$this->pointer] ?? null;
-                // VALUES must be followed by paren and then a list of values
-                if ($token === null || $token['value'] !== '(') {
-                  throw new SQLFakeParseException('Expected ( after VALUES');
-                }
-                $close = SQLParser::findMatchingParen($this->pointer, $this->tokens);
-                $values_tokens = Vec\slice($this->tokens, $this->pointer + 1, $close - $this->pointer - 1);
-                $values = $this->parseValues($values_tokens);
-                if (C\count($values) !== C\count($query->insertColumns)) {
-                  throw new SQLFakeParseException(
-                    'Insert list contains '.
-                    C\count($query->insertColumns).
-                    ' fields, but values clause contains '.
-                    C\count($values),
-                  );
-                }
-                $query->values[] = $values;
-                $this->pointer = $close;
-                $needs_another_plus_plus = true;
-              } while (($this->tokens[$this->pointer + 1]['value'] ?? null) === ',' && $this->pointer);
-              // The while loop above used to havea $this->pointer++ here.             ^^^^^^^^^^^^^^
-              // We still need to increment is this condition is true.
-              if ($needs_another_plus_plus && ($this->tokens[$this->pointer + 1]['value'] ?? null) === ',') {
-                $this->pointer++;
+          if ($token['value'] === 'VALUES') {
+            // parses insert values of the form
+            // (1, 'Scott', 'Sandler'), (2, 'Matt', 'Brown')
+            while (true) {
+              $this->pointer++;
+              $token = $this->tokens[$this->pointer] ?? null;
+              // VALUES must be followed by paren and then a list of values
+              if ($token === null || $token['value'] !== '(') {
+                throw new SQLFakeParseException('Expected ( after VALUES');
               }
-              break;
-            default:
+              $close = SQLParser::findMatchingParen($this->pointer, $this->tokens);
+              $values_tokens = Vec\slice($this->tokens, $this->pointer + 1, $close - $this->pointer - 1);
+              // takes tokens from (1, 'Scott', 'Sandler')
+              // and returns [1, 'Scott', 'Sandler']
+              $values = $this->parseValues($values_tokens);
+              if (C\count($values) !== C\count($query->insertColumns)) {
+                throw new SQLFakeParseException(
+                  'Insert list contains '.
+                  C\count($query->insertColumns).
+                  ' fields, but values clause contains '.
+                  C\count($values),
+                );
+              }
+              $query->values[] = $values;
+              $this->pointer = $close;
+              if (($this->tokens[$this->pointer + 1]['value'] ?? null) !== ',') {
+                break;
+              }
+              $this->pointer++;
+              if (!$close) {
+                break;
+              }
+            }
+          } else {
               throw new SQLFakeParseException("Unexpected clause {$token['value']}");
           }
           $this->currentClause = $token['value'];
           break;
+
         case TokenType::IDENTIFIER:
           if ($needs_comma) {
             throw new SQLFakeParseException('Expected , between expressions in INSERT');
