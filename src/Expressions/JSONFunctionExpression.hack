@@ -1,6 +1,6 @@
 namespace Slack\SQLFake;
 
-use namespace HH\Lib\{C, Str, Vec};
+use namespace HH\Lib\{C, Dict, Str, Vec};
 use namespace Slack\SQLFake\JSONPath;
 
 /**
@@ -38,6 +38,8 @@ final class JSONFunctionExpression extends BaseFunctionExpression {
                 return $this->sqlJSONLength($row, $conn);
             case 'JSON_DEPTH':
                 return $this->sqlJSONDepth($row, $conn);
+            case 'JSON_CONTAINS':
+                return $this->sqlJSONContains($row, $conn);
         }
 
         throw new SQLFakeRuntimeException('Function '.$this->functionName.' not implemented yet');
@@ -347,5 +349,90 @@ final class JSONFunctionExpression extends BaseFunctionExpression {
         } catch (JSONPath\JSONException $e) {
             throw new SQLFakeRuntimeException('MySQL JSON_DEPTH() function encountered error: '.$e->getMessage());
         }
+    }
+
+    private function sqlJSONContains(row $row, AsyncMysqlConnection $conn): ?bool {
+        $row = $this->maybeUnrollGroupedDataset($row);
+        $args = $this->args;
+        $argCount = C\count($args);
+
+        if ($argCount !== 2 && $argCount !== 3) {
+            throw new SQLFakeRuntimeException('MySQL JSON_CONTAINS() function must be called with 2 - 3 arguments');
+        }
+
+        // Get the json from the column
+        $json = $args[0]->evaluate($row, $conn);
+        if ($json is null) {
+            return null;
+        }
+
+        if (!($json is string)) {
+            throw new SQLFakeRuntimeException('MySQL JSON_CONTAINS() function doc has incorrect type');
+        }
+
+        $path = '$'; // Set path to root initially in case no path is given
+        if ($argCount === 3) {
+            $path = $args[2]->evaluate($row, $conn, self::RETAIN_JSON_EVAL_OPTS);
+
+            if (!($path is string)) {
+                throw new SQLFakeRuntimeException('MySQL JSON_CONTAINS() function path has incorrect type');
+            }
+        }
+
+        // Narrow down the json to the specified path
+        try {
+            $json = (new JSONPath\JSONObject($json))->get($path);
+            if ($json is null) {
+                throw new SQLFakeRuntimeException('MySQL JSON_CONTAINS() function given invalid json');
+            }
+            $json = $json->value[0];
+        } catch (JSONPath\JSONException $e) {
+            throw new SQLFakeRuntimeException('MySQL JSON_CONTAINS() function encountered error: '.$e->getMessage());
+        }
+
+        // Now check if the json contains the value
+        try {
+            $value = $args[1]->evaluate($row, $conn, self::RETAIN_JSON_EVAL_OPTS);
+
+            if ($value is null) {
+                return null;
+            }
+
+            if (!($value is string)) {
+                throw new SQLFakeRuntimeException('MySQL JSON_CONTAINS() function value has incorrect type');
+            }
+
+            $value = (new JSONPath\JSONObject($value))->get('$')->value[0];
+
+            if ($json is vec<_>) {
+                // If $json is a vec then we have an array and will test if the array contains the given value
+                if ($value is dict<_,_>) {
+                    return C\count(Vec\filter($json, $val ==> Dict\equal($val, $value))) > 0;
+                }
+                else {
+                    return C\contains($json, $value);
+                }
+            }
+            else if ($json is dict<_,_>) {
+                // If $json is a dict then we have an object and will test that either (1) $json and $value are the same or
+                // (2) one of $json's members is the same as $value
+                if ($value is dict<_,_>) {
+                    if (Dict\equal($json, $value)) { return true; }
+
+                    return C\count(Dict\filter($json, $val ==> Dict\equal($val, $value))) > 0;
+                }
+                else {
+                    return C\count(Dict\filter($json, $val ==> $value == $val)) > 0;
+                }
+            }
+            else {
+                return $json == $value;
+            }
+
+        } catch (JSONPath\JSONException $e) {
+            throw new SQLFakeRuntimeException('MySQL JSON_CONTAINS() function encountered error: '.$e->getMessage());
+        }
+
+        return false;
     }
 }

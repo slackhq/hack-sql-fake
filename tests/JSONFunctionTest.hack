@@ -12,6 +12,7 @@ type JSONKeysExpectedType = shape(?'exception' => classname<SQLFakeException>, ?
 type JSONLengthExpectedType = shape(?'exception' => classname<SQLFakeException>, ?'value' => ?int);
 type JSONDepthExpectedType = shape(?'exception' => classname<SQLFakeException>, ?'value' => ?int);
 type JSONFunctionCompositionExpectedType = shape(?'exception' => classname<SQLFakeException>, ?'value' => mixed);
+type JSONContainsExpectedType = shape(?'exception' => classname<SQLFakeException>, ?'value' => ?int);
 
 final class JSONFunctionTest extends HackTest {
     private static ?AsyncMysqlConnection $conn;
@@ -376,6 +377,53 @@ final class JSONFunctionTest extends HackTest {
         string $select,
         JSONFunctionCompositionExpectedType $expected,
     ): Awaitable<void> {
+        await $this->simpleSelectTestCase($select, $expected);
+    }
+
+    public static async function testJSONContainsProvider(): Awaitable<vec<(string, JSONContainsExpectedType)>> {
+        return vec[
+            // NULL inputs
+            tuple("JSON_CONTAINS(NULL, '{}', '$')", shape('value' => null)),
+            tuple("JSON_CONTAINS('{}', NULL, '$')", shape('value' => null)),
+
+            // bad input
+            tuple("JSON_CONTAINS('{}')", shape('exception' => SQLFakeRuntimeException::class)),
+            tuple("JSON_CONTAINS('', 2, '$')", shape('exception' => SQLFakeRuntimeException::class)),
+            tuple("JSON_CONTAINS('{}', 2, '$', '$')", shape('exception' => SQLFakeRuntimeException::class)),
+            tuple("JSON_CONTAINS('{}', '\$fd', 2)", shape('exception' => SQLFakeRuntimeException::class)),
+
+            // non-existent path
+            tuple("JSON_CONTAINS('null', '2', '$.a')", shape('exception' => SQLFakeRuntimeException::class)),
+            tuple("JSON_CONTAINS('[]', 45, '$.a')", shape('exception' => SQLFakeRuntimeException::class)),
+            tuple("JSON_CONTAINS('2', 45, '$.a')", shape('exception' => SQLFakeRuntimeException::class)),
+            tuple("JSON_CONTAINS('{\"a\": {\"b\":\"test\"}}', '45', '$.b')", shape('exception' => SQLFakeRuntimeException::class)),
+
+            // existent path - array
+            tuple("JSON_CONTAINS('[]', '4', '$')", shape('value' => 0)),
+            tuple("JSON_CONTAINS('[1, 2, 3, 4]', '1', '$')", shape('value' => 1)),
+            tuple("JSON_CONTAINS('[\"blue\", \"green\", \"red\", \"yellow\"]', '\"red\"', '$')", shape('value' => 1)),
+
+            // existent path - object
+            tuple("JSON_CONTAINS('{}', '4', '$')", shape('value' => 0)),
+            tuple("JSON_CONTAINS('{\"a\": {\"b\":\"test\"}}', '\"test\"', '$.a.b')", shape('value' => 1)),
+            tuple("JSON_CONTAINS('{\"a\": {\"b\":\"test\"}}', '{\"b\":\"test\"}', '$.a')", shape('value' => 1)),
+            tuple("JSON_CONTAINS('{\"a\": {\"b\":\"test\"}}', '\"test\"', '$.a')", shape('value' => 1)),
+
+            // no path - array
+            tuple("JSON_CONTAINS('[]', '4')", shape('value' => 0)),
+            tuple("JSON_CONTAINS('[1, 2, 3, 4]', '1')", shape('value' => 1)),
+            tuple("JSON_CONTAINS('[\"blue\", \"green\", \"red\", \"yellow\"]', '\"red\"')", shape('value' => 1)),
+
+            // no path - object
+            tuple("JSON_CONTAINS('{}', '4')", shape('value' => 0)),
+            tuple("JSON_CONTAINS('{\"a\": {\"b\":\"test\"}}', '\"test\"')", shape('value' => 0)),
+            tuple("JSON_CONTAINS('{\"a\": {\"b\":\"test\"}}', '{\"a\": {\"b\":\"test\"}}')", shape('value' => 1)),
+            tuple("JSON_CONTAINS('{\"a\": {\"b\":\"test\"}}', '{\"b\":\"test\"}')", shape('value' => 1)),
+        ];
+    }
+
+    <<DataProvider('testJSONContainsProvider')>>
+    public async function testJSONContains(string $select, JSONContainsExpectedType $expected): Awaitable<void> {
         await $this->simpleSelectTestCase($select, $expected);
     }
 
