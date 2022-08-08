@@ -56,19 +56,9 @@ final class ColumnExpression extends Expression {
       // didn't find row by alias, so search without alias instead
       // but only if the column expression didn't have an explicit table name on it
       // OR if we are explicitly allowing fallthrough to the full row, which we do in the ORDER BY clause
+      $dot_column_name = '.'.$this->columnName;
       foreach ($row as $key => $col) {
-        $parts = Str\split($key, '.');
-
-        // find the last part of the string - as an optimization, we deliberately don't call C\lastx
-        $did_iterate = false;
-        $last_part = null;
-        foreach ($parts as $part) {
-          $did_iterate = true;
-          $last_part = $part;
-        }
-        invariant($did_iterate, 'Column name was empty');
-
-        if ($last_part === $this->columnName) {
+        if (Str\ends_with($key, $dot_column_name)) {
           return $col;
         }
       }
