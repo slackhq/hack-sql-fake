@@ -411,7 +411,12 @@ final class JSONFunctionExpression extends BaseFunctionExpression {
             if ($json is vec<_>) {
                 // If $json is a vec then we have an array and will test if the array contains the given value
                 if ($term is dict<_,_>) {
-                    return C\count(Vec\filter($json, $val ==> Dict\equal($val, $term))) > 0;
+                    return C\count(Vec\filter($json, $val ==> {
+                        if ($val is dict<_,_>) {
+                            return Dict\equal($val, $term);
+                        }
+                        return false;
+                    })) > 0;
                 }
                 else {
                     return C\contains($json, $term);
@@ -423,7 +428,12 @@ final class JSONFunctionExpression extends BaseFunctionExpression {
                 if ($term is dict<_,_>) {
                     if (Dict\equal($json, $term)) { return true; }
 
-                    return C\count(Dict\filter($json, $val ==> Dict\equal($val, $term))) > 0;
+                    return C\count(Dict\filter($json, $val ==> {
+                        if ($val is dict<_,_>) {
+                            return Dict\equal($val, $term);
+                        }
+                        return false;
+                    })) > 0;
                 }
                 else {
                     return C\count(Dict\filter($json, $val ==> $term == $val)) > 0;
