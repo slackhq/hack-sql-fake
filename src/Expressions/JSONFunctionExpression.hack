@@ -382,7 +382,7 @@ final class JSONFunctionExpression extends BaseFunctionExpression {
         // Narrow down the json to the specified path
         try {
             $json = (new JSONPath\JSONObject($json))->get($path);
-            if ($json is null || $json->value is null) {
+            if ($json is null || $json->value is null || !($json->value is vec<_>)) {
                 throw new SQLFakeRuntimeException('MySQL JSON_CONTAINS() function given invalid json');
             }
             $json = $json->value[0];
@@ -403,7 +403,7 @@ final class JSONFunctionExpression extends BaseFunctionExpression {
             }
 
             $term = (new JSONPath\JSONObject($term))->get('$');
-             if ($term is null || $term->value is null) {
+             if ($term is null || $term->value is null || !($term->value is vec<_>)) {
                 throw new SQLFakeRuntimeException('MySQL JSON_CONTAINS() function given invalid json');
             }
             $term = $term->value[0];
