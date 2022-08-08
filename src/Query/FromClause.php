@@ -66,7 +66,16 @@ final class FromClause {
       invariant($res is KeyedContainer<_, _>, 'evaluated result of SubqueryExpression must be dataset');
 
       $new_dataset = vec[];
-      if ($schema !== null) {
+      if ($schema is nonnull && QueryContext::$strictSchemaMode) {
+         foreach ($res as $row) {
+          $row as dict<_, _>;
+          $m = dict[];
+          foreach ($row as $field => $val) {
+            $m["{$name}.{$field}"] = $val;
+          }
+          $new_dataset[] = $m;
+        }
+      } else if ($schema is nonnull) {
         // if schema is set, order the fields in the right order on each row
         $ordered_fields = keyset[];
         foreach ($schema['fields'] as $field) {
