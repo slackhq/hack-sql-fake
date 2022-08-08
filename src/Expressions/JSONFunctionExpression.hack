@@ -382,7 +382,7 @@ final class JSONFunctionExpression extends BaseFunctionExpression {
         // Narrow down the json to the specified path
         try {
             $json = (new JSONPath\JSONObject($json))->get($path);
-            if ($json is null) {
+            if ($json is null || $json->value is null || !($json->value is vec<_>)) {
                 throw new SQLFakeRuntimeException('MySQL JSON_CONTAINS() function given invalid json');
             }
             $json = $json->value[0];
@@ -390,43 +390,57 @@ final class JSONFunctionExpression extends BaseFunctionExpression {
             throw new SQLFakeRuntimeException('MySQL JSON_CONTAINS() function encountered error: '.$e->getMessage());
         }
 
-        // Now check if the json contains the value
+        // Now check if the json contains the term
         try {
-            $value = $args[1]->evaluate($row, $conn, self::RETAIN_JSON_EVAL_OPTS);
+            $term = $args[1]->evaluate($row, $conn, self::RETAIN_JSON_EVAL_OPTS);
 
-            if ($value is null) {
+            if ($term is null) {
                 return null;
             }
 
-            if (!($value is string)) {
+            if (!($term is string)) {
                 throw new SQLFakeRuntimeException('MySQL JSON_CONTAINS() function value has incorrect type');
             }
 
-            $value = (new JSONPath\JSONObject($value))->get('$')->value[0];
+            $term = (new JSONPath\JSONObject($term))->get('$');
+             if ($term is null || $term->value is null || !($term->value is vec<_>)) {
+                throw new SQLFakeRuntimeException('MySQL JSON_CONTAINS() function given invalid json');
+            }
+            $term = $term->value[0];
 
             if ($json is vec<_>) {
                 // If $json is a vec then we have an array and will test if the array contains the given value
-                if ($value is dict<_,_>) {
-                    return C\count(Vec\filter($json, $val ==> Dict\equal($val, $value))) > 0;
+                if ($term is dict<_,_>) {
+                    return C\count(Vec\filter($json, $val ==> {
+                        if ($val is dict<_,_>) {
+                            return Dict\equal($val, $term);
+                        }
+                        return false;
+                    })) > 0;
                 }
                 else {
-                    return C\contains($json, $value);
+                    return C\contains($json, $term);
                 }
             }
             else if ($json is dict<_,_>) {
-                // If $json is a dict then we have an object and will test that either (1) $json and $value are the same or
-                // (2) one of $json's members is the same as $value
-                if ($value is dict<_,_>) {
-                    if (Dict\equal($json, $value)) { return true; }
+                // If $json is a dict then we have an object and will test that either (1) $json and $term are the same or
+                // (2) one of $json's members is the same as $term
+                if ($term is dict<_,_>) {
+                    if (Dict\equal($json, $term)) { return true; }
 
-                    return C\count(Dict\filter($json, $val ==> Dict\equal($val, $value))) > 0;
+                    return C\count(Dict\filter($json, $val ==> {
+                        if ($val is dict<_,_>) {
+                            return Dict\equal($val, $term);
+                        }
+                        return false;
+                    })) > 0;
                 }
                 else {
-                    return C\count(Dict\filter($json, $val ==> $value == $val)) > 0;
+                    return C\count(Dict\filter($json, $val ==> $term == $val)) > 0;
                 }
             }
             else {
-                return $json == $value;
+                return $json == $term;
             }
 
         } catch (JSONPath\JSONException $e) {
