@@ -323,14 +323,16 @@ class JSONObject {
             return null;
         }
 
-        $child_name_regex = re"/^\.(?<child>(?<quote0>\"?)[[:alpha:]_$][\w-$]*(?<quote1>\\2)|\*)(?<rest>.*)$/";
+        $child_name_regex = re"/^\.(?<child>(?<quote0>\"?)[[:alpha:]_$][a-zA-Z0-9_\-\$]*(?<quote1>\\2)|\*)(?<rest>.*)$/";
         $matched = Regex\first_match($jsonPath, $child_name_regex);
 
         if ($matched) {
             // Remove double quotedness if matched
-            $child = ($matched['quote0'] === '"' && $matched['quote1'] === '"')
-                ? Str\strip_prefix($matched['child'], '"') |> Str\strip_suffix($$, '"')
-                : $matched['child'];
+            if ($matched['quote0'] === '"' && $matched['quote1'] === '"') {
+                $child = Str\strip_prefix($matched['child'], '"') |> Str\strip_suffix($$, '"');
+            } else {
+                $child = $matched['child'];
+            }
 
             return shape(
                 'child' => $child,
