@@ -144,8 +144,6 @@ final class SelectParser {
                 // so if a constant comes back in the list, it has to be a positional operator
                 // and the columns are 1-indexed in MySQL terms so we subtract one from the $position arg to find the right expression
                 if ($expression is ConstantExpression) {
-                  // SELECT is evaluated after GROUP BY, so the PositionExpression can only be used for ORDER BY
-                  // for GROUP BY it just grabs the associated SELECT expression
                   $position = (int)($expression->value) - 1;
 
                   $expression = $query->selectExpressions[$position] ?? null;

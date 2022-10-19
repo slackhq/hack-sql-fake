@@ -354,6 +354,52 @@ final class SQLFunctionTest extends HackTest {
 		);
 	}
 
+
+	public async function testFunctionInOrderBy(): Awaitable<void> {
+		$conn = static::$conn as nonnull;
+		// with alias
+		$results = await $conn->query("select max(id) as max_id, group_id from table3 group by group_id order by max_id");
+		expect($results->rows())->toBeSame(
+			vec[dict['max_id' => 3, 'group_id' => 12345], dict['max_id' => 6, 'group_id' => 6]],
+		);
+
+		// without alias
+		$results = await $conn->query("select max(id), group_id from table3 group by group_id order by max(id)");
+		expect($results->rows())->toBeSame(
+			vec[dict['max(id)' => 3, 'group_id' => 12345], dict['max(id)' => 6, 'group_id' => 6]],
+		);
+
+		// with alias being the same as the column name
+		$results = await $conn->query("select max(id) as id, group_id from table3 group by group_id order by id");
+		expect($results->rows())->toBeSame(
+			vec[dict['id' => 3, 'group_id' => 12345], dict['id' => 6, 'group_id' => 6]],
+		);
+
+		// with positional identifier
+		$results = await $conn->query("select max(id), group_id from table3 group by group_id order by 1");
+		expect($results->rows())->toBeSame(
+			vec[dict['max(id)' => 3, 'group_id' => 12345], dict['max(id)' => 6, 'group_id' => 6]],
+		);
+
+		// with positional identifier for column 2
+		$results = await $conn->query("select max(id), group_id from table3 group by group_id order by 2");
+		expect($results->rows())->toBeSame(
+			vec[dict['max(id)' => 6, 'group_id' => 6], dict['max(id)' => 3, 'group_id' => 12345]],
+		);
+
+		// with positional identifier for column 1 but columns reversed
+		$results = await $conn->query("select group_id, max(id) from table3 group by group_id order by 1");
+		expect($results->rows())->toBeSame(
+			vec[dict['group_id' => 6, 'max(id)' => 6], dict['group_id' => 12345, 'max(id)' => 3]],
+		);
+
+		// with positional identifier and alias
+		$results = await $conn->query("select max(id) as max_id, group_id from table3 group by group_id order by 1");
+		expect($results->rows())->toBeSame(
+			vec[dict['max_id' => 3, 'group_id' => 12345], dict['max_id' => 6, 'group_id' => 6]],
+		);
+	}
+
 	<<__Override>>
 	public static async function beforeFirstTestAsync(): Awaitable<void> {
 		static::$conn = await SharedSetup::initAsync();

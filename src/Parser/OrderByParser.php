@@ -37,10 +37,13 @@ final class OrderByParser {
 
       // any constants in the ORDER BY must be positional references
       if ($expression is ConstantExpression) {
-        // SELECT is evaluated before ORDER BY, so we can use a PositionExpression to grab the value
+        // grab the associated position from the select list
         $position = (int)($expression->value);
 
-        $expression = new PositionExpression($position);
+        $expression = $this->selectExpressions[$position - 1] ?? null;
+        if ($expression is null) {
+          throw new SQLFakeParseException("ORDER BY positional field $position not found in SELECT list");
+        }
       }
 
       $next = $this->tokens[$this->pointer + 1] ?? null;
