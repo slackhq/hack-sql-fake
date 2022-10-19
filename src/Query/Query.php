@@ -36,7 +36,7 @@ abstract class Query {
   /**
    * Apply the ORDER BY clause to sort the rows
    */
-  protected function applyOrderBy(AsyncMysqlConnection $conn, dataset $data): dataset {
+  protected function applyOrderBy(AsyncMysqlConnection $_conn, dataset $data): dataset {
     $order_by = $this->orderBy;
     if ($order_by === null) {
       return $data;
