@@ -36,7 +36,7 @@ abstract class Query {
   /**
    * Apply the ORDER BY clause to sort the rows
    */
-  protected function applyOrderBy(AsyncMysqlConnection $conn, dataset $data): dataset {
+  protected function applyOrderBy(AsyncMysqlConnection $_conn, dataset $data): dataset {
     $order_by = $this->orderBy;
     if ($order_by === null) {
       return $data;
@@ -53,8 +53,10 @@ abstract class Query {
     // sort function applies all ORDER BY criteria to compare two rows
     $sort_fun = (row $a, row $b): int ==> {
       foreach ($order_by as $rule) {
-        $value_a = $rule['expression']->evaluate($a, $conn);
-        $value_b = $rule['expression']->evaluate($b, $conn);
+        // in applySelect, the order by expressions are pre-evaluated and saved on the row with their names as keys,
+        // so we don't need to evaluate them again here
+        $value_a = $a[$rule['expression']->name];
+        $value_b = $b[$rule['expression']->name];
 
         if ($value_a != $value_b) {
           if ($value_a is num && $value_b is num) {
