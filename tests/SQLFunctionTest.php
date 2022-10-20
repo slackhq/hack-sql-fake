@@ -354,7 +354,6 @@ final class SQLFunctionTest extends HackTest {
 		);
 	}
 
-
 	public async function testFunctionInOrderBy(): Awaitable<void> {
 		$conn = static::$conn as nonnull;
 		// with alias
