@@ -1,0 +1,21 @@
+// For format details, see https://aka.ms/devcontainer.json.
+{
+  "name": "Hack",
+  "image": "hhvm/hhvm:4.153-latest",
+
+  // Set *default* container specific settings.json values on container create.
+  "userEnvProbe": "loginShell",
+
+  // Add the IDs of extensions you want installed when the container is created.
+  "extensions": [
+    "pranayagarwal.vscode-hack"
+  ],
+
+  "mounts": [],
+
+  "remoteEnv": {},
+
+  // Use 'postCreateCommand' to run commands after the container is created.
+  "postCreateCommand": "bin/setup-devcontainer"
+
+}
