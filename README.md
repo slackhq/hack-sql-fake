@@ -170,6 +170,10 @@ This library aims to support everything its users use in MySQL, rather than ever
 
 See [Contributing](CONTRIBUTING.md)
 
+### Development
+
+A VSCode [devcontainer](https://containers.dev/implementors/json_reference/) setup is included in the repository. With a local docker daemon running, invoke `code .` in the root of your checkout of this repository and VSCode should automatically build a container and install dependencies. A debug action is included to run unit tests in the HHVM debugger as well.
+
 ## Latest Releases
 
 * v4.0.5
