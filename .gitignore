@@ -4,7 +4,9 @@ www.pid
 *.orig
 *~
 composer.lock
-.vscode
+/.vscode/*
+!/.vscode/launch.json
+/.idea
 **/*hhast.parser-cache
 .var
 composer.phar

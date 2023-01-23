@@ -1,0 +1,44 @@
+#!/bin/bash
+
+set -euo pipefail
+
+# Set up this repository for running bin/health-score
+# This is similar to build-docker.sh, but that is optimized for production
+# See also bin/setup-dev
+
+hhvm_version="4.153"
+
+if ! hhvm --version | grep -q "$hhvm_version"; then
+    echo "HHVM $hhvm_version is required"
+    echo "Current version:" $(hhvm --version | grep "HipHop VM")
+    exit 1
+fi
+
+if [[ $# -gt 0 && "$1" == "--reset" ]]; then
+    echo "Resetting all existing setup..."
+    rm -rf .bundle composer.phar vendor
+fi
+
+# From https://getcomposer.org/doc/faqs/how-to-install-composer-programmatically.md
+echo "Installing composer..."
+ls composer.phar >/dev/null 2>/dev/null || (curl -O https://getcomposer.org/download/2.1.5/composer.phar
+EXPECTED_SIGNATURE="be95557cc36eeb82da0f4340a469bad56b57f742d2891892dcb2f8b0179790ec"
+if ! shasum --algorithm 256 composer.phar | grep -q "$EXPECTED_SIGNATURE"; then
+    >&2 echo 'ERROR: Invalid installer signature'
+    rm composer.phar
+    exit 1
+fi)
+chmod a+x composer.phar
+echo ""
+
+# Show versions
+echo "VERSIONS"
+hhvm --version
+php composer.phar --version
+echo ""
+
+# Install dependencies
+echo "Installing dependencies..."
+php composer.phar install
+echo ""
+

@@ -1,0 +1,18 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "HHVM: Run tests in debugger",
+            "type": "hhvm",
+            "request": "launch",
+            "cwd":"${workspaceFolder}",
+            // 'hhvmargs' come before 'script' when invoking HHVM, so the actual script
+            // is hacktest, with 'script' passed as the final arg, as an arg to hacktest
+            "script": "${file}",
+            "hhvmArgs": ["${workspaceFolder}/vendor/hhvm/hacktest/bin/hacktest.hack", "--"]
+        }
+    ]
+}
