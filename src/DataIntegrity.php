@@ -179,6 +179,8 @@ abstract final class DataIntegrity {
               }
             } else {
               $field_value = (string)$row[$field_name];
+
+              // handle json column type validation
               if ($field_mysql_type === DataType::JSON) {
                 // null is okay
                 if ($row[$field_name] is nonnull) {
