@@ -179,7 +179,26 @@ abstract final class DataIntegrity {
               }
             } else {
               $field_value = (string)$row[$field_name];
-              if ($field_length > 0 && \mb_strlen($field_value) > $field_length) {
+              if ($field_mysql_type === DataType::JSON) {
+                // null is okay
+                if ($row[$field_name] is nonnull) {
+                  if (!Str\is_empty((string)$row[$field_name])) {
+                    // validate json string
+                    $json_obj = \json_decode((string)$row[$field_name]);
+                    if ($json_obj is null) {
+                      // invalid json
+                      throw new SQLFakeRuntimeException(
+                        "Invalid value '{$field_value}' for column '{$field_name}' on '{$schema['name']}', expected json",
+                      );
+                    }
+                  } else {
+                    // empty strings are not valid for json columns
+                    throw new SQLFakeRuntimeException(
+                      "Invalid value '{$field_value}' for column '{$field_name}' on '{$schema['name']}', expected json",
+                    );
+                  }
+                }
+              } else if ($field_length > 0 && \mb_strlen($field_value) > $field_length) {
                 $field_str = \var_export($row[$field_name], true);
                 throw new SQLFakeRuntimeException(
                   "Invalid value '{$field_str}' for column '{$field_name}' on '{$schema['name']}', expected string of size {$field_length}",

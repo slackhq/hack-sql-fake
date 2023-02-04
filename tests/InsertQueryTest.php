@@ -240,6 +240,42 @@ final class InsertQueryTest extends HackTest {
       );
   }
 
+  public async function testEmptyStringInsertIntoJsonColumn(): Awaitable<void> {
+    $conn = static::$conn as nonnull;
+    QueryContext::$strictSQLMode = true;
+    expect(() ==> $conn->query("INSERT INTO table_with_json (id, data) VALUES (1, '')"))
+      ->toThrow(
+        SQLFakeRuntimeException::class,
+        "Invalid value '' for column 'data' on 'table_with_json', expected json",
+      );
+  }
+
+  public async function testInvalidJsonStringInsertIntoJsonColumn(): Awaitable<void> {
+    $conn = static::$conn as nonnull;
+    QueryContext::$strictSQLMode = true;
+    expect(() ==> $conn->query("INSERT INTO table_with_json (id, data) VALUES (1, 'abc')"))
+      ->toThrow(
+        SQLFakeRuntimeException::class,
+        "Invalid value 'abc' for column 'data' on 'table_with_json', expected json",
+      );
+  }
+
+  public async function testNullInsertIntoJsonColumn(): Awaitable<void> {
+    $conn = static::$conn as nonnull;
+    QueryContext::$strictSQLMode = true;
+    await $conn->query("INSERT INTO table_with_json (id, data) VALUES (1, NULL)");
+    $result = await $conn->query("SELECT * FROM table_with_json");
+    expect($result->rows())->toBeSame(vec[dict['id' => 1, 'data' => null]]);
+  }
+
+  public async function testValidJsonInsertIntoJsonColumn(): Awaitable<void> {
+    $conn = static::$conn as nonnull;
+    QueryContext::$strictSQLMode = true;
+    await $conn->query("INSERT INTO table_with_json (id, data) VALUES (1, '{\"test\":123}')");
+    $result = await $conn->query("SELECT * FROM table_with_json");
+    expect($result->rows())->toBeSame(vec[dict['id' => 1, 'data' => '{"test":123}']]);
+  }
+
   public async function testDupeInsertNoConflicts(): Awaitable<void> {
     $conn = static::$conn as nonnull;
     await $conn->query(

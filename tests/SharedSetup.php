@@ -162,6 +162,32 @@ const dict<string, dict<string, table_schema>> TEST_SCHEMA = dict[
 				),
 			],
 		),
+		'table_with_json' => shape(
+			'name' => 'table_with_json',
+			'fields' => vec[
+				shape(
+					'name' => 'id',
+					'type' => DataType::BIGINT,
+					'length' => 20,
+					'null' => false,
+					'hack_type' => 'int',
+				),
+				shape(
+					'name' => 'data',
+					'type' => DataType::JSON,
+					'length' => 255,
+					'null' => true,
+					'hack_type' => 'string',
+				),
+			],
+			'indexes' => vec[
+				shape(
+					'name' => 'PRIMARY',
+					'type' => 'PRIMARY',
+					'fields' => keyset['id'],
+				)
+			],
+		),
 		'table_with_more_fields' => shape(
 			'name' => 'table_with_more_fields',
 			'fields' => vec[
