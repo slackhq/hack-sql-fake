@@ -263,8 +263,8 @@ final class InsertQueryTest extends HackTest {
   public async function testNullInsertIntoJsonColumn(): Awaitable<void> {
     $conn = static::$conn as nonnull;
     QueryContext::$strictSQLMode = true;
-    await $conn->query("INSERT INTO table_with_json (id, data) VALUES (1, NULL)");
-    $result = await $conn->query("SELECT * FROM table_with_json");
+    await $conn->query('INSERT INTO table_with_json (id, data) VALUES (1, NULL)');
+    $result = await $conn->query('SELECT * FROM table_with_json');
     expect($result->rows())->toBeSame(vec[dict['id' => 1, 'data' => null]]);
   }
 
@@ -272,7 +272,7 @@ final class InsertQueryTest extends HackTest {
     $conn = static::$conn as nonnull;
     QueryContext::$strictSQLMode = true;
     await $conn->query("INSERT INTO table_with_json (id, data) VALUES (1, '{\"test\":123}')");
-    $result = await $conn->query("SELECT * FROM table_with_json");
+    $result = await $conn->query('SELECT * FROM table_with_json');
     expect($result->rows())->toBeSame(vec[dict['id' => 1, 'data' => '{"test":123}']]);
   }
 
