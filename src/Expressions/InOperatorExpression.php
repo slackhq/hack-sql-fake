@@ -60,7 +60,7 @@ final class InOperatorExpression extends Expression {
           }
         }
       } else {
-        if ($value == $in_expr->evaluate($row, $conn)) {
+        if (\HH\Lib\Legacy_FIXME\eq($value, $in_expr->evaluate($row, $conn))) {
           return !$this->negated;
         }
       }
