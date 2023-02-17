@@ -271,17 +271,9 @@ final class InsertQueryTest extends HackTest {
   public async function testValidJsonInsertIntoJsonColumn(): Awaitable<void> {
     $conn = static::$conn as nonnull;
     QueryContext::$strictSQLMode = true;
-    await $conn->query('INSERT INTO table_with_json (id, data) VALUES (1, \'{"test":123}\')');
+    await $conn->query("INSERT INTO table_with_json (id, data) VALUES (1, '{\"test\":123}')");
     $result = await $conn->query('SELECT * FROM table_with_json');
     expect($result->rows())->toBeSame(vec[dict['id' => 1, 'data' => '{"test":123}']]);
-  }
-
-  public async function testValidJsonWithQuotesEscapedInsertIntoJsonColumn(): Awaitable<void> {
-    $conn = static::$conn as nonnull;
-    QueryContext::$strictSQLMode = true;
-    await $conn->query('INSERT INTO table_with_json (id, data) VALUES (1, \'{\\\"domains\\\":[\\\"foo.com\\\"]}\')');
-    $result = await $conn->query('SELECT * FROM table_with_json');
-    expect($result->rows())->toBeSame(vec[dict['id' => 1, 'data' => '{"domains":["foo.com"]}']]);
   }
 
   public async function testDupeInsertNoConflicts(): Awaitable<void> {

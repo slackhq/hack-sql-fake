@@ -185,17 +185,13 @@ abstract final class DataIntegrity {
                 if ($row[$field_name] is nonnull) {
                   if (!Str\is_empty((string)$row[$field_name])) {
                     // validate json string
-                    // json_decode will return null if json string contains escaped quotes - mysql just unescapes the quotes and accepts the string
-                    $json_string = \stripslashes((string)$row[$field_name]);
-                    $json_obj = \json_decode($json_string);
+                    $json_obj = \json_decode((string)$row[$field_name]);
                     if ($json_obj is null) {
                       // invalid json
                       throw new SQLFakeRuntimeException(
                         "Invalid value '{$field_value}' for column '{$field_name}' on '{$schema['name']}', expected json",
                       );
                     }
-                    // mysql removes the \
-                    $row[$field_name] = $json_string;
                   } else {
                     // empty strings are not valid for json columns
                     throw new SQLFakeRuntimeException(
