@@ -259,7 +259,7 @@ final class InsertQueryTest extends HackTest {
         "Invalid value 'abc' for column 'data' on 'table_with_json', expected json",
       );
   }
-  
+
   public async function testNullStringCapsInsertIntoJsonColumn(): Awaitable<void> {
     $conn = static::$conn as nonnull;
     QueryContext::$strictSQLMode = true;
@@ -274,7 +274,7 @@ final class InsertQueryTest extends HackTest {
     $conn = static::$conn as nonnull;
     QueryContext::$strictSQLMode = true;
     await $conn->query("INSERT INTO table_with_json (id, data) VALUES (1, 'null')");
-    $result = await $conn->query("SELECT * FROM table_with_json");
+    $result = await $conn->query('SELECT * FROM table_with_json');
     expect($result->rows())->toBeSame(vec[dict['id' => 1, 'data' => null]]);
   }
 
