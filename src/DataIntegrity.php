@@ -187,10 +187,18 @@ abstract final class DataIntegrity {
                     // validate json string
                     $json_obj = \json_decode((string)$row[$field_name]);
                     if ($json_obj is null) {
-                      // invalid json
-                      throw new SQLFakeRuntimeException(
-                        "Invalid value '{$field_value}' for column '{$field_name}' on '{$schema['name']}', expected json",
-                      );
+                      // MySQL will accept the string 'null' in a json column and it converts it to a proper NULL
+                      // the string 'null', however, returns NULL when decoded via \json_decode() which is the same
+                      // as what we get from decoding invalid json
+                      if ((string)$row[$field_name] === 'null') {
+                        $row[$field_name] = null;
+                        $field_value = null;
+                      } else {
+                        // invalid json
+                        throw new SQLFakeRuntimeException(
+                          "Invalid value '{$field_value}' for column '{$field_name}' on '{$schema['name']}', expected json",
+                        );
+                      }
                     }
                   } else {
                     // empty strings are not valid for json columns
