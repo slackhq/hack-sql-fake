@@ -20,7 +20,7 @@ final class AsyncMysqlConnectResult extends \AsyncMysqlConnectResult {
 
   <<__Override>>
   public function elapsedMicros(): int {
-    return (int)($this->elapsed * 1_000_000);
+    return (int)($this->elapsed * 1000000);
   }
   <<__Override>>
   public function startTime(): float {
