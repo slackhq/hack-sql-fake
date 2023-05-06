@@ -26,17 +26,17 @@ class JSONException extends \Exception {}
 final class InvalidJSONException extends JSONException {}
 final class DivergentJSONPathSetException extends JSONException {}
 final class InvalidJSONPathException extends JSONException {
-    private string $token;
+	private string $token;
 
-    /**
-     * Class constructor
-     *
-     * @param string $token token related to the JSONPath error
-     *
-     * @return void
-     */
-    public function __construct(string $token) {
-        $this->token = $token;
-        parent::__construct("Error in JSONPath near '".$token."'", 0, null);
-    }
+	/**
+	 * Class constructor
+	 *
+	 * @param string $token token related to the JSONPath error
+	 *
+	 * @return void
+	 */
+	public function __construct(string $token) {
+		$this->token = $token;
+		parent::__construct("Error in JSONPath near '".$token."'", 0, null);
+	}
 }
