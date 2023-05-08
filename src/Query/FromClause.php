@@ -78,8 +78,8 @@ final class FromClause {
 			} else if ($schema is nonnull) {
 				// if schema is set, order the fields in the right order on each row
 				$ordered_fields = keyset[];
-				foreach ($schema['fields'] as $field) {
-					$ordered_fields[] = $field['name'];
+				foreach ($schema->fields as $field) {
+					$ordered_fields[] = $field->name;
 				}
 
 				foreach ($res as $row) {

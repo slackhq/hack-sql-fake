@@ -45,9 +45,9 @@ abstract final class QueryContext {
 	 * servers with the same name but different schemas. We don't include server hostnames here
 	 * because it's common to have sharded databases with the same names on different hosts
 	 */
-	public static dict<string, dict<string, table_schema>> $schema = dict[];
+	public static dict<string, dict<string, TableSchema>> $schema = dict[];
 
-	public static function getSchema(string $database, string $table): ?table_schema {
+	public static function getSchema(string $database, string $table): ?TableSchema {
 		return self::$schema[$database][$table] ?? null;
 	}
 }

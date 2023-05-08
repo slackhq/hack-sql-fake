@@ -20,7 +20,7 @@ abstract final class JoinProcessor {
 		JoinType $join_type,
 		?JoinOperator $_ref_type,
 		?Expression $ref_clause,
-		?table_schema $right_schema,
+		?TableSchema $right_schema,
 	): dataset {
 
 		// MySQL supports JOIN (inner), LEFT OUTER JOIN, RIGHT OUTER JOIN, and implicitly CROSS JOIN (which uses commas), NATURAL
@@ -76,8 +76,8 @@ abstract final class JoinProcessor {
 				// this null placeholder row is merged into the data set for that row
 				$null_placeholder = dict[];
 				if ($right_schema !== null) {
-					foreach ($right_schema['fields'] as $field) {
-						$null_placeholder["{$right_table_name}.{$field['name']}"] = null;
+					foreach ($right_schema->fields as $field) {
+						$null_placeholder["{$right_table_name}.{$field->name}"] = null;
 					}
 				}
 
@@ -109,8 +109,8 @@ abstract final class JoinProcessor {
 
 				$null_placeholder = dict[];
 				if ($right_schema !== null) {
-					foreach ($right_schema['fields'] as $field) {
-						$null_placeholder["{$right_table_name}.{$field['name']}"] = null;
+					foreach ($right_schema->fields as $field) {
+						$null_placeholder["{$right_table_name}.{$field->name}"] = null;
 					}
 				}
 
@@ -180,7 +180,9 @@ abstract final class JoinProcessor {
 
 		// MySQL actually doesn't throw if there's no matching columns, but I think we can take the liberty to assume it's not what you meant to do and throw here
 		if ($filter === null) {
-			throw new SQLFakeParseException('NATURAL join keyword was used with tables that do not share any column names');
+			throw new SQLFakeParseException(
+				'NATURAL join keyword was used with tables that do not share any column names',
+			);
 		}
 
 		return $filter;
@@ -235,7 +237,7 @@ abstract final class JoinProcessor {
 		JoinType $join_type,
 		?JoinOperator $_ref_type,
 		BinaryOperatorExpression $filter,
-		?table_schema $right_schema,
+		?TableSchema $right_schema,
 	): dataset {
 		$left = $filter->left as ColumnExpression;
 		$right = $filter->right as ColumnExpression;
@@ -273,8 +275,8 @@ abstract final class JoinProcessor {
 				// this null placeholder row is merged into the data set for that row
 				$null_placeholder = dict[];
 				if ($right_schema !== null) {
-					foreach ($right_schema['fields'] as $field) {
-						$null_placeholder["{$right_table_name}.{$field['name']}"] = null;
+					foreach ($right_schema->fields as $field) {
+						$null_placeholder["{$right_table_name}.{$field->name}"] = null;
 					}
 				}
 

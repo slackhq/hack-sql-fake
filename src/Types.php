@@ -91,41 +91,6 @@ type limit_clause = shape(
 
 type order_by_clause = vec<shape('expression' => Expression, 'direction' => SortDirection)>;
 
-/**
- * A simple representation of a table schema, used to make the application smarter.
- * This allows SQL Fake to provide fully typed rows, validate that columns exist,
- * enforce primary key constraints, check if indexes would be used, and more
- */
-type table_schema = shape(
-
-	/**
-	 * Table name as it exists in the database
-	 */
-	'name' => string,
-	'fields' => Container<
-		shape(
-			'name' => string,
-			'type' => DataType,
-			'length' => int,
-			'null' => bool,
-			'hack_type' => string,
-			?'unsigned' => bool,
-			?'default' => string,
-		),
-	>,
-	'indexes' => Container<
-		shape(
-			'name' => string,
-			'type' => string,
-			'fields' => Container<string>,
-		),
-	>,
-	?'vitess_sharding' => shape(
-		'keyspace' => string,
-		'sharding_key' => string,
-	),
-);
-
 enum DataType: string {
 	TINYINT = 'TINYINT';
 	SMALLINT = 'SMALLINT';

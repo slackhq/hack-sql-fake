@@ -15,8 +15,8 @@ use namespace HH\Lib\{C, Keyset, Str, Vec};
 abstract final class DataIntegrity {
 
 	<<__Memoize>>
-	public static function namesForSchema(table_schema $schema): keyset<string> {
-		return Keyset\map($schema['fields'], $field ==> $field['name']);
+	public static function namesForSchema(TableSchema $schema): keyset<string> {
+		return Keyset\map($schema->fields, $field ==> $field->name);
 	}
 
 	protected static function getDefaultValueForField(
@@ -66,20 +66,25 @@ abstract final class DataIntegrity {
 	 * Ensure all fields from the table schema are present in the row
 	 * Applies default values based on either DEFAULTs, nullable fields, or data types
 	 */
-	public static function ensureFieldsPresent(dict<string, mixed> $row, table_schema $schema): dict<string, mixed> {
+	public static function ensureFieldsPresent(dict<string, mixed> $row, TableSchema $schema): dict<string, mixed> {
 
-		foreach ($schema['fields'] as $field) {
-			$field_name = $field['name'];
-			$field_type = $field['hack_type'];
-			$field_length = $field['length'];
-			$field_mysql_type = $field['type'];
-			$field_nullable = $field['null'] ?? false;
-			$field_default = $field['default'] ?? null;
-			$field_unsigned = $field['unsigned'] ?? false;
+		foreach ($schema->fields as $field) {
+			$field_name = $field->name;
+			$field_type = $field->hack_type;
+			$field_length = $field->length;
+			$field_mysql_type = $field->type;
+			$field_nullable = $field->null ?? false;
+			$field_default = $field->default;
+			$field_unsigned = $field->unsigned ?? false;
 
 			if (!C\contains_key($row, $field_name)) {
-				$row[$field_name] =
-					self::getDefaultValueForField($field_type, $field_nullable, $field_default, $field_name, $schema['name']);
+				$row[$field_name] = self::getDefaultValueForField(
+					$field_type,
+					$field_nullable,
+					$field_default,
+					$field_name,
+					$schema->name,
+				);
 			} else if ($row[$field_name] === null) {
 				if ($field_nullable) {
 					// explicit null value and nulls are allowed, let it through
@@ -87,10 +92,17 @@ abstract final class DataIntegrity {
 				} else if (QueryContext::$strictSQLMode) {
 					// if we got this far the column has no default and isn't nullable, strict would throw
 					// but default MySQL mode would coerce to a valid value
-					throw new SQLFakeRuntimeException("Column '{$field_name}' on '{$schema['name']}' does not allow null values");
+					throw new SQLFakeRuntimeException(
+						"Column '{$field_name}' on '{$schema->name}' does not allow null values",
+					);
 				} else {
-					$row[$field_name] =
-						self::getDefaultValueForField($field_type, $field_nullable, $field_default, $field_name, $schema['name']);
+					$row[$field_name] = self::getDefaultValueForField(
+						$field_type,
+						$field_nullable,
+						$field_default,
+						$field_name,
+						$schema->name,
+					);
 				}
 			} else {
 				// TODO more integrity constraints, check field length for varchars, check timestamps
@@ -102,7 +114,8 @@ abstract final class DataIntegrity {
 							if (QueryContext::$strictSQLMode) {
 								$field_str = \var_export($row[$field_name], true);
 								throw new SQLFakeRuntimeException(
-									"Invalid value {$field_str} for column '{$field_name}' on '{$schema['name']}', expected int",
+									"Invalid value {$field_str} for column '{$field_name}' on '{$schema
+										->name}', expected int",
 								);
 							} else {
 								$row[$field_name] = (int)$row[$field_name];
@@ -118,7 +131,8 @@ abstract final class DataIntegrity {
 										$field_value >= (($signed) ? \pow(2, 7) : \pow(2, 8))
 									) {
 										throw new SQLFakeRuntimeException(
-											"Column '{$field_name}' on '{$schema['name']}' expects a valid '{$field_mysql_type}'",
+											"Column '{$field_name}' on '{$schema
+												->name}' expects a valid '{$field_mysql_type}'",
 										);
 									}
 									break;
@@ -128,7 +142,8 @@ abstract final class DataIntegrity {
 										$field_value >= (($signed) ? \pow(2, 15) : \pow(2, 16))
 									) {
 										throw new SQLFakeRuntimeException(
-											"Column '{$field_name}' on '{$schema['name']}' expects a valid '{$field_mysql_type}'",
+											"Column '{$field_name}' on '{$schema
+												->name}' expects a valid '{$field_mysql_type}'",
 										);
 									}
 									break;
@@ -138,7 +153,8 @@ abstract final class DataIntegrity {
 										$field_value >= (($signed) ? \pow(2, 23) : \pow(2, 24))
 									) {
 										throw new SQLFakeRuntimeException(
-											"Column '{$field_name}' on '{$schema['name']}' expects a valid '{$field_mysql_type}'",
+											"Column '{$field_name}' on '{$schema
+												->name}' expects a valid '{$field_mysql_type}'",
 										);
 									}
 									break;
@@ -148,7 +164,8 @@ abstract final class DataIntegrity {
 										$field_value >= (($signed) ? \pow(2, 31) : \pow(2, 32))
 									) {
 										throw new SQLFakeRuntimeException(
-											"Column '{$field_name}' on '{$schema['name']}' expects a valid '{$field_mysql_type}'",
+											"Column '{$field_name}' on '{$schema
+												->name}' expects a valid '{$field_mysql_type}'",
 										);
 									}
 									break;
@@ -158,13 +175,15 @@ abstract final class DataIntegrity {
 										$field_value >= (($signed) ? \pow(2, 63) : \pow(2, 64))
 									) {
 										throw new SQLFakeRuntimeException(
-											"Column '{$field_name}' on '{$schema['name']}' expects a valid '{$field_mysql_type}'",
+											"Column '{$field_name}' on '{$schema
+												->name}' expects a valid '{$field_mysql_type}'",
 										);
 									}
 									break;
 								default:
 									throw new SQLFakeRuntimeException(
-										"Column '{$field_name}' on '{$schema['name']}' expects a valid '{$field_mysql_type}'",
+										"Column '{$field_name}' on '{$schema
+											->name}' expects a valid '{$field_mysql_type}'",
 									);
 									break;
 							}
@@ -175,7 +194,8 @@ abstract final class DataIntegrity {
 							if (QueryContext::$strictSQLMode) {
 								$field_str = \var_export($row[$field_name], true);
 								throw new SQLFakeRuntimeException(
-									"Invalid value '{$field_str}' for column '{$field_name}' on '{$schema['name']}', expected float",
+									"Invalid value '{$field_str}' for column '{$field_name}' on '{$schema
+										->name}', expected float",
 								);
 							} else {
 								$row[$field_name] = (float)$row[$field_name];
@@ -187,7 +207,8 @@ abstract final class DataIntegrity {
 							if (QueryContext::$strictSQLMode) {
 								$field_str = \var_export($row[$field_name], true);
 								throw new SQLFakeRuntimeException(
-									"Invalid value '{$field_str}' for column '{$field_name}' on '{$schema['name']}', expected string",
+									"Invalid value '{$field_str}' for column '{$field_name}' on '{$schema
+										->name}', expected string",
 								);
 							} else {
 								$row[$field_name] = (string)$row[$field_name];
@@ -211,21 +232,24 @@ abstract final class DataIntegrity {
 											} else {
 												// invalid json
 												throw new SQLFakeRuntimeException(
-													"Invalid value '{$field_value}' for column '{$field_name}' on '{$schema['name']}', expected json",
+													"Invalid value '{$field_value}' for column '{$field_name}' on '{$schema
+														->name}', expected json",
 												);
 											}
 										}
 									} else {
 										// empty strings are not valid for json columns
 										throw new SQLFakeRuntimeException(
-											"Invalid value '{$field_value}' for column '{$field_name}' on '{$schema['name']}', expected json",
+											"Invalid value '{$field_value}' for column '{$field_name}' on '{$schema
+												->name}', expected json",
 										);
 									}
 								}
 							} else if ($field_length > 0 && \mb_strlen($field_value) > $field_length) {
 								$field_str = \var_export($row[$field_name], true);
 								throw new SQLFakeRuntimeException(
-									"Invalid value '{$field_str}' for column '{$field_name}' on '{$schema['name']}', expected string of size {$field_length}",
+									"Invalid value '{$field_str}' for column '{$field_name}' on '{$schema
+										->name}', expected string of size {$field_length}",
 								);
 							}
 						}
@@ -240,23 +264,23 @@ abstract final class DataIntegrity {
 	/**
 	 * Ensure default values are present, coerce data types as MySQL would
 	 */
-	public static function coerceToSchema(dict<string, mixed> $row, table_schema $schema): dict<string, mixed> {
+	public static function coerceToSchema(dict<string, mixed> $row, TableSchema $schema): dict<string, mixed> {
 
 		$fields = self::namesForSchema($schema);
 		$bad_fields = Keyset\keys($row) |> Keyset\diff($$, $fields);
 		if (!C\is_empty($bad_fields)) {
 			$bad_fields = Str\join($bad_fields, ', ');
-			throw new SQLFakeRuntimeException("Column(s) '{$bad_fields}' not found on '{$schema['name']}'");
+			throw new SQLFakeRuntimeException("Column(s) '{$bad_fields}' not found on '{$schema->name}'");
 		}
 
 		$row = self::ensureFieldsPresent($row, $schema);
 
-		foreach ($schema['fields'] as $field) {
-			$field_name = $field['name'];
-			$field_type = $field['hack_type'];
+		foreach ($schema->fields as $field) {
+			$field_name = $field->name;
+			$field_type = $field->hack_type;
 
 			// don't coerce null values on nullable fields
-			if ($field['null'] && $row[$field_name] === null) {
+			if ($field->null && $row[$field_name] === null) {
 				continue;
 			}
 
@@ -289,17 +313,17 @@ abstract final class DataIntegrity {
 	public static function checkUniqueConstraints(
 		dataset $table,
 		dict<string, mixed> $row,
-		table_schema $schema,
-		?int $update_row_id = null,
+		TableSchema $schema,
+		?arraykey $update_row_id = null,
 	): ?(string, int) {
 
 		// gather all unique keys
 		$unique_keys = dict[];
-		foreach ($schema['indexes'] as $index) {
-			if ($index['type'] === 'PRIMARY') {
-				$unique_keys['PRIMARY'] = keyset($index['fields']);
-			} else if ($index['type'] === 'UNIQUE') {
-				$unique_keys[$index['name']] = keyset($index['fields']);
+		foreach ($schema->indexes as $index) {
+			if ($index->type === 'PRIMARY') {
+				$unique_keys['PRIMARY'] = $index->fields;
+			} else if ($index->type === 'UNIQUE') {
+				$unique_keys[$index->name] = $index->fields;
 			}
 		}
 
@@ -317,9 +341,12 @@ abstract final class DataIntegrity {
 					continue;
 				}
 				if (C\every($unique_key, $field ==> $r[$field] === $row[$field])) {
-					$dupe_unique_key_value = Vec\map($unique_key, $field ==> (string)$row[$field]) |> Str\join($$, ', ');
-					return
-						tuple("Duplicate entry '{$dupe_unique_key_value}' for key '{$name}' in table '{$schema['name']}'", $row_id);
+					$dupe_unique_key_value = Vec\map($unique_key, $field ==> (string)$row[$field])
+						|> Str\join($$, ', ');
+					return tuple(
+						"Duplicate entry '{$dupe_unique_key_value}' for key '{$name}' in table '{$schema->name}'",
+						$row_id,
+					);
 				}
 			}
 		}

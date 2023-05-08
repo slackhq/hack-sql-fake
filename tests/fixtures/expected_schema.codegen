@@ -1,0 +1,115 @@
+use type Slack\SQLFake\{Column, DataType, Index, TableSchema};
+
+<<__Memoize>>
+function get_my_table_schemas(): dict<string, dict<string, table_schema>> {
+	return dict[
+		'prod' => dict[
+			'test' => new TableSchema(
+				'test',
+				vec[
+					new Column(
+						'id',
+						DataType::VARCHAR,
+						255,
+						false,
+						'string',
+					),
+					new Column(
+						'value',
+						DataType::VARCHAR,
+						255,
+						false,
+						'string',
+					),
+				],
+				vec[
+					new Index(
+						'PRIMARY',
+						'PRIMARY',
+						keyset['id'],
+					),
+				],
+			),
+			'test2' => new TableSchema(
+				'test2',
+				vec[
+					new Column(
+						'id',
+						DataType::BIGINT,
+						20,
+						false,
+						'int',
+						true,
+					),
+					new Column(
+						'name',
+						DataType::VARCHAR,
+						100,
+						false,
+						'string',
+					),
+				],
+				vec[
+					new Index(
+						'PRIMARY',
+						'PRIMARY',
+						keyset['id', 'name'],
+					),
+					new Index(
+						'name',
+						'INDEX',
+						keyset['name'],
+					),
+				],
+			),
+			'test3' => new TableSchema(
+				'test3',
+				vec[
+					new Column(
+						'id',
+						DataType::BIGINT,
+						20,
+						false,
+						'int',
+						true,
+					),
+					new Column(
+						'ch',
+						DataType::CHAR,
+						64,
+						true,
+						'string',
+					),
+					new Column(
+						'deleted',
+						DataType::TINYINT,
+						3,
+						false,
+						'int',
+						true,
+						'0',
+					),
+					new Column(
+						'name',
+						DataType::VARCHAR,
+						100,
+						false,
+						'string',
+					),
+				],
+				vec[
+					new Index(
+						'PRIMARY',
+						'PRIMARY',
+						keyset['id'],
+					),
+					new Index(
+						'name',
+						'UNIQUE',
+						keyset['name'],
+					),
+				],
+			),
+		],
+	];
+}

@@ -11,7 +11,7 @@ final class InsertQueryTest extends HackTest {
 
 	<<__Override>>
 	public static async function beforeFirstTestAsync(): Awaitable<void> {
-		init(TEST_SCHEMA, true);
+		init(get_test_schema(), true);
 		$pool = new AsyncMysqlConnectionPool(darray[]);
 		static::$conn = await $pool->connect('example', 1, 'db1', '', '');
 		// black hole logging
