@@ -32,9 +32,8 @@ final class ConstantExpression extends Expression {
 			case TokenType::NULL_CONSTANT:
 				return null;
 			default:
-				throw new SQLFakeRuntimeException(
-					"Attempted to assign invalid token type {$token['type']} to Constant Expression",
-				);
+				throw
+					new SQLFakeRuntimeException("Attempted to assign invalid token type {$token['type']} to Constant Expression");
 		}
 	}
 

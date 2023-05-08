@@ -77,9 +77,8 @@ EOT
 				HackBuilderValues::shapeWithPerKeyRendering(
 					shape(
 						'name' => HackBuilderValues::export(),
-						'indexes' => HackBuilderValues::vec(
-							HackBuilderValues::shapeWithUniformRendering(HackBuilderValues::export()),
-						),
+						'indexes' =>
+							HackBuilderValues::vec(HackBuilderValues::shapeWithUniformRendering(HackBuilderValues::export())),
 						'fields' => HackBuilderValues::vec(HackBuilderValues::shapeWithPerKeyRendering(
 							shape(
 								'name' => HackBuilderValues::export(),

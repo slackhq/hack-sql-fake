@@ -67,7 +67,7 @@ final class FromClause {
 
 			$new_dataset = vec[];
 			if ($schema is nonnull && QueryContext::$strictSchemaMode) {
-				 foreach ($res as $row) {
+				foreach ($res as $row) {
 					$row as dict<_, _>;
 					$m = dict[];
 					foreach ($row as $field => $val) {

@@ -195,12 +195,10 @@ abstract final class JoinProcessor {
 		string $right_column,
 	): BinaryOperatorExpression {
 
-		$left = new ColumnExpression(
-			shape('type' => TokenType::IDENTIFIER, 'value' => $left_column, 'raw' => $left_column),
-		);
-		$right = new ColumnExpression(
-			shape('type' => TokenType::IDENTIFIER, 'value' => $right_column, 'raw' => $right_column),
-		);
+		$left =
+			new ColumnExpression(shape('type' => TokenType::IDENTIFIER, 'value' => $left_column, 'raw' => $left_column));
+		$right =
+			new ColumnExpression(shape('type' => TokenType::IDENTIFIER, 'value' => $right_column, 'raw' => $right_column));
 
 		// making a binary expression ensuring those two tokens are equal
 		$expr = new BinaryOperatorExpression($left, /* $negated */ false, Operator::EQUALS, $right);

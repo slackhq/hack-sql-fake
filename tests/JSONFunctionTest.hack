@@ -328,10 +328,7 @@ final class JSONFunctionTest extends HackTest {
 			tuple("JSON_EXTRACT(JSON_EXTRACT('[true]', '$[0]'), '$')", shape('value' => 'true')),
 
 			// JSON as doc for JSON_REPLACE
-			tuple(
-				"JSON_REPLACE(JSON_EXTRACT('{\"a\":{\"b\": 2}}', '$.a'), '$.b', true)",
-				shape('value' => '{"b":true}'),
-			),
+			tuple("JSON_REPLACE(JSON_EXTRACT('{\"a\":{\"b\": 2}}', '$.a'), '$.b', true)", shape('value' => '{"b":true}')),
 			tuple("JSON_REPLACE(JSON_EXTRACT(\"[false]\", '$[0]'), '$.a', 'test')", shape('value' => 'false')),
 
 			tuple(
@@ -341,10 +338,7 @@ final class JSONFunctionTest extends HackTest {
 			tuple("JSON_REPLACE('{\"b\":2}', '$.b', 1 < 2)", shape('value' => '{"b":true}')),
 
 			// JSON value as replacement in JSON_REPLACE
-			tuple(
-				"JSON_REPLACE('[0,1]', '$[1]', JSON_EXTRACT('{\"a\": \"test\"}', '$.a'))",
-				shape('value' => '[0,"test"]'),
-			),
+			tuple("JSON_REPLACE('[0,1]', '$[1]', JSON_EXTRACT('{\"a\": \"test\"}', '$.a'))", shape('value' => '[0,"test"]')),
 			tuple(
 				"JSON_REPLACE('{\"a\":2}', JSON_UNQUOTE(JSON_EXTRACT('{\"b\":\"$.a\"}', '$.b')), 4)",
 				shape('value' => '{"a":4}'),
@@ -396,7 +390,10 @@ final class JSONFunctionTest extends HackTest {
 			tuple("JSON_CONTAINS('null', '2', '$.a')", shape('exception' => SQLFakeRuntimeException::class)),
 			tuple("JSON_CONTAINS('[]', 45, '$.a')", shape('exception' => SQLFakeRuntimeException::class)),
 			tuple("JSON_CONTAINS('2', 45, '$.a')", shape('exception' => SQLFakeRuntimeException::class)),
-			tuple("JSON_CONTAINS('{\"a\": {\"b\":\"test\"}}', '45', '$.b')", shape('exception' => SQLFakeRuntimeException::class)),
+			tuple(
+				"JSON_CONTAINS('{\"a\": {\"b\":\"test\"}}', '45', '$.b')",
+				shape('exception' => SQLFakeRuntimeException::class),
+			),
 
 			// existent path - array
 			tuple("JSON_CONTAINS('[]', '4', '$')", shape('value' => 0)),

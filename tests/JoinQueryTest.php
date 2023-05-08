@@ -49,9 +49,8 @@ final class JoinQueryTest extends HackTest {
 		$results = await $conn->query('SELECT * FROM table3 JOIN association_table ON id = table_3_id');
 		expect($results->rows())->toBeSame($expected, 'with no aliases and column names inferred from table schema');
 
-		$results = await $conn->query(
-			'SELECT * FROM table3 JOIN association_table ON table3.id = association_table.table_3_id',
-		);
+		$results =
+			await $conn->query('SELECT * FROM table3 JOIN association_table ON table3.id = association_table.table_3_id');
 		expect($results->rows())->toBeSame($expected, 'with columns using explicitly specified table names');
 
 		$results = await $conn->query(
@@ -91,9 +90,8 @@ final class JoinQueryTest extends HackTest {
 
 	public async function testLeftJoin(): Awaitable<void> {
 		$conn = static::$conn as nonnull;
-		$results = await $conn->query(
-			'SELECT id, table_4_id FROM table3 LEFT OUTER JOIN association_table ON id=table_3_id',
-		);
+		$results =
+			await $conn->query('SELECT id, table_4_id FROM table3 LEFT OUTER JOIN association_table ON id=table_3_id');
 		expect($results->rows())->toBeSame(vec[
 			dict['id' => 1, 'table_4_id' => 1000],
 			dict['id' => 1, 'table_4_id' => 1001],
@@ -121,9 +119,8 @@ final class JoinQueryTest extends HackTest {
 
 	public async function testCrossJoin(): Awaitable<void> {
 		$conn = static::$conn as nonnull;
-		$results = await $conn->query(
-			'SELECT table_3_id, id as table_4_id FROM association_table, table4 WHERE table4.id=1003',
-		);
+		$results =
+			await $conn->query('SELECT table_3_id, id as table_4_id FROM association_table, table4 WHERE table4.id=1003');
 		expect($results->rows())->toBeSame(vec[
 			dict['table_3_id' => 1, 'table_4_id' => 1003],
 			dict['table_3_id' => 1, 'table_4_id' => 1003],

@@ -108,51 +108,66 @@ abstract final class DataIntegrity {
 								$row[$field_name] = (int)$row[$field_name];
 							}
 						} else {
-								$signed = !($field_unsigned);
-								$field_value = (int)$row[$field_name];
+							$signed = !($field_unsigned);
+							$field_value = (int)$row[$field_name];
 
-								switch($field_mysql_type) {
-									case DataType::TINYINT:
-										if ($field_value < (($signed) ? -\pow(2,7) : 0) || $field_value >= (($signed) ? \pow(2,7) : \pow(2,8))){
-											throw new SQLFakeRuntimeException(
-												"Column '{$field_name}' on '{$schema['name']}' expects a valid '{$field_mysql_type}'",
-											);
-										}
-										break;
-									case DataType::SMALLINT:
-										if ($field_value < (($signed) ? -\pow(2,15) : 0) || $field_value >= (($signed) ? \pow(2,15) : \pow(2,16))){
-											throw new SQLFakeRuntimeException(
-												"Column '{$field_name}' on '{$schema['name']}' expects a valid '{$field_mysql_type}'",
-											);
-										}
-										break;
-									case DataType::MEDIUMINT:
-										if ($field_value < (($signed) ? -\pow(2,23) : 0) || $field_value >= (($signed) ? \pow(2,23) : \pow(2,24))){
-											throw new SQLFakeRuntimeException(
-												"Column '{$field_name}' on '{$schema['name']}' expects a valid '{$field_mysql_type}'",
-											);
-										}
-										break;
-									case DataType::INT:
-										if ($field_value < (($signed) ? -\pow(2,31) : 0) || $field_value >= (($signed) ? \pow(2,31) : \pow(2,32))){
-											throw new SQLFakeRuntimeException(
-												"Column '{$field_name}' on '{$schema['name']}' expects a valid '{$field_mysql_type}'",
-											);
-										}
-										break;
-									case DataType::BIGINT:
-										if ($field_value < (($signed) ? -\pow(2,63) : 0) || $field_value >= (($signed) ? \pow(2,63) : \pow(2,64))){
-											throw new SQLFakeRuntimeException(
-												"Column '{$field_name}' on '{$schema['name']}' expects a valid '{$field_mysql_type}'",
-											);
-										}
-										break;
-									default:
+							switch ($field_mysql_type) {
+								case DataType::TINYINT:
+									if (
+										$field_value < (($signed) ? -\pow(2, 7) : 0) ||
+										$field_value >= (($signed) ? \pow(2, 7) : \pow(2, 8))
+									) {
 										throw new SQLFakeRuntimeException(
 											"Column '{$field_name}' on '{$schema['name']}' expects a valid '{$field_mysql_type}'",
 										);
-										break;
-								}
+									}
+									break;
+								case DataType::SMALLINT:
+									if (
+										$field_value < (($signed) ? -\pow(2, 15) : 0) ||
+										$field_value >= (($signed) ? \pow(2, 15) : \pow(2, 16))
+									) {
+										throw new SQLFakeRuntimeException(
+											"Column '{$field_name}' on '{$schema['name']}' expects a valid '{$field_mysql_type}'",
+										);
+									}
+									break;
+								case DataType::MEDIUMINT:
+									if (
+										$field_value < (($signed) ? -\pow(2, 23) : 0) ||
+										$field_value >= (($signed) ? \pow(2, 23) : \pow(2, 24))
+									) {
+										throw new SQLFakeRuntimeException(
+											"Column '{$field_name}' on '{$schema['name']}' expects a valid '{$field_mysql_type}'",
+										);
+									}
+									break;
+								case DataType::INT:
+									if (
+										$field_value < (($signed) ? -\pow(2, 31) : 0) ||
+										$field_value >= (($signed) ? \pow(2, 31) : \pow(2, 32))
+									) {
+										throw new SQLFakeRuntimeException(
+											"Column '{$field_name}' on '{$schema['name']}' expects a valid '{$field_mysql_type}'",
+										);
+									}
+									break;
+								case DataType::BIGINT:
+									if (
+										$field_value < (($signed) ? -\pow(2, 63) : 0) ||
+										$field_value >= (($signed) ? \pow(2, 63) : \pow(2, 64))
+									) {
+										throw new SQLFakeRuntimeException(
+											"Column '{$field_name}' on '{$schema['name']}' expects a valid '{$field_mysql_type}'",
+										);
+									}
+									break;
+								default:
+									throw new SQLFakeRuntimeException(
+										"Column '{$field_name}' on '{$schema['name']}' expects a valid '{$field_mysql_type}'",
+									);
+									break;
+							}
 						}
 						break;
 					case 'double':
