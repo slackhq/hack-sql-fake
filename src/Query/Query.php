@@ -149,7 +149,7 @@ abstract class Query {
 		dataset $filtered_rows,
 		dataset $original_table,
 		vec<BinaryOperatorExpression> $set_clause,
-		?table_schema $table_schema,
+		?TableSchema $table_schema,
 		/* for dupe inserts only */
 		?row $values = null,
 	): (int, vec<dict<string, mixed>>) {
@@ -158,7 +158,7 @@ abstract class Query {
 
 		$valid_fields = null;
 		if ($table_schema !== null) {
-			$valid_fields = Keyset\map($table_schema['fields'], $field ==> $field['name']);
+			$valid_fields = Keyset\map($table_schema->fields, $field ==> $field->name);
 		}
 
 		$set_clauses = vec[];

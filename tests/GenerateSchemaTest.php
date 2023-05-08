@@ -9,121 +9,38 @@ final class GenerateSchemaTest extends HackTest {
 
 	public async function testGenerateSchema(): Awaitable<void> {
 		$expected = dict[
-			'test' => shape(
-				'name' => 'test',
-				'fields' => vec[
-					shape(
-						'name' => 'id',
-						'type' => 'VARCHAR',
-						'length' => 255,
-						'null' => false,
-						'hack_type' => 'string',
-					),
-					shape(
-						'name' => 'value',
-						'type' => 'VARCHAR',
-						'length' => 255,
-						'null' => false,
-						'hack_type' => 'string',
-					),
+			'test' => new TableSchema(
+				'test',
+				vec[
+					new Column('id', DataType::VARCHAR, 255, false, 'string'),
+					new Column('value', DataType::VARCHAR, 255, false, 'string'),
 				],
-				'indexes' => vec[
-					shape(
-						'name' => 'PRIMARY',
-						'type' => 'PRIMARY',
-						'fields' => dict[
-							'id' => 'id',
-						],
-					),
+				vec[
+					new Index('PRIMARY', 'PRIMARY', keyset['id']),
 				],
 			),
-			'test2' => shape(
-				'name' => 'test2',
-				'fields' => vec[
-					shape(
-						'name' => 'id',
-						'type' => 'BIGINT',
-						'length' => 20,
-						'null' => false,
-						'hack_type' => 'int',
-						'unsigned' => true,
-					),
-					shape(
-						'name' => 'name',
-						'type' => 'VARCHAR',
-						'length' => 100,
-						'null' => false,
-						'hack_type' => 'string',
-					),
+			'test2' => new TableSchema(
+				'test2',
+				vec[
+					new Column('id', DataType::BIGINT, 20, false, 'int', true),
+					new Column('name', DataType::VARCHAR, 100, false, 'string'),
 				],
-				'indexes' => vec[
-					shape(
-						'name' => 'PRIMARY',
-						'type' => 'PRIMARY',
-						'fields' => dict[
-							'id' => 'id',
-							'name' => 'name',
-						],
-					),
-					shape(
-						'name' => 'name',
-						'type' => 'INDEX',
-						'fields' => dict[
-							'name' => 'name',
-						],
-					),
+				vec[
+					new Index('PRIMARY', 'PRIMARY', keyset['id', 'name']),
+					new Index('name', 'INDEX', keyset['name']),
 				],
 			),
-			'test3' => shape(
-				'name' => 'test3',
-				'fields' => vec[
-					shape(
-						'name' => 'id',
-						'type' => 'BIGINT',
-						'length' => 20,
-						'null' => false,
-						'hack_type' => 'int',
-						'unsigned' => true,
-					),
-					shape(
-						'name' => 'ch',
-						'type' => 'CHAR',
-						'length' => 64,
-						'null' => true,
-						'hack_type' => 'string',
-					),
-					shape(
-						'name' => 'deleted',
-						'type' => 'TINYINT',
-						'length' => 3,
-						'null' => false,
-						'hack_type' => 'int',
-						'default' => '0',
-						'unsigned' => true,
-					),
-					shape(
-						'name' => 'name',
-						'type' => 'VARCHAR',
-						'length' => 100,
-						'null' => false,
-						'hack_type' => 'string',
-					),
+			'test3' => new TableSchema(
+				'test3',
+				vec[
+					new Column('id', DataType::BIGINT, 20, false, 'int', true),
+					new Column('ch', DataType::CHAR, 64, true, 'string'),
+					new Column('deleted', DataType::TINYINT, 3, false, 'int', true, '0'),
+					new Column('name', DataType::VARCHAR, 100, false, 'string'),
 				],
-				'indexes' => vec[
-					shape(
-						'name' => 'PRIMARY',
-						'type' => 'PRIMARY',
-						'fields' => dict[
-							'id' => 'id',
-						],
-					),
-					shape(
-						'name' => 'name',
-						'type' => 'UNIQUE',
-						'fields' => dict[
-							'name' => 'name',
-						],
-					),
+				vec[
+					new Index('PRIMARY', 'PRIMARY', keyset['id']),
+					new Index('name', 'UNIQUE', keyset['name']),
 				],
 			),
 		];
@@ -131,8 +48,12 @@ final class GenerateSchemaTest extends HackTest {
 		$generator = new SchemaGenerator();
 		$sql = \file_get_contents(__DIR__.'/fixtures/SchemaExample.sql');
 		$schema = $generator->generateFromString($sql);
-		expect($schema['test'])->toHaveSameShapeAs($expected['test']);
-		expect($schema['test2'])->toHaveSameShapeAs($expected['test2']);
-		expect($schema['test3'])->toHaveSameShapeAs($expected['test3']);
+		expect(\var_export($schema['test'], true))->toEqual(\var_export($expected['test'], true));
+		expect(\var_export($schema['test2'], true))->toEqual(\var_export($expected['test2'], true));
+		expect(\var_export($schema['test3'], true))->toEqual(\var_export($expected['test3'], true));
+		$expected_schema = \file_get_contents(__DIR__.'/fixtures/expected_schema.codegen');
+		$string_schema =
+			BuildSchemaCLI::getRenderedHackTableSchemaWithClusters('get_my_table_schemas', dict['prod' => $schema]);
+		expect($string_schema)->toBeSame($expected_schema);
 	}
 }

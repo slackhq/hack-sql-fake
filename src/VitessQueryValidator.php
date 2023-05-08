@@ -86,7 +86,7 @@ final class UpdateQueryValidator extends VitessQueryValidator {
 
 		list($database, $table_name) = Query::parseTableName($this->conn, $this->query->updateClause['name']);
 		$table_schema = QueryContext::getSchema($database, $table_name);
-		$vitess_sharding = $table_schema['vitess_sharding'] ?? null;
+		$vitess_sharding = $table_schema?->vitess_sharding;
 
 		if ($vitess_sharding === null) {
 			// This could either be an unsharded table or a misconfiguration.
@@ -96,7 +96,7 @@ final class UpdateQueryValidator extends VitessQueryValidator {
 
 		$columns = VitessQueryValidator::extractColumnExprNames($set);
 
-		if (C\contains_key($columns, $vitess_sharding['sharding_key'])) {
+		if (C\contains_key($columns, $vitess_sharding->sharding_key)) {
 			throw new SQLFakeVitessQueryViolation(
 				Str\format('Vitess query validation error: %s', UnsupportedCases::PRIMARY_VINDEX_COLUMN),
 			);
@@ -132,7 +132,7 @@ final class SelectQueryValidator extends VitessQueryValidator {
 			$where = $this->query->whereClause;
 			list($database, $table_name) = Query::parseTableName($this->conn, $table['name']);
 			$table_schema = QueryContext::getSchema($database, $table_name);
-			$vitess_sharding = $table_schema['vitess_sharding'] ?? null;
+			$vitess_sharding = $table_schema?->vitess_sharding ?? null;
 			// if we don't have a sharding scheme defined, assume it isn't cross shard
 			if ($vitess_sharding === null) {
 				$is_scatter_query = false;
@@ -142,7 +142,7 @@ final class SelectQueryValidator extends VitessQueryValidator {
 			if ($where is BinaryOperatorExpression) {
 				$columns = VitessQueryValidator::extractColumnExprNames($where->traverse());
 				// if the where clause selects on the sharding key, we're good to go
-				if (C\contains_key($columns, $vitess_sharding['sharding_key'])) {
+				if (C\contains_key($columns, $vitess_sharding->sharding_key)) {
 					// TODO: for now this just returns but we need to eventually
 					// handle cases like JOINS where multiple tables are involved
 					return false;

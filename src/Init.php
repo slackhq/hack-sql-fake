@@ -17,7 +17,7 @@ namespace Slack\SQLFake;
  * If strict mode is provided (recommended), SQLFake will throw an exception on any query referencing tables not in the schema.
  */
 function init(
-	dict<string, dict<string, table_schema>> $schema = dict[],
+	dict<string, dict<string, TableSchema>> $schema = dict[],
 	bool $strict_sql = false,
 	bool $strict_schema = false,
 ): void {

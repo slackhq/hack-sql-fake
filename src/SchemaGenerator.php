@@ -9,44 +9,40 @@ final class SchemaGenerator {
 	/**
 	 * Pass SQL schema as a string
 	 */
-	public function generateFromString(string $sql): dict<string, table_schema> {
+	public function generateFromString(string $sql): dict<string, TableSchema> {
 		$parser = new CreateTableParser();
 		$schema = $parser->parse($sql);
 
 		$tables = dict[];
 		foreach ($schema as $table => $s) {
-			$table_generated_schema = shape(
-				'name' => $s['name'],
-				'fields' => vec[],
-				'indexes' => vec[],
-			);
+			$table_generated_schema = new TableSchema($s['name']);
 
 			foreach ($s['fields'] as $field) {
-				$f = shape(
-					'name' => $field['name'],
-					'type' => $field['type'] as DataType,
-					'length' => (int)($field['length'] ?? 0),
-					'null' => $field['null'] ?? true,
-					'hack_type' => $this->sqlToHackFieldType($field),
+				$f = new Column(
+					$field['name'],
+					$field['type'] as DataType,
+					(int)($field['length'] ?? 0),
+					$field['null'] ?? true,
+					$this->sqlToHackFieldType($field),
 				);
 
 				$default = ($field['default'] ?? null);
 				if ($default is nonnull && $default !== 'NULL') {
-					$f['default'] = $default;
+					$f->default = $default;
 				}
 
 				$unsigned = ($field['unsigned'] ?? null);
 				if ($unsigned is nonnull) {
-					$f['unsigned'] = $unsigned;
+					$f->unsigned = $unsigned;
 				}
-				$table_generated_schema['fields'][] = $f;
+				$table_generated_schema->fields[] = $f;
 			}
 
 			foreach ($s['indexes'] as $index) {
-				$table_generated_schema['indexes'][] = shape(
-					'name' => $index['name'] ?? $index['type'],
-					'type' => $index['type'],
-					'fields' => Keyset\map($index['cols'], $col ==> $col['name']),
+				$table_generated_schema->indexes[] = new Index(
+					$index['name'] ?? $index['type'],
+					$index['type'],
+					Keyset\map($index['cols'], $col ==> $col['name']),
 				);
 			}
 
