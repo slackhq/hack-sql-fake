@@ -5,7 +5,6 @@ namespace Slack\SQLFake;
 use namespace HH\Lib\{C, Regex};
 use type Facebook\CLILib\CLIWithArguments;
 use namespace Facebook\CLILib\CLIOptions;
-use function var_export, preg_replace;
 
 final class BuildSchemaCLI extends CLIWithArguments {
 	private string $functionName = 'get_db_schema';
