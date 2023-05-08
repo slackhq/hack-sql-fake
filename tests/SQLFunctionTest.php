@@ -36,14 +36,12 @@ final class SQLFunctionTest extends HackTest {
 		$results = await $conn->query('select group_id, count(*) from association_table group by 1');
 		expect($results->rows())->toBeSame($expected, 'with positional reference in group_by');
 
-		$results = await $conn->query(
-			'select group_id, count(*) from association_table group by association_table.group_id',
-		);
+		$results =
+			await $conn->query('select group_id, count(*) from association_table group by association_table.group_id');
 		expect($results->rows())->toBeSame($expected, 'with column and alias reference in group_by');
 
-		$results = await $conn->query(
-			'select group_id, count(1) from association_table group by association_table.group_id',
-		);
+		$results =
+			await $conn->query('select group_id, count(1) from association_table group by association_table.group_id');
 		expect($results->rows())->toBeSame(
 			vec[dict['group_id' => 12345, 'count(1)' => 3], dict['group_id' => 0, 'count(1)' => 1]],
 			'with count(1) instead of count(*)',
@@ -60,9 +58,8 @@ final class SQLFunctionTest extends HackTest {
 
 	public async function testCountDistinct(): Awaitable<void> {
 		$conn = static::$conn as nonnull;
-		$results = await $conn->query(
-			'select group_id, count(DISTINCT table_3_id) from association_table group by group_id',
-		);
+		$results =
+			await $conn->query('select group_id, count(DISTINCT table_3_id) from association_table group by group_id');
 		expect($results->rows())->toBeSame(
 			vec[
 				dict['group_id' => 12345, 'count(DISTINCT table_3_id)' => 2],
@@ -114,9 +111,8 @@ final class SQLFunctionTest extends HackTest {
 
 	public async function testMinMax(): Awaitable<void> {
 		$conn = static::$conn as nonnull;
-		$results = await $conn->query(
-			'SELECT group_id, MIN(table_4_id), MAX(table_4_id) FROM association_table GROUP BY group_id',
-		);
+		$results =
+			await $conn->query('SELECT group_id, MIN(table_4_id), MAX(table_4_id) FROM association_table GROUP BY group_id');
 		expect($results->rows())->toBeSame(
 			vec[
 				dict[
@@ -135,9 +131,8 @@ final class SQLFunctionTest extends HackTest {
 
 	public async function testAggNoGroupBy(): Awaitable<void> {
 		$conn = static::$conn as nonnull;
-		$results = await $conn->query(
-			'SELECT COUNT(*), MIN(table_4_id), MAX(table_4_id), AVG(table_4_id) FROM association_table',
-		);
+		$results =
+			await $conn->query('SELECT COUNT(*), MIN(table_4_id), MAX(table_4_id), AVG(table_4_id) FROM association_table');
 		expect($results->rows())->toBeSame(
 			vec[
 				dict[
@@ -370,9 +365,7 @@ final class SQLFunctionTest extends HackTest {
 
 		// with alias being the same as the column name
 		$results = await $conn->query('select max(id) as id, group_id from table3 group by group_id order by id');
-		expect($results->rows())->toBeSame(
-			vec[dict['id' => 3, 'group_id' => 12345], dict['id' => 6, 'group_id' => 6]],
-		);
+		expect($results->rows())->toBeSame(vec[dict['id' => 3, 'group_id' => 12345], dict['id' => 6, 'group_id' => 6]]);
 
 		// with positional identifier
 		$results = await $conn->query('select max(id), group_id from table3 group by group_id order by 1');

@@ -185,7 +185,7 @@ const dict<string, dict<string, table_schema>> TEST_SCHEMA = dict[
 					'name' => 'PRIMARY',
 					'type' => 'PRIMARY',
 					'fields' => keyset['id'],
-				)
+				),
 			],
 		),
 		'table_with_more_fields' => shape(
@@ -386,7 +386,7 @@ const dict<string, dict<string, table_schema>> TEST_SCHEMA = dict[
 					'name' => 'PRIMARY',
 					'type' => 'PRIMARY',
 					'fields' => keyset['id'],
-				)
+				),
 			],
 		),
 		'association_table' => shape(

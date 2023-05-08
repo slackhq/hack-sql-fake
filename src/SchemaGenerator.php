@@ -34,7 +34,7 @@ final class SchemaGenerator {
 				if ($default is nonnull && $default !== 'NULL') {
 					$f['default'] = $default;
 				}
-				
+
 				$unsigned = ($field['unsigned'] ?? null);
 				if ($unsigned is nonnull) {
 					$f['unsigned'] = $unsigned;

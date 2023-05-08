@@ -71,9 +71,7 @@ final class UpdateQueryTest extends HackTest {
 			dict['id' => 4, 'group_id' => 13, 'name' => 'name34updated'],
 			dict['id' => 6, 'group_id' => 13, 'name' => 'name36updated'],
 		];
-		await $conn->query(
-			"UPDATE `db2`.`table3` set name=CONCAT(name, id, 'updated'), group_id = 13 WHERE group_id=6",
-		);
+		await $conn->query("UPDATE `db2`.`table3` set name=CONCAT(name, id, 'updated'), group_id = 13 WHERE group_id=6");
 		$results = await $conn->query('SELECT * FROM table3 WHERE group_id=13');
 		expect($results->rows())->toBeSame($expected, 'with backticks');
 	}

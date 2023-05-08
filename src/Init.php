@@ -17,24 +17,24 @@ namespace Slack\SQLFake;
  * If strict mode is provided (recommended), SQLFake will throw an exception on any query referencing tables not in the schema.
  */
 function init(
-  dict<string, dict<string, table_schema>> $schema = dict[],
-  bool $strict_sql = false,
-  bool $strict_schema = false,
+	dict<string, dict<string, table_schema>> $schema = dict[],
+	bool $strict_sql = false,
+	bool $strict_schema = false,
 ): void {
-  QueryContext::$schema = $schema;
-  QueryContext::$strictSQLMode = $strict_sql;
-  QueryContext::$strictSchemaMode = $strict_schema;
+	QueryContext::$schema = $schema;
+	QueryContext::$strictSQLMode = $strict_sql;
+	QueryContext::$strictSchemaMode = $strict_schema;
 }
 
 function add_server(string $hostname, server_config $config): void {
-  $server = Server::getOrCreate($hostname);
-  $server->setConfig($config);
+	$server = Server::getOrCreate($hostname);
+	$server->setConfig($config);
 }
 
 function snapshot(string $name): void {
-  Server::snapshot($name);
+	Server::snapshot($name);
 }
 
 function restore(string $name): void {
-  Server::restore($name);
+	Server::restore($name);
 }

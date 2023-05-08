@@ -63,9 +63,8 @@ final class SelectClauseTest extends HackTest {
 			'with backtick quoted identifiers',
 		);
 
-		$results = await $conn->query(
-			'SELECT table3.id, table3.group_id as my_fav_group_id FROM `db2`.`table3` WHERE group_id=6',
-		);
+		$results =
+			await $conn->query('SELECT table3.id, table3.group_id as my_fav_group_id FROM `db2`.`table3` WHERE group_id=6');
 		expect($results->rows())->toBeSame(
 			vec[
 				dict['id' => 4, 'my_fav_group_id' => 6],
@@ -194,9 +193,8 @@ final class SelectClauseTest extends HackTest {
 
 	public async function testLimit(): Awaitable<void> {
 		$conn = static::$conn as nonnull;
-		$results = await $conn->query(
-			'select group_id, table_4_id from association_table ORDER BY group_id, 2 DESC LIMIT 2',
-		);
+		$results =
+			await $conn->query('select group_id, table_4_id from association_table ORDER BY group_id, 2 DESC LIMIT 2');
 		expect($results->rows())->toBeSame(
 			vec[
 				dict['group_id' => 0, 'table_4_id' => 1003],
@@ -235,9 +233,7 @@ final class SelectClauseTest extends HackTest {
 
 	public async function testOutOfOrderClauses(): Awaitable<void> {
 		$conn = static::$conn as nonnull;
-		expect(
-			() ==> $conn->query('select group_id, table_4_id from association_table LIMIT 2 ORDER BY group_id, 2 DESC'),
-		)
+		expect(() ==> $conn->query('select group_id, table_4_id from association_table LIMIT 2 ORDER BY group_id, 2 DESC'))
 			->toThrow(SQLFakeParseException::class, 'Unexpected ORDER');
 	}
 

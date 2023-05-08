@@ -228,11 +228,8 @@ final class CreateTableParser {
 				if (C\count($temp)) {
 					$statements[] = shape(
 						'tuples' => $temp,
-						'sql' => Str\slice(
-							$sql,
-							$source_map[$start][0],
-							$source_map[$i][0] - $source_map[$start][0] + $source_map[$i][1],
-						),
+						'sql' =>
+							Str\slice($sql, $source_map[$start][0], $source_map[$i][0] - $source_map[$start][0] + $source_map[$i][1]),
 					);
 				}
 				$temp = vec[];
@@ -244,11 +241,8 @@ final class CreateTableParser {
 		if (C\count($temp)) {
 			$statements[] = shape(
 				'tuples' => $temp,
-				'sql' => Str\slice(
-					$sql,
-					$source_map[$start][0],
-					$source_map[$i][0] - $source_map[$start][0] + $source_map[$i][1],
-				),
+				'sql' =>
+					Str\slice($sql, $source_map[$start][0], $source_map[$i][0] - $source_map[$start][0] + $source_map[$i][1]),
 			);
 		}
 
@@ -859,10 +853,7 @@ final class CreateTableParser {
 						// Extend the length of the first token to include everything
 						// up through the last in the sequence.
 						$j = $i + C\count($list) - 1;
-						$out_map[] = tuple(
-							$source_map[$i][0],
-							($source_map[$j][0] - $source_map[$i][0]) + $source_map[$j][1],
-						);
+						$out_map[] = tuple($source_map[$i][0], ($source_map[$j][0] - $source_map[$i][0]) + $source_map[$j][1]);
 
 						$i = $j + 1;
 						$found = true;

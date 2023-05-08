@@ -7,9 +7,13 @@
   "userEnvProbe": "loginShell",
 
   // Add the IDs of extensions you want installed when the container is created.
-  "extensions": [
-    "pranayagarwal.vscode-hack"
-  ],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "pranayagarwal.vscode-hack"
+      ]
+    }
+  },
 
   "mounts": [],
 

@@ -39,6 +39,6 @@ echo ""
 
 # Install dependencies
 echo "Installing dependencies..."
-php composer.phar install
+php composer.phar install --ignore-platform-reqs
 echo ""
 

@@ -75,8 +75,7 @@ final class UpdateQueryValidator extends VitessQueryValidator {
 	public function getHandlers(): dict<string, (function(): Awaitable<void>)> {
 		$handlers = dict[];
 		if (static::$isPrimaryVindexColumnValidatorEnabled) {
-			$handlers[UnsupportedCases::PRIMARY_VINDEX_COLUMN] = async () ==>
-				await $this->updateChangesPrimaryVindexColumn();
+			$handlers[UnsupportedCases::PRIMARY_VINDEX_COLUMN] = async () ==> await $this->updateChangesPrimaryVindexColumn();
 		}
 
 		return $handlers;
@@ -205,9 +204,8 @@ final class SelectQueryValidator extends VitessQueryValidator {
 				case MultiOperand::UNION_ALL:
 				case MultiOperand::INTERSECT:
 				case MultiOperand::EXCEPT:
-					throw new SQLFakeVitessQueryViolation(
-						Str\format('Vitess query validation error: %s', UnsupportedCases::UNIONS),
-					);
+					throw
+						new SQLFakeVitessQueryViolation(Str\format('Vitess query validation error: %s', UnsupportedCases::UNIONS));
 			}
 		}
 	}

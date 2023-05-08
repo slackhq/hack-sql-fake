@@ -10,9 +10,8 @@ final class MultiQueryTest extends HackTest {
 
 	public async function testSubqueryInSelect(): Awaitable<void> {
 		$conn = static::$conn as nonnull;
-		$results = await $conn->query(
-			'SELECT * FROM (SELECT id FROM table4 WHERE id = 1001 OR id = 1004) as sub WHERE id = 1001',
-		);
+		$results =
+			await $conn->query('SELECT * FROM (SELECT id FROM table4 WHERE id = 1001 OR id = 1004) as sub WHERE id = 1001');
 		expect($results->rows())->toBeSame(vec[
 			dict['id' => 1001],
 		]);
