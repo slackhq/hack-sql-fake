@@ -1,7 +1,7 @@
 use type Slack\SQLFake\{Column, DataType, Index, TableSchema};
 
 <<__Memoize>>
-function get_my_table_schemas(): dict<string, dict<string, table_schema>> {
+function get_my_table_schemas(): dict<string, dict<string, TableSchema>> {
 	return dict[
 		'prod' => dict[
 			'test' => new TableSchema(

@@ -87,7 +87,7 @@ EOT
 		$file_contents .= "use type Slack\\SQLFake\\{Column, DataType, Index, TableSchema};\n";
 		$file_contents .= "\n";
 		$file_contents .= "<<__Memoize>>\n";
-		$file_contents .= "function {$function_name}(): dict<string, dict<string, table_schema>> {\n";
+		$file_contents .= "function {$function_name}(): dict<string, dict<string, TableSchema>> {\n";
 		$file_contents .= "\treturn dict[\n";
 		foreach ($table_schemas as $cluster => $tables) {
 			$file_contents .= "\t\t'{$cluster}' => ".self::getRenderedHackTableSchema($tables, "\t\t");
