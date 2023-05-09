@@ -118,16 +118,16 @@ EOT
 				$file_contents .= $indentation."\t\t\t\t'{$field->name}',\n";
 				$file_contents .= $indentation."\t\t\t\tDataType::{$field->type},\n";
 				$file_contents .= $indentation."\t\t\t\t{$field->length},\n";
-				$file_contents .= $indentation."\t\t\t\t" . ($field->null ? 'true' : 'false') . ",\n";
+				$file_contents .= $indentation."\t\t\t\t" . \var_export($field->null, true) . ",\n";
 				$file_contents .= $indentation."\t\t\t\t'{$field->hack_type}',\n";
 				if ($field->unsigned is nonnull || $field->default is nonnull) {
 					if ($field->unsigned is nonnull) {
-						$file_contents .= $indentation."\t\t\t\t" . ($field->unsigned ? 'true' : 'false') . ",\n";
+						$file_contents .= $indentation."\t\t\t\t" . \var_export($field->unsigned, true) . ",\n";
 					} else {
 						$file_contents .= $indentation."\t\t\t\tnull,\n";
 					}
 					if ($field->default is nonnull) {
-						$file_contents .= $indentation."\t\t\t\t'{$field->default}',\n";
+						$file_contents .= $indentation."\t\t\t\t\"{$field->default}\",\n";
 					}
 				}
 				$file_contents .= $indentation."\t\t\t),\n";

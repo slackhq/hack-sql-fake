@@ -87,7 +87,7 @@ function get_my_table_schemas(): dict<string, dict<string, TableSchema>> {
 						false,
 						'int',
 						true,
-						'0',
+						"0",
 					),
 					new Column(
 						'name',
