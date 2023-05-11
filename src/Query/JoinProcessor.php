@@ -154,7 +154,7 @@ abstract final class JoinProcessor {
 				break;
 		}
 
-		return $out;
+		return dict($out);
 	}
 
 	/**
@@ -180,9 +180,7 @@ abstract final class JoinProcessor {
 
 		// MySQL actually doesn't throw if there's no matching columns, but I think we can take the liberty to assume it's not what you meant to do and throw here
 		if ($filter === null) {
-			throw new SQLFakeParseException(
-				'NATURAL join keyword was used with tables that do not share any column names',
-			);
+			throw new SQLFakeParseException('NATURAL join keyword was used with tables that do not share any column names');
 		}
 
 		return $filter;
@@ -305,6 +303,6 @@ abstract final class JoinProcessor {
 			default:
 				invariant_violation('unreachable');
 		}
-		return $out;
+		return dict($out);
 	}
 }

@@ -310,13 +310,13 @@ final class CreateTableParser {
 		//
 
 		$fields = vec[];
-		$indexes = vec[];
+		$index_refs = vec[];
 
 		if ($this->nextTokenIs($tokens, '(')) {
 			$tokens = Vec\drop($tokens, 1);
 			$ret = $this->parseCreateDefinition(inout $tokens);
 			$fields = $ret['fields'];
-			$indexes = $ret['indexes'];
+			$index_refs = $ret['indexes'];
 		}
 
 		$props = $this->parseTableProps(inout $tokens);
@@ -324,7 +324,7 @@ final class CreateTableParser {
 		$table = shape(
 			'name' => $name,
 			'fields' => $fields,
-			'indexes' => $indexes,
+			'indexes' => $index_refs,
 			'props' => $props,
 			'sql' => $sql,
 		);
@@ -342,26 +342,26 @@ final class CreateTableParser {
 	) {
 
 		$fields = vec[];
-		$indexes = vec[];
+		$index_refs = vec[];
 
 		while ($tokens[0] !== ')') {
 			$these_tokens = $this->sliceUntilNextField(inout $tokens);
 
-			$this->parseFieldOrKey(inout $these_tokens, inout $fields, inout $indexes);
+			$this->parseFieldOrKey(inout $these_tokens, inout $fields, inout $index_refs);
 		}
 
 		$tokens = Vec\drop($tokens, 1); // closing paren
 
 		return shape(
 			'fields' => $fields,
-			'indexes' => $indexes,
+			'indexes' => $index_refs,
 		);
 	}
 
 	private function parseFieldOrKey(
 		inout vec<string> $tokens,
 		inout vec<parsed_field> $fields,
-		inout vec<parsed_index> $indexes,
+		inout vec<parsed_index> $index_refs,
 	): void {
 
 		//
@@ -424,7 +424,7 @@ final class CreateTableParser {
 				if (C\count($tokens)) {
 					$index['more'] = $tokens;
 				}
-				$indexes[] = $index;
+				$index_refs[] = $index;
 				return;
 
 			//
@@ -447,7 +447,7 @@ final class CreateTableParser {
 				if (C\count($tokens)) {
 					$index['more'] = $tokens;
 				}
-				$indexes[] = $index;
+				$index_refs[] = $index;
 				return;
 
 			// FULLTEXT		[index_name] (index_col_name,...) [index_option] ...
@@ -487,7 +487,7 @@ final class CreateTableParser {
 				if (C\count($tokens)) {
 					$index['more'] = $tokens;
 				}
-				$indexes[] = $index;
+				$index_refs[] = $index;
 				return;
 
 			// older stuff

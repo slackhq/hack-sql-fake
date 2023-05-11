@@ -10,42 +10,117 @@ final class SharedSetup {
 		$pool = new AsyncMysqlConnectionPool(darray[]);
 		$conn = await $pool->connect('example', 1, 'db2', '', '');
 
+		$table3_data = tuple(
+			dict[
+				1 => dict['id' => 1, 'group_id' => 12345, 'name' => 'name1'],
+				2 => dict['id' => 2, 'group_id' => 12345, 'name' => 'name2'],
+				3 => dict['id' => 3, 'group_id' => 12345, 'name' => 'name3'],
+				4 => dict['id' => 4, 'group_id' => 6, 'name' => 'name4'],
+				6 => dict['id' => 6, 'group_id' => 6, 'name' => 'name5'],
+			],
+			dict[
+				'name_uniq' => dict[
+					'name1' => 1,
+					'name2' => 2,
+					'name3' => 3,
+					'name4' => 4,
+					'name6' => 6,
+				],
+			],
+			dict[
+				'group_id' => dict[
+					12345 => keyset[1, 2, 3],
+					6 => keyset[4, 6],
+				],
+			],
+		);
+
+		$table4_data = tuple(
+			dict[
+				1000 => dict['id' => 1000, 'group_id' => 12345, 'description' => 'desc1'],
+				1001 => dict['id' => 1001, 'group_id' => 12345, 'description' => 'desc2'],
+				1002 => dict['id' => 1002, 'group_id' => 12345, 'description' => 'desc3'],
+				1003 => dict['id' => 1003, 'group_id' => 7, 'description' => 'desc1'],
+				1004 => dict['id' => 1004, 'group_id' => 7, 'description' => 'desc2'],
+			],
+			dict[],
+			dict[
+				'group_id' => dict[
+					12345 => keyset[1000, 1001, 1002],
+					7 => keyset[1003, 1004],
+				],
+			],
+		);
+
+		$table5_data = tuple(
+			dict[
+				1000 => dict['id' => 1000, 'test_type' => 0x0, 'description' => 'desc0'],
+				1001 => dict['id' => 1001, 'test_type' => 0x1, 'description' => 'desc1'],
+				1002 => dict['id' => 1002, 'test_type' => 0x1, 'description' => 'desc2'],
+				1003 => dict['id' => 1003, 'test_type' => 0x2, 'description' => 'desc3'],
+				1004 => dict['id' => 1004, 'test_type' => 0x1, 'description' => 'desc4'],
+			],
+			dict[],
+			dict[
+				'test_type' => dict[
+					0x0 => keyset[1000],
+					0x1 => keyset[1001, 1002, 1004],
+					0x2 => keyset[1003],
+				],
+			],
+		);
+
+		$association_table_data = tuple(
+			dict[
+				'1||1000||' => dict[
+					'table_3_id' => 1,
+					'table_4_id' => 1000,
+					'group_id' => 12345,
+					'description' => 'association 1',
+				],
+				'1||1001||' => dict[
+					'table_3_id' => 1,
+					'table_4_id' => 1001,
+					'group_id' => 12345,
+					'description' => 'association 2',
+				],
+				'2||1000||' => dict[
+					'table_3_id' => 2,
+					'table_4_id' => 1000,
+					'group_id' => 12345,
+					'description' => 'association 3',
+				],
+				'3||1003||' => dict['table_3_id' => 3, 'table_4_id' => 1003, 'group_id' => 0, 'description' => 'association 4'],
+			],
+			dict[],
+			dict[
+				'table_4_id' => dict[
+					1000 => keyset['1||1000||', '2||1000||'],
+					1001 => keyset['1||1001||'],
+					1003 => keyset['3||1003||'],
+				],
+			],
+		);
+
+		$table6_data = tuple(
+			dict[
+				1000 => dict['id' => 1000, 'position' => '5'],
+				1001 => dict['id' => 1001, 'position' => '125'],
+				1002 => dict['id' => 1002, 'position' => '75'],
+				1003 => dict['id' => 1003, 'position' => '625'],
+				1004 => dict['id' => 1004, 'position' => '25'],
+			],
+			dict[],
+			dict[],
+		);
+
 		// populate database state
 		$database = dict[
-			'table3' => vec[
-				dict['id' => 1, 'group_id' => 12345, 'name' => 'name1'],
-				dict['id' => 2, 'group_id' => 12345, 'name' => 'name2'],
-				dict['id' => 3, 'group_id' => 12345, 'name' => 'name3'],
-				dict['id' => 4, 'group_id' => 6, 'name' => 'name3'],
-				dict['id' => 6, 'group_id' => 6, 'name' => 'name3'],
-			],
-			'table4' => vec[
-				dict['id' => 1000, 'group_id' => 12345, 'description' => 'desc1'],
-				dict['id' => 1001, 'group_id' => 12345, 'description' => 'desc2'],
-				dict['id' => 1002, 'group_id' => 12345, 'description' => 'desc3'],
-				dict['id' => 1003, 'group_id' => 7, 'description' => 'desc1'],
-				dict['id' => 1004, 'group_id' => 7, 'description' => 'desc2'],
-			],
-			'table5' => vec[
-				dict['id' => 1000, 'test_type' => 0x0, 'description' => 'desc0'],
-				dict['id' => 1001, 'test_type' => 0x1, 'description' => 'desc1'],
-				dict['id' => 1002, 'test_type' => 0x1, 'description' => 'desc2'],
-				dict['id' => 1003, 'test_type' => 0x2, 'description' => 'desc3'],
-				dict['id' => 1004, 'test_type' => 0x1, 'description' => 'desc4'],
-			],
-			'association_table' => vec[
-				dict['table_3_id' => 1, 'table_4_id' => 1000, 'group_id' => 12345, 'description' => 'association 1'],
-				dict['table_3_id' => 1, 'table_4_id' => 1001, 'group_id' => 12345, 'description' => 'association 2'],
-				dict['table_3_id' => 2, 'table_4_id' => 1000, 'group_id' => 12345, 'description' => 'association 3'],
-				dict['table_3_id' => 3, 'table_4_id' => 1003, 'group_id' => 0, 'description' => 'association 4'],
-			],
-			'table6' => vec[
-				dict['id' => 1000, 'position' => '5'],
-				dict['id' => 1001, 'position' => '125'],
-				dict['id' => 1002, 'position' => '75'],
-				dict['id' => 1003, 'position' => '625'],
-				dict['id' => 1004, 'position' => '25'],
-			],
+			'table3' => $table3_data,
+			'table4' => $table4_data,
+			'table5' => $table5_data,
+			'association_table' => $association_table_data,
+			'table6' => $table6_data,
 		];
 
 		$conn->getServer()->databases['db2'] = $database;
@@ -62,18 +137,26 @@ final class SharedSetup {
 		$vitess_conn = await $pool->connect('example2', 2, 'vitess', '', '');
 
 		$vitess_dbs = dict[
-			'vt_table1' => vec[
-				dict['id' => 1, 'name' => 'Pallettown Chickenstrips'],
-				dict['id' => 2, 'name' => 'Brewery Cuttlefish'],
-				dict['id' => 3, 'name' => 'Blasphemy Chowderpants'],
-				dict['id' => 4, 'name' => 'Benjamin Ampersand'],
-			],
-			'vt_table2' => vec[
-				dict['id' => 11, 'vt_table1_id' => 1, 'description' => 'no'],
-				dict['id' => 12, 'vt_table1_id' => 2, 'description' => 'no'],
-				dict['id' => 13, 'vt_table1_id' => 3, 'description' => 'no'],
-				dict['id' => 14, 'vt_table1_id' => 4, 'description' => 'no'],
-			],
+			'vt_table1' => tuple(
+				dict[
+					1 => dict['id' => 1, 'name' => 'Pallettown Chickenstrips'],
+					2 => dict['id' => 2, 'name' => 'Brewery Cuttlefish'],
+					3 => dict['id' => 3, 'name' => 'Blasphemy Chowderpants'],
+					4 => dict['id' => 4, 'name' => 'Benjamin Ampersand'],
+				],
+				dict[],
+				dict[],
+			),
+			'vt_table2' => tuple(
+				dict[
+					11 => dict['id' => 11, 'vt_table1_id' => 1, 'description' => 'no'],
+					12 => dict['id' => 12, 'vt_table1_id' => 2, 'description' => 'no'],
+					13 => dict['id' => 13, 'vt_table1_id' => 3, 'description' => 'no'],
+					14 => dict['id' => 14, 'vt_table1_id' => 4, 'description' => 'no'],
+				],
+				dict[],
+				dict[],
+			),
 		];
 
 		$vitess_conn->getServer()->databases['vitess'] = $vitess_dbs;

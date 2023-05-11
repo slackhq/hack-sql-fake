@@ -45,6 +45,11 @@ final class JSONFunctionExpression extends BaseFunctionExpression {
 		throw new SQLFakeRuntimeException('Function '.$this->functionName.' not implemented yet');
 	}
 
+	<<__Override>>
+	public function getIndexCandidates(): ?dict<string, mixed> {
+		return null;
+	}
+
 	private function sqlJSONValid(row $row, AsyncMysqlConnection $conn): ?bool {
 		$row = $this->maybeUnrollGroupedDataset($row);
 		$args = $this->args;
@@ -331,9 +336,8 @@ final class JSONFunctionExpression extends BaseFunctionExpression {
 
 		$argCount = C\count($args);
 		if ($argCount !== 1) {
-			throw new SQLFakeRuntimeException(
-				'MySQL JSON_DEPTH() function must be called with 1 JSON document argument',
-			);
+			throw
+				new SQLFakeRuntimeException('MySQL JSON_DEPTH() function must be called with 1 JSON document argument');
 		}
 
 		$json = $args[0]->evaluate($row, $conn);
@@ -403,43 +407,43 @@ final class JSONFunctionExpression extends BaseFunctionExpression {
 			}
 
 			$term = (new JSONPath\JSONObject($term))->get('$');
-			 if ($term is null || $term->value is null || !($term->value is vec<_>)) {
+			if ($term is null || $term->value is null || !($term->value is vec<_>)) {
 				throw new SQLFakeRuntimeException('MySQL JSON_CONTAINS() function given invalid json');
 			}
 			$term = $term->value[0];
 
 			if ($json is vec<_>) {
 				// If $json is a vec then we have an array and will test if the array contains the given value
-				if ($term is dict<_,_>) {
+				if ($term is dict<_, _>) {
 					return C\count(Vec\filter($json, $val ==> {
-						if ($val is dict<_,_>) {
+						if ($val is dict<_, _>) {
 							return Dict\equal($val, $term);
 						}
 						return false;
-					})) > 0;
-				}
-				else {
+					})) >
+						0;
+				} else {
 					return C\contains($json, $term);
 				}
-			}
-			else if ($json is dict<_,_>) {
+			} else if ($json is dict<_, _>) {
 				// If $json is a dict then we have an object and will test that either (1) $json and $term are the same or
 				// (2) one of $json's members is the same as $term
-				if ($term is dict<_,_>) {
-					if (Dict\equal($json, $term)) { return true; }
+				if ($term is dict<_, _>) {
+					if (Dict\equal($json, $term)) {
+						return true;
+					}
 
 					return C\count(Dict\filter($json, $val ==> {
-						if ($val is dict<_,_>) {
+						if ($val is dict<_, _>) {
 							return Dict\equal($val, $term);
 						}
 						return false;
-					})) > 0;
-				}
-				else {
+					})) >
+						0;
+				} else {
 					return C\count(Dict\filter($json, $val ==> $term == $val)) > 0;
 				}
-			}
-			else {
+			} else {
 				return $json == $term;
 			}
 

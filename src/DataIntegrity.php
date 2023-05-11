@@ -78,13 +78,8 @@ abstract final class DataIntegrity {
 			$field_unsigned = $field->unsigned ?? false;
 
 			if (!C\contains_key($row, $field_name)) {
-				$row[$field_name] = self::getDefaultValueForField(
-					$field_type,
-					$field_nullable,
-					$field_default,
-					$field_name,
-					$schema->name,
-				);
+				$row[$field_name] =
+					self::getDefaultValueForField($field_type, $field_nullable, $field_default, $field_name, $schema->name);
 			} else if ($row[$field_name] === null) {
 				if ($field_nullable) {
 					// explicit null value and nulls are allowed, let it through
@@ -92,17 +87,10 @@ abstract final class DataIntegrity {
 				} else if (QueryContext::$strictSQLMode) {
 					// if we got this far the column has no default and isn't nullable, strict would throw
 					// but default MySQL mode would coerce to a valid value
-					throw new SQLFakeRuntimeException(
-						"Column '{$field_name}' on '{$schema->name}' does not allow null values",
-					);
+					throw new SQLFakeRuntimeException("Column '{$field_name}' on '{$schema->name}' does not allow null values");
 				} else {
-					$row[$field_name] = self::getDefaultValueForField(
-						$field_type,
-						$field_nullable,
-						$field_default,
-						$field_name,
-						$schema->name,
-					);
+					$row[$field_name] =
+						self::getDefaultValueForField($field_type, $field_nullable, $field_default, $field_name, $schema->name);
 				}
 			} else {
 				// TODO more integrity constraints, check field length for varchars, check timestamps
@@ -315,7 +303,7 @@ abstract final class DataIntegrity {
 		dict<string, mixed> $row,
 		TableSchema $schema,
 		?arraykey $update_row_id = null,
-	): ?(string, int) {
+	): ?(string, arraykey) {
 
 		// gather all unique keys
 		$unique_keys = dict[];
@@ -343,10 +331,8 @@ abstract final class DataIntegrity {
 				if (C\every($unique_key, $field ==> $r[$field] === $row[$field])) {
 					$dupe_unique_key_value = Vec\map($unique_key, $field ==> (string)$row[$field])
 						|> Str\join($$, ', ');
-					return tuple(
-						"Duplicate entry '{$dupe_unique_key_value}' for key '{$name}' in table '{$schema->name}'",
-						$row_id,
-					);
+					return
+						tuple("Duplicate entry '{$dupe_unique_key_value}' for key '{$name}' in table '{$schema->name}'", $row_id);
 				}
 			}
 		}

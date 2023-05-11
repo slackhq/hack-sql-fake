@@ -81,8 +81,8 @@ final class MultiQueryTest extends HackTest {
 			dict['id' => 1, 'group_id' => 12345, 'name' => 'name1'],
 			// no dedupe with union all
 			dict['id' => 3, 'group_id' => 12345, 'name' => 'name3'],
-			dict['id' => 4, 'group_id' => 6, 'name' => 'name3'],
-			dict['id' => 6, 'group_id' => 6, 'name' => 'name3'],
+			dict['id' => 4, 'group_id' => 6, 'name' => 'name4'],
+			dict['id' => 6, 'group_id' => 6, 'name' => 'name5'],
 		]);
 	}
 

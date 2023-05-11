@@ -10,7 +10,7 @@ use namespace HH\Lib\Str;
  */
 abstract final class SQLCommandProcessor {
 
-	public static function execute(string $sql, AsyncMysqlConnection $conn): (dataset, int) {
+	public static function execute(string $sql, AsyncMysqlConnection $conn): (vec<dict<string, mixed>>, int) {
 
 		// Check for unsupported statements
 		if (Str\starts_with_ci($sql, 'SET') || Str\starts_with_ci($sql, 'BEGIN') || Str\starts_with_ci($sql, 'COMMIT')) {
@@ -33,7 +33,7 @@ abstract final class SQLCommandProcessor {
 		}
 
 		if ($query is SelectQuery) {
-			return tuple($query->execute($conn), 0);
+			return tuple(vec($query->execute($conn)), 0);
 		} else if ($query is UpdateQuery) {
 			return tuple(vec[], $query->execute($conn));
 		} else if ($query is DeleteQuery) {

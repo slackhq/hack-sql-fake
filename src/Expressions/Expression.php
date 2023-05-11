@@ -70,6 +70,8 @@ abstract class Expression {
 		return $result;
 	}
 
+	public abstract function getIndexCandidates(): ?dict<string, mixed>;
+
 	/**
 	 * a lot of times you just want the value
 	 */

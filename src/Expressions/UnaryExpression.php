@@ -43,6 +43,11 @@ final class UnaryExpression extends Expression {
 	}
 
 	<<__Override>>
+	public function getIndexCandidates(): ?dict<string, mixed> {
+		return null;
+	}
+
+	<<__Override>>
 	public function setNextChild(Expression $expr, bool $overwrite = false): void {
 		if ($this->subject is nonnull && !$overwrite) {
 			throw new SQLFakeParseException('Unexpected expression after unary operand');

@@ -45,6 +45,11 @@ final class CaseOperatorExpression extends Expression {
 	}
 
 	<<__Override>>
+	public function getIndexCandidates(): ?dict<string, mixed> {
+		return null;
+	}
+
+	<<__Override>>
 	public function isWellFormed(): bool {
 		return $this->wellFormed;
 	}

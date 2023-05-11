@@ -4,7 +4,7 @@
 
 namespace Slack\SQLFake;
 
-use namespace HH\Lib\{C, Regex, Str, Vec};
+use namespace HH\Lib\{C, Dict, Regex, Str, Vec};
 
 /**
  * any operator that takes arguments on the left and right side, like +, -, *, AND, OR...
@@ -301,6 +301,43 @@ final class BinaryOperatorExpression extends Expression {
 			default:
 				throw new SQLFakeRuntimeException('Operator '.(string)$this->operator.' not implemented in SQLFake');
 		}
+	}
+
+	<<__Override>>
+	public function getIndexCandidates(): ?dict<string, mixed> {
+		$op = $this->operator;
+		if ($op === null) {
+			// an operator should only be in this state in the middle of parsing, never when evaluating
+			throw new SQLFakeRuntimeException('Attempted to evaluate BinaryOperatorExpression with empty operator');
+		}
+
+		if ($this->negated) {
+			return null;
+		}
+
+		return self::getColumnNamesFromBinop($this);
+	}
+
+	private static function getColumnNamesFromBinop(BinaryOperatorExpression $expr): dict<string, mixed> {
+		$column_names = dict[];
+
+		if ($expr->operator === Operator::EQUALS) {
+			if ($expr->left is ColumnExpression && $expr->left->name !== '*' && $expr->right is ConstantExpression) {
+				$column_names[$expr->left->name] = $expr->right->value;
+			}
+		}
+
+		if ($expr->operator === Operator::AND) {
+			if ($expr->left is BinaryOperatorExpression) {
+				$column_names = self::getColumnNamesFromBinop($expr->left);
+			}
+
+			if ($expr->right is BinaryOperatorExpression) {
+				$column_names = Dict\merge($column_names, self::getColumnNamesFromBinop($expr->right));
+			}
+		}
+
+		return $column_names;
 	}
 
 	/**
