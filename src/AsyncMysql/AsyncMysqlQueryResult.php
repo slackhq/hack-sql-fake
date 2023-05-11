@@ -10,9 +10,9 @@ use namespace HH\Lib\C;
 final class AsyncMysqlQueryResult extends \AsyncMysqlQueryResult {
 
 	/* HH_IGNORE_ERROR[3012] I don't want to call parent::construct */
-	public function __construct(private dataset $rows, private int $rows_affected = 0, private int $last_insert_id = 0) {}
+	public function __construct(private vec<dict<string, mixed>> $rows, private int $rows_affected = 0, private int $last_insert_id = 0) {}
 
-	public function rows(): dataset {
+	public function rows(): vec<dict<string, mixed>> {
 		return $this->rows;
 	}
 

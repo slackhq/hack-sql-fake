@@ -14,11 +14,11 @@ final class TableSchema implements IMemoizeParam {
 	) {}
 
 	public function getInstanceKey(): string {
-		return $this->name;
+		return $this->name.\implode(', ', \HH\Lib\Vec\map($this->fields, $field ==> $field->name));
 	}
 
-	public function getPrimaryKeyColumns(): keyset<string> {
-		$primary = \HH\Lib\Vec\filter($this->indexes, $index ==> $index->name === 'PRIMARY')[0];
-		return $primary->fields;
+	public function getPrimaryKeyColumns(): ?keyset<string> {
+		$primary = \HH\Lib\Vec\filter($this->indexes, $index ==> $index->name === 'PRIMARY')[0] ?? null;
+		return $primary?->fields;
 	}
 }

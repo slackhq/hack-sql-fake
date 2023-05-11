@@ -2,7 +2,7 @@
 
 namespace Slack\SQLFake;
 
-use namespace HH\Lib\C;
+use namespace HH\Lib\{C, Vec};
 
 /**
  * Represents the entire FROM clause of a query,
@@ -31,18 +31,25 @@ final class FromClause {
 
 	/**
 	 * The FROM clause of the query gets processed first, retrieving data from tables, executing subqueries, and handling joins
-	 * This is also where we build up the $columns list which is commonly used throughout the entire library to map column references to indexes in this dataset
+	 * This is also where we build up the $columns list which is commonly used throughout the entire library to map column references to index_refs in this dataset
 	 * @reviewer, we don't build up the $columns, since the variable is unused...
 	 */
-	public function process(AsyncMysqlConnection $conn, string $sql): dataset {
+	public function process(
+		AsyncMysqlConnection $conn,
+		string $sql,
+	): (dataset, unique_index_refs, index_refs, vec<Index>) {
 
-		$data = vec[];
+		$data = dict[];
 		$is_first_table = true;
+		$unique_index_refs = dict[];
+		$index_refs = dict[];
+		$indexes = vec[];
 
 		foreach ($this->tables as $table) {
 			$schema = null;
 			if (Shapes::keyExists($table, 'subquery')) {
 				$res = $table['subquery']->evaluate(dict[], $conn);
+				invariant($res is KeyedContainer<_, _>, 'evaluated result of SubqueryExpression must be dataset');
 				$name = $table['name'];
 			} else {
 				$table_name = $table['name'];
@@ -56,24 +63,22 @@ final class FromClause {
 					throw new SQLFakeRuntimeException("Table $table_name not found in schema and strict mode is enabled");
 				}
 
-				$res = $conn->getServer()->getTable($database, $table_name);
-
-				if ($res === null) {
-					$res = vec[];
+				list($res, $unique_index_refs, $index_refs) =
+					$conn->getServer()->getTableData($database, $table_name) ?: tuple(dict[], dict[], dict[]);
+				if ($schema is nonnull) {
+					$indexes = Vec\concat($indexes, $schema->indexes);
 				}
 			}
 
-			invariant($res is KeyedContainer<_, _>, 'evaluated result of SubqueryExpression must be dataset');
-
-			$new_dataset = vec[];
+			$new_dataset = dict[];
 			if ($schema is nonnull && QueryContext::$strictSchemaMode) {
-				foreach ($res as $row) {
+				foreach ($res as $key => $row) {
 					$row as dict<_, _>;
 					$m = dict[];
 					foreach ($row as $field => $val) {
 						$m["{$name}.{$field}"] = $val;
 					}
-					$new_dataset[] = $m;
+					$new_dataset[$key] = $m;
 				}
 			} else if ($schema is nonnull) {
 				// if schema is set, order the fields in the right order on each row
@@ -82,7 +87,7 @@ final class FromClause {
 					$ordered_fields[] = $field->name;
 				}
 
-				foreach ($res as $row) {
+				foreach ($res as $key => $row) {
 					invariant($row is dict<_, _>, 'each item in evaluated result of SubqueryExpression must be row');
 
 					$m = dict[];
@@ -92,17 +97,17 @@ final class FromClause {
 						}
 						$m["{$name}.{$field}"] = $row[$field];
 					}
-					$new_dataset[] = $m;
+					$new_dataset[$key] = $m;
 				}
 			} else {
-				foreach ($res as $row) {
+				foreach ($res as $key => $row) {
 					invariant($row is dict<_, _>, 'each item in evaluated result of SubqueryExpression must be row');
 
 					$m = dict[];
-					foreach ($row as $key => $val) {
-						$m["{$name}.{$key}"] = $val;
+					foreach ($row as $column => $val) {
+						$m["{$name}.{$column}"] = $val;
 					}
-					$new_dataset[] = $m;
+					$new_dataset[$key] = $m;
 				}
 			}
 
@@ -128,6 +133,6 @@ final class FromClause {
 			}
 		}
 
-		return $data;
+		return tuple($data, $unique_index_refs, $index_refs, $indexes);
 	}
 }

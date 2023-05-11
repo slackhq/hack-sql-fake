@@ -23,7 +23,10 @@ abstract class Query {
 	public string $sql;
 	public bool $ignoreDupes = false;
 
-	protected function applyWhere(AsyncMysqlConnection $conn, dataset $data): dataset {
+	protected function applyWhere(
+		AsyncMysqlConnection $conn,
+		dataset $data,
+	): dataset {
 		$where = $this->whereClause;
 		if ($where === null) {
 			// no where clause? cool! just return the given data
@@ -61,7 +64,8 @@ abstract class Query {
 				if ($value_a != $value_b) {
 					if ($value_a is num && $value_b is num) {
 						return (
-							((float)$value_a < (float)$value_b ? 1 : 0) ^ (($rule['direction'] === SortDirection::DESC) ? 1 : 0)
+							((float)$value_a < (float)$value_b ? 1 : 0) ^
+							(($rule['direction'] === SortDirection::DESC) ? 1 : 0)
 						)
 							? -1
 							: 1;
@@ -83,14 +87,26 @@ abstract class Query {
 		// Work around default sorting behavior to provide a usort that looks like MySQL, where equal values are ordered deterministically
 		// record the keys in a dict for usort
 		$data_temp = dict[];
+		$offset = 0;
 		foreach ($data as $i => $item) {
-			$data_temp[$i] = tuple($i, $item);
+			$data_temp[$i] = tuple($i, $offset, $item);
+			$offset++;
 		}
 
-		$data_temp = Dict\sort($data_temp, ((int, dict<string, mixed>) $a, (int, dict<string, mixed>) $b): int ==> {
-			$result = $sort_fun($a[1], $b[1]);
+		$data_temp = Dict\sort($data_temp, (
+			(arraykey, int, dict<string, mixed>) $a,
+			(arraykey, int, dict<string, mixed>) $b,
+		): int ==> {
+			$result = $sort_fun($a[2], $b[2]);
 
-			return $result === 0 ? $b[0] - $a[0] : $result;
+			if ($result !== 0) {
+				return $result;
+			}
+
+			$a_index = $a[1];
+			$b_index = $b[1];
+
+			return $b_index > $a_index ? 1 : -1;
 		});
 
 		// re-key the input dataset
@@ -99,7 +115,7 @@ abstract class Query {
 		// keys for updates/deletes to be able to delete the right rows
 		$data = dict[];
 		foreach ($data_temp as $item) {
-			$data[$item[0]] = $item[1];
+			$data[$item[0]] = $item[2];
 		}
 
 		return $data;
@@ -148,25 +164,26 @@ abstract class Query {
 		string $table_name,
 		dataset $filtered_rows,
 		dataset $original_table,
+		unique_index_refs $unique_index_refs,
+		index_refs $index_refs,
 		vec<BinaryOperatorExpression> $set_clause,
 		?TableSchema $table_schema,
 		/* for dupe inserts only */
 		?row $values = null,
-	): (int, vec<dict<string, mixed>>) {
-
-		$original_table as vec<_>;
-
+	): (int, dataset, unique_index_refs, index_refs) {
 		$valid_fields = null;
 		if ($table_schema !== null) {
 			$valid_fields = Keyset\map($table_schema->fields, $field ==> $field->name);
 		}
 
+		$columns = keyset[];
 		$set_clauses = vec[];
 		foreach ($set_clause as $expression) {
 			// the parser already asserts this at parse time
 			$left = $expression->left as ColumnExpression;
 			$right = $expression->right as nonnull;
 			$column = $left->name;
+			$columns[] = $column;
 
 			// If we know the valid fields for this table, only allow setting those
 			if ($valid_fields !== null) {
@@ -176,6 +193,16 @@ abstract class Query {
 			}
 
 			$set_clauses[] = shape('column' => $column, 'expression' => $right);
+		}
+
+		$applicable_indexes = vec[];
+
+		if ($table_schema is nonnull) {
+			foreach ($table_schema->indexes as $index) {
+				if (Keyset\intersect($index->fields, $columns) !== keyset[]) {
+					$applicable_indexes[] = $index;
+				}
+			}
 		}
 
 		$update_count = 0;
@@ -194,6 +221,13 @@ abstract class Query {
 					$update_row['sql_fake_values.'.$col] = $val;
 				}
 			}
+
+			list($unique_index_ref_deletes, $index_ref_deletes) = self::getIndexRemovalsForRow(
+				$applicable_indexes,
+				$row_id,
+				$row,
+			);
+
 			foreach ($set_clauses as $clause) {
 				$existing_value = $row[$clause['column']] ?? null;
 				$expr = $clause['expression'];
@@ -205,11 +239,60 @@ abstract class Query {
 				}
 			}
 
+			$new_row_id = $row_id;
+			$unique_index_ref_additions = vec[];
+			$index_ref_additions = vec[];
+
 			if ($changes_found) {
 				if ($table_schema is nonnull) {
 					// throw on invalid data types if strict mode
 					$row = DataIntegrity::coerceToSchema($row, $table_schema);
-					$result = DataIntegrity::checkUniqueConstraints($original_table, $row, $table_schema, $row_id);
+				}
+
+				foreach ($applicable_indexes as $index) {
+					if ($index->type === 'PRIMARY') {
+						if (C\count($index->fields) === 1) {
+							$index_key = $row[C\firstx($index->fields)] as arraykey;
+						} else {
+							$index_key = '';
+							foreach ($index->fields as $field) {
+								$index_key .= $row[$field] as arraykey.'||';
+							}
+						}
+
+						$new_row_id = $index_key;
+					}
+				}
+
+				list($unique_index_ref_additions, $index_ref_additions) = self::getIndexAdditionsForRow(
+					$applicable_indexes,
+					$row,
+				);
+			}
+
+			if ($changes_found) {
+				if ($table_schema is nonnull) {
+					$key_violation = false;
+
+					if (C\contains_key($original_table, $new_row_id)) {
+						$key_violation = true;
+					} else {
+						foreach ($unique_index_ref_deletes as list($index_name, $index_key)) {
+							if (
+								isset($unique_index_refs[$index_name][$index_key]) &&
+								$unique_index_refs[$index_name][$index_key] !== $row_id
+							) {
+								$key_violation = true;
+								break;
+							}
+						}
+					}
+
+					$result = null;
+					if ($key_violation) {
+						$result = DataIntegrity::checkUniqueConstraints($original_table, $row, $table_schema, $row_id);
+					}
+
 					if ($result is nonnull) {
 						if ($this->ignoreDupes) {
 							continue;
@@ -219,13 +302,138 @@ abstract class Query {
 						}
 					}
 				}
-				$original_table[$row_id] = $row;
+
+				foreach ($unique_index_ref_deletes as list($table, $key)) {
+					unset($unique_index_refs[$table][$key]);
+				}
+
+				foreach ($index_ref_deletes as list($table, $key, $index_row)) {
+					unset($index_refs[$table][$key][$index_row]);
+				}
+
+				foreach ($unique_index_ref_additions as list($index_name, $index_key)) {
+					if (!C\contains_key($unique_index_refs, $index_name)) {
+						$unique_index_refs[$index_name] = dict[];
+					}
+					$unique_index_refs[$index_name][$index_key] = $new_row_id;
+				}
+
+				foreach ($index_ref_additions as list($index_name, $index_key)) {
+					if (!C\contains_key($index_refs, $index_name)) {
+						$index_refs[$index_name] = dict[];
+					}
+					if (!C\contains_key($index_refs[$index_name], $index_key)) {
+						$index_refs[$index_name][$index_key] = keyset[];
+					}
+					$index_refs[$index_name][$index_key][] = $new_row_id;
+				}
+
+				if ($new_row_id !== $row_id) {
+					// Remap keys to preserve insertion order when primary key has changed
+					$original_table = Dict\pull_with_key(
+						$original_table,
+						($k, $v) ==> $k === $row_id ? $row : $v,
+						($k, $_) ==> $k === $row_id ? $new_row_id : $k,
+					);
+				} else {
+					$original_table[$row_id] = $row;
+				}
+
 				$update_count++;
 			}
 		}
 
 		// write it back to the database
-		$conn->getServer()->saveTable($database, $table_name, $original_table);
-		return tuple($update_count, $original_table);
+		$conn->getServer()->saveTable($database, $table_name, $original_table, $unique_index_refs, $index_refs);
+		return tuple($update_count, $original_table, $unique_index_refs, $index_refs);
+	}
+
+	public static function getIndexRemovalsForRow(
+		vec<Index> $applicable_indexes,
+		arraykey $row_id,
+		row $row,
+	): (vec<(string, arraykey)>, vec<(string, arraykey, arraykey)>) {
+		$unique_index_ref_deletes = vec[];
+		$index_ref_deletes = vec[];
+
+		foreach ($applicable_indexes as $index) {
+			if (C\count($index->fields) === 1) {
+				$index_key = $row[C\firstx($index->fields)] as ?arraykey;
+			} else {
+				$index_key = '';
+				$saw_null = false;
+
+				foreach ($index->fields as $field) {
+					$index_part = $row[$field] as ?arraykey;
+
+					if ($index_part is null) {
+						$saw_null = true;
+						break;
+					}
+
+					$index_key .= $row[$field] as arraykey.'||';
+				}
+
+				if ($saw_null) {
+					$index_key = null;
+				}
+			}
+
+			if ($index_key is null) {
+				continue;
+			}
+
+			if ($index->type === 'UNIQUE') {
+				$unique_index_ref_deletes[] = tuple($index->name, $index_key);
+			} else if ($index->type === 'INDEX') {
+				$index_ref_deletes[] = tuple($index->name, $index_key, $row_id);
+			}
+		}
+
+		return tuple($unique_index_ref_deletes, $index_ref_deletes);
+	}
+
+	public static function getIndexAdditionsForRow(
+		vec<Index> $applicable_indexes,
+		row $row,
+	): (vec<(string, arraykey)>, vec<(string, arraykey)>) {
+		$unique_index_ref_additions = vec[];
+		$index_ref_additions = vec[];
+
+		foreach ($applicable_indexes as $index) {
+			if (C\count($index->fields) === 1) {
+				$index_key = $row[C\firstx($index->fields)] as ?arraykey;
+			} else {
+				$index_key = '';
+				$saw_null = false;
+
+				foreach ($index->fields as $field) {
+					$index_part = $row[$field] as ?arraykey;
+
+					if ($index_part is null) {
+						$saw_null = true;
+						break;
+					}
+
+					$index_key .= $row[$field] as arraykey.'||';
+				}
+
+				if ($saw_null) {
+					$index_key = null;
+				}
+			}
+
+			if ($index_key is null) {
+				continue;
+			}
+
+			if ($index->type === 'UNIQUE') {
+				$unique_index_ref_additions[] = tuple($index->name, $index_key);
+			} else if ($index->type === 'INDEX') {
+				$index_ref_additions[] = tuple($index->name, $index_key);
+			}
+		}
+
+		return tuple($unique_index_ref_additions, $index_ref_additions);
 	}
 }

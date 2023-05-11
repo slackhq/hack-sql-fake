@@ -43,7 +43,7 @@ abstract final class Logger {
 	 *   1 row from cluster1
 	 *
 	 */
-	public static function logResult(string $server, dataset $data, int $rows_affected): void {
+	public static function logResult(string $server, vec<dict<string, mixed>> $data, int $rows_affected): void {
 		if (QueryContext::$verbosity >= Verbosity::RESULTS) {
 			if ($rows_affected > 0) {
 				self::write("{$rows_affected} rows affected\n");
@@ -56,7 +56,7 @@ abstract final class Logger {
 		}
 	}
 
-	private static function formatData(dataset $rows, string $server): string {
+	private static function formatData(vec<dict<string, mixed>> $rows, string $server): string {
 		$count = C\count($rows);
 
 		$tbl_columns = static::formatColumns($rows);
@@ -83,7 +83,7 @@ abstract final class Logger {
 	/**
 	 * Determine maximum string length of column names or values
 	 */
-	protected static function formatColumns(dataset $data): dict<string, int> {
+	protected static function formatColumns(vec<dict<string, mixed>> $data): dict<string, int> {
 
 		$columns = dict[];
 		foreach ($data as $row) {

@@ -39,8 +39,8 @@ final class SelectExpressionTest extends HackTest {
 			dict['id' => 1, 'group_id' => 12345, 'name' => 'name1'],
 			dict['id' => 2, 'group_id' => 12345, 'name' => 'name2'],
 			dict['id' => 3, 'group_id' => 12345, 'name' => 'name3'],
-			dict['id' => 4, 'group_id' => 6, 'name' => 'name3'],
-			dict['id' => 6, 'group_id' => 6, 'name' => 'name3'],
+			dict['id' => 4, 'group_id' => 6, 'name' => 'name4'],
+			dict['id' => 6, 'group_id' => 6, 'name' => 'name5'],
 		]);
 	}
 
@@ -285,8 +285,8 @@ final class SelectExpressionTest extends HackTest {
 		$expected = vec[
 			dict['id' => 1, 'group_id' => 12345, 'name' => 'name1'],
 			dict['id' => 3, 'group_id' => 12345, 'name' => 'name3'],
-			dict['id' => 4, 'group_id' => 6, 'name' => 'name3'],
-			dict['id' => 6, 'group_id' => 6, 'name' => 'name3'],
+			dict['id' => 4, 'group_id' => 6, 'name' => 'name4'],
+			dict['id' => 6, 'group_id' => 6, 'name' => 'name5'],
 		];
 		expect($results->rows())->toBeSame($expected, 'not regexp');
 		$results = await $conn->query("SELECT * FROM table3 WHERE name NOT REGEXP BINARY('[a-z]2')");
@@ -371,8 +371,8 @@ final class SelectExpressionTest extends HackTest {
 		expect($results->rows())->toBeSame(
 			vec[
 				dict['id' => 3, 'group_id' => 12345, 'name' => 'name3'],
-				dict['id' => 4, 'group_id' => 6, 'name' => 'name3'],
-				dict['id' => 6, 'group_id' => 6, 'name' => 'name3'],
+				dict['id' => 4, 'group_id' => 6, 'name' => 'name4'],
+				dict['id' => 6, 'group_id' => 6, 'name' => 'name5'],
 			],
 			'with actual rows',
 		);

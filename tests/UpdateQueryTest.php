@@ -16,8 +16,8 @@ final class UpdateQueryTest extends HackTest {
 			dict['id' => 1, 'group_id' => 12345, 'name' => 'updated'],
 			dict['id' => 2, 'group_id' => 12345, 'name' => 'name2'],
 			dict['id' => 3, 'group_id' => 12345, 'name' => 'name3'],
-			dict['id' => 4, 'group_id' => 6, 'name' => 'name3'],
-			dict['id' => 6, 'group_id' => 6, 'name' => 'name3'],
+			dict['id' => 4, 'group_id' => 6, 'name' => 'name4'],
+			dict['id' => 6, 'group_id' => 6, 'name' => 'name5'],
 		]);
 	}
 
@@ -26,8 +26,8 @@ final class UpdateQueryTest extends HackTest {
 		await $conn->query("UPDATE table3 set name=CONCAT(name, id, 'updated'), group_id = 13 WHERE group_id=6");
 		$results = await $conn->query('SELECT * FROM table3 WHERE group_id=13');
 		expect($results->rows())->toBeSame(vec[
-			dict['id' => 4, 'group_id' => 13, 'name' => 'name34updated'],
-			dict['id' => 6, 'group_id' => 13, 'name' => 'name36updated'],
+			dict['id' => 4, 'group_id' => 13, 'name' => 'name44updated'],
+			dict['id' => 6, 'group_id' => 13, 'name' => 'name56updated'],
 		]);
 	}
 
@@ -57,8 +57,8 @@ final class UpdateQueryTest extends HackTest {
 	public async function testQualifiedTable(): Awaitable<void> {
 		$conn = static::$conn as nonnull;
 		$expected = vec[
-			dict['id' => 4, 'group_id' => 13, 'name' => 'name34updated'],
-			dict['id' => 6, 'group_id' => 13, 'name' => 'name36updated'],
+			dict['id' => 4, 'group_id' => 13, 'name' => 'name44updated'],
+			dict['id' => 6, 'group_id' => 13, 'name' => 'name56updated'],
 		];
 		await $conn->query("UPDATE db2.table3 set name=CONCAT(name, id, 'updated'), group_id = 13 WHERE group_id=6");
 		$results = await $conn->query('SELECT * FROM table3 WHERE group_id=13');
@@ -68,8 +68,8 @@ final class UpdateQueryTest extends HackTest {
 	public async function testQualifiedTableBackticks(): Awaitable<void> {
 		$conn = static::$conn as nonnull;
 		$expected = vec[
-			dict['id' => 4, 'group_id' => 13, 'name' => 'name34updated'],
-			dict['id' => 6, 'group_id' => 13, 'name' => 'name36updated'],
+			dict['id' => 4, 'group_id' => 13, 'name' => 'name44updated'],
+			dict['id' => 6, 'group_id' => 13, 'name' => 'name56updated'],
 		];
 		await $conn->query("UPDATE `db2`.`table3` set name=CONCAT(name, id, 'updated'), group_id = 13 WHERE group_id=6");
 		$results = await $conn->query('SELECT * FROM table3 WHERE group_id=13');

@@ -15,8 +15,8 @@ final class DeleteQueryTest extends HackTest {
 		expect($results->rows())->toBeSame(vec[
 			dict['id' => 2, 'group_id' => 12345, 'name' => 'name2'],
 			dict['id' => 3, 'group_id' => 12345, 'name' => 'name3'],
-			dict['id' => 4, 'group_id' => 6, 'name' => 'name3'],
-			dict['id' => 6, 'group_id' => 6, 'name' => 'name3'],
+			dict['id' => 4, 'group_id' => 6, 'name' => 'name4'],
+			dict['id' => 6, 'group_id' => 6, 'name' => 'name5'],
 		]);
 	}
 
@@ -25,8 +25,8 @@ final class DeleteQueryTest extends HackTest {
 		await $conn->query('DELETE FROM table3 WHERE group_id=12345');
 		$results = await $conn->query('SELECT * FROM table3');
 		expect($results->rows())->toBeSame(vec[
-			dict['id' => 4, 'group_id' => 6, 'name' => 'name3'],
-			dict['id' => 6, 'group_id' => 6, 'name' => 'name3'],
+			dict['id' => 4, 'group_id' => 6, 'name' => 'name4'],
+			dict['id' => 6, 'group_id' => 6, 'name' => 'name5'],
 		]);
 	}
 
@@ -36,8 +36,8 @@ final class DeleteQueryTest extends HackTest {
 		$results = await $conn->query('SELECT * FROM table3');
 		expect($results->rows())->toBeSame(vec[
 			dict['id' => 3, 'group_id' => 12345, 'name' => 'name3'],
-			dict['id' => 4, 'group_id' => 6, 'name' => 'name3'],
-			dict['id' => 6, 'group_id' => 6, 'name' => 'name3'],
+			dict['id' => 4, 'group_id' => 6, 'name' => 'name4'],
+			dict['id' => 6, 'group_id' => 6, 'name' => 'name5'],
 		]);
 	}
 
@@ -47,8 +47,8 @@ final class DeleteQueryTest extends HackTest {
 		$results = await $conn->query('SELECT * FROM table3');
 		expect($results->rows())->toBeSame(vec[
 			dict['id' => 1, 'group_id' => 12345, 'name' => 'name1'],
-			dict['id' => 4, 'group_id' => 6, 'name' => 'name3'],
-			dict['id' => 6, 'group_id' => 6, 'name' => 'name3'],
+			dict['id' => 4, 'group_id' => 6, 'name' => 'name4'],
+			dict['id' => 6, 'group_id' => 6, 'name' => 'name5'],
 		]);
 	}
 
@@ -56,24 +56,24 @@ final class DeleteQueryTest extends HackTest {
 		$conn = static::$conn as nonnull;
 		await $conn->query('DELETE FROM db2.table3 WHERE group_id=12345');
 		$expected = vec[
-			dict['id' => 4, 'group_id' => 6, 'name' => 'name3'],
-			dict['id' => 6, 'group_id' => 6, 'name' => 'name3'],
+			dict['id' => 4, 'group_id' => 6, 'name' => 'name4'],
+			dict['id' => 6, 'group_id' => 6, 'name' => 'name5'],
 		];
 		$results = await $conn->query('SELECT * FROM table3');
 		expect($results->rows())->toBeSame($expected, 'with no backticks');
 
 		await $conn->query('DELETE FROM `db2`.`table3` WHERE group_id=12345');
 		$expected = vec[
-			dict['id' => 4, 'group_id' => 6, 'name' => 'name3'],
-			dict['id' => 6, 'group_id' => 6, 'name' => 'name3'],
+			dict['id' => 4, 'group_id' => 6, 'name' => 'name4'],
+			dict['id' => 6, 'group_id' => 6, 'name' => 'name5'],
 		];
 		$results = await $conn->query('SELECT * FROM table3');
 		expect($results->rows())->toBeSame($expected, 'with backticks');
 
 		await $conn->query('DELETE FROM `db2`.table3 WHERE group_id=12345');
 		$expected = vec[
-			dict['id' => 4, 'group_id' => 6, 'name' => 'name3'],
-			dict['id' => 6, 'group_id' => 6, 'name' => 'name3'],
+			dict['id' => 4, 'group_id' => 6, 'name' => 'name4'],
+			dict['id' => 6, 'group_id' => 6, 'name' => 'name5'],
 		];
 		$results = await $conn->query('SELECT * FROM table3');
 		expect($results->rows())->toBeSame($expected, 'with partial backticks because why not');
@@ -86,8 +86,8 @@ final class DeleteQueryTest extends HackTest {
 		expect($results->rows())->toBeSame(vec[
 			dict['id' => 2, 'group_id' => 12345, 'name' => 'name2'],
 			dict['id' => 3, 'group_id' => 12345, 'name' => 'name3'],
-			dict['id' => 4, 'group_id' => 6, 'name' => 'name3'],
-			dict['id' => 6, 'group_id' => 6, 'name' => 'name3'],
+			dict['id' => 4, 'group_id' => 6, 'name' => 'name4'],
+			dict['id' => 6, 'group_id' => 6, 'name' => 'name5'],
 		]);
 	}
 

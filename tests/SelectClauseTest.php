@@ -271,8 +271,6 @@ final class SelectClauseTest extends HackTest {
 			dict['id' => 1, 'group_id' => 12345],
 			dict['id' => 2, 'group_id' => 12345],
 			dict['id' => 3, 'group_id' => 12345],
-			dict['id' => 4, 'group_id' => 6],
-			dict['id' => 6, 'group_id' => 6],
 		]);
 	}
 }

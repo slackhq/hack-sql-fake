@@ -55,7 +55,7 @@ final class SelectQuery extends Query {
 			// FROM clause handling - builds a data set including extracting rows from tables, applying joins
 			$this->applyFrom($conn)
 			// WHERE caluse - filter out any rows that don't match it
-			|> $this->applyWhere($conn, $$)
+			|> $this->applyWhere($conn, $$[0])
 			// GROUP BY clause - may group the rows if necessary. all clauses after this need to know how to handled both grouped and ungrouped inputs
 			|> $this->applyGroupBy($conn, $$)
 			// HAVING clause, filter out any rows not matching it
@@ -74,14 +74,14 @@ final class SelectQuery extends Query {
 
 	/**
 	 * The FROM clause of the query gets processed first, retrieving data from tables, executing subqueries, and handling joins
-	 * This is also where we build up the $columns list which is commonly used throughout the entire library to map column references to indexes in this dataset
+	 * This is also where we build up the $columns list which is commonly used throughout the entire library to map column references to index_refs in this dataset
 	 */
-	protected function applyFrom(AsyncMysqlConnection $conn): dataset {
+	protected function applyFrom(AsyncMysqlConnection $conn): (dataset, unique_index_refs, index_refs, vec<Index>) {
 
 		$from = $this->fromClause;
 		if ($from === null) {
 			// we put one empty row when there is no FROM so that queries like "SELECT 1" will return a row
-			return vec[dict[]];
+			return tuple(dict[0 => dict[]], dict[], dict[], vec[]);
 		}
 
 		return $from->process($conn, $this->sql);
@@ -109,7 +109,7 @@ final class SelectQuery extends Query {
 				$grouped_data[$hash][(string)$count] = $row;
 			}
 
-			$data = vec($grouped_data);
+			$data = dict($grouped_data);
 		} else {
 			$found_aggregate = false;
 			foreach ($select_expressions as $expr) {
@@ -122,7 +122,7 @@ final class SelectQuery extends Query {
 			// if we have an aggregate function in the select clause but no group by, do an implicit group that puts all rows in one grouping
 			// this makes things like "SELECT COUNT(*) FROM mytable" work
 			if ($found_aggregate) {
-				return vec[Dict\map_keys($data, $k ==> (string)$k)];
+				return dict[0 => Dict\map_keys($data, $k ==> (string)$k)];
 			}
 		}
 
@@ -137,7 +137,7 @@ final class SelectQuery extends Query {
 	protected function applyHaving(AsyncMysqlConnection $conn, dataset $data): dataset {
 		$havingClause = $this->havingClause;
 		if ($havingClause is nonnull) {
-			return Vec\filter($data, $row ==> (bool)$havingClause->evaluate($row, $conn));
+			return Dict\filter($data, $row ==> (bool)$havingClause->evaluate($row, $conn));
 		}
 
 		return $data;
@@ -157,10 +157,10 @@ final class SelectQuery extends Query {
 
 		$order_by_expressions = $this->orderBy ?? vec[];
 
-		$out = vec[];
+		$out = dict[];
 
 		// ok now you got that filter, let's do the formatting
-		foreach ($data as $row) {
+		foreach ($data as $key => $row) {
 			$formatted_row = dict[];
 
 			foreach ($this->selectExpressions as $expr) {
@@ -221,11 +221,11 @@ final class SelectQuery extends Query {
 				$formatted_row[$name] ??= $val;
 			}
 
-			$out[] = $formatted_row;
+			$out[$key] = $formatted_row;
 		}
 
 		if (C\contains_key($this->options, 'DISTINCT')) {
-			return Vec\unique_by($out, (row $row): string ==> Str\join(Vec\map($row, $col ==> (string)$col), '-'));
+			return Dict\unique_by($out, (row $row): string ==> Str\join(Vec\map($row, $col ==> (string)$col), '-'));
 		}
 
 		return $out;
@@ -268,7 +268,7 @@ final class SelectQuery extends Query {
 		}
 
 		// remove the fields we don't want from each row
-		return Vec\map($data, $row ==> Dict\filter_keys($row, $field ==> !C\contains_key($remove_fields, $field)));
+		return Dict\map($data, $row ==> Dict\filter_keys($row, $field ==> !C\contains_key($remove_fields, $field)));
 	}
 
 	/**
@@ -287,19 +287,19 @@ final class SelectQuery extends Query {
 			switch ($sub['type']) {
 				case MultiOperand::UNION:
 					// contact the results, then get unique rows by converting all fields to string and comparing a joined-up representation
-					$data = Vec\concat($data, $subquery_results) |> Vec\unique_by($$, $row_encoder);
+					$data = Vec\concat($data, $subquery_results) |> Dict\unique_by($$, $row_encoder);
 					break;
 				case MultiOperand::UNION_ALL:
 					// just concatenate with no uniqueness
-					$data = Vec\concat($data, $subquery_results);
+					$data = Vec\concat($data, $subquery_results) |> dict($$);
 					break;
 				case MultiOperand::INTERSECT:
 					// there's no Vec\intersect_by currently
 					$encoded_data = Keyset\map($data, $row_encoder);
-					$data = Vec\filter($subquery_results, $row ==> C\contains_key($encoded_data, $row_encoder($row)));
+					$data = Dict\filter($subquery_results, $row ==> C\contains_key($encoded_data, $row_encoder($row)));
 					break;
 				case MultiOperand::EXCEPT:
-					$data = Vec\diff_by($data, $subquery_results, $row_encoder);
+					$data = dict(Vec\diff_by($data, $subquery_results, $row_encoder));
 					break;
 			}
 		}
