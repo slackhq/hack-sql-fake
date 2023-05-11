@@ -45,11 +45,6 @@ final class JSONFunctionExpression extends BaseFunctionExpression {
 		throw new SQLFakeRuntimeException('Function '.$this->functionName.' not implemented yet');
 	}
 
-	<<__Override>>
-	public function getIndexCandidates(): ?dict<string, mixed> {
-		return null;
-	}
-
 	private function sqlJSONValid(row $row, AsyncMysqlConnection $conn): ?bool {
 		$row = $this->maybeUnrollGroupedDataset($row);
 		$args = $this->args;

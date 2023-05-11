@@ -55,7 +55,7 @@ final class SelectQuery extends Query {
 			// FROM clause handling - builds a data set including extracting rows from tables, applying joins
 			$this->applyFrom($conn)
 			// WHERE caluse - filter out any rows that don't match it
-			|> $this->applyWhere($conn, $$[0], $$[1], $$[2], $$[3])
+			|> $this->applyWhere($conn, $$[0])
 			// GROUP BY clause - may group the rows if necessary. all clauses after this need to know how to handled both grouped and ungrouped inputs
 			|> $this->applyGroupBy($conn, $$)
 			// HAVING clause, filter out any rows not matching it

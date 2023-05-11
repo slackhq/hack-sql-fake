@@ -17,7 +17,7 @@ final class DeleteQuery extends Query {
 
 		Metrics::trackQuery(QueryType::DELETE, $conn->getServer()->name, $table_name, $this->sql);
 
-		return $this->applyWhere($conn, $data[0], $data[1], $data[2], $schema?->indexes)
+		return $this->applyWhere($conn, $data[0])
 			|> $this->applyOrderBy($conn, $$)
 			|> $this->applyLimit($$)
 			|> $this->applyDelete($conn, $database, $table_name, $$, $data[0], $data[1], $data[2], $schema);

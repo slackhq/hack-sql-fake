@@ -14,7 +14,7 @@ final class UpdateQuery extends Query {
 		$schema = QueryContext::getSchema($database, $tableName);
 
 		list($rows_affected, $_, $_, $_) =
-			$this->applyWhere($conn, $data, $unique_index_refs, $index_refs, $schema?->indexes)
+			$this->applyWhere($conn, $data)
 			|> $this->applyOrderBy($conn, $$)
 			|> $this->applyLimit($$)
 			|> $this->applySet(

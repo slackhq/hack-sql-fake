@@ -303,21 +303,6 @@ final class BinaryOperatorExpression extends Expression {
 		}
 	}
 
-	<<__Override>>
-	public function getIndexCandidates(): ?dict<string, mixed> {
-		$op = $this->operator;
-		if ($op === null) {
-			// an operator should only be in this state in the middle of parsing, never when evaluating
-			throw new SQLFakeRuntimeException('Attempted to evaluate BinaryOperatorExpression with empty operator');
-		}
-
-		if ($this->negated) {
-			return null;
-		}
-
-		return self::getColumnNamesFromBinop($this);
-	}
-
 	private static function getColumnNamesFromBinop(BinaryOperatorExpression $expr): dict<string, mixed> {
 		$column_names = dict[];
 

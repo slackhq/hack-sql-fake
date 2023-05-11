@@ -77,11 +77,6 @@ final class ColumnExpression extends Expression {
 		}
 	}
 
-	<<__Override>>
-	public function getIndexCandidates(): ?dict<string, mixed> {
-		return null;
-	}
-
 	/**
 	 * for use in ORDER BY... allow evaluating the expression
 	 * to fall through to the full row if the column is not found fully qualified.
