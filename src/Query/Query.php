@@ -293,11 +293,20 @@ abstract class Query {
 			$set_clauses[] = shape('column' => $column, 'expression' => $right);
 		}
 
+		$primary_key_columns = $table_schema?->getPrimaryKeyColumns() ?? keyset[];
+		$primary_key_changed = false;
+
+		foreach ($set_clauses as $clause) {
+			if (C\contains_key($primary_key_columns, $clause['column'])) {
+				$primary_key_changed = true;
+			}
+		}
+
 		$applicable_indexes = vec[];
 
 		if ($table_schema is nonnull) {
 			foreach ($table_schema->indexes as $index) {
-				if (Keyset\intersect($index->fields, $columns) !== keyset[]) {
+				if ($primary_key_changed || Keyset\intersect($index->fields, $columns) !== keyset[]) {
 					$applicable_indexes[] = $index;
 				}
 			}
@@ -320,11 +329,8 @@ abstract class Query {
 				}
 			}
 
-			list($unique_index_ref_deletes, $index_ref_deletes) = self::getIndexRemovalsForRow(
-				$applicable_indexes,
-				$row_id,
-				$row,
-			);
+			list($unique_index_ref_deletes, $index_ref_deletes) =
+				self::getIndexRemovalsForRow($applicable_indexes, $row_id, $row);
 
 			foreach ($set_clauses as $clause) {
 				$existing_value = $row[$clause['column']] ?? null;
@@ -362,10 +368,8 @@ abstract class Query {
 					}
 				}
 
-				list($unique_index_ref_additions, $index_ref_additions) = self::getIndexAdditionsForRow(
-					$applicable_indexes,
-					$row,
-				);
+				list($unique_index_ref_additions, $index_ref_additions) =
+					self::getIndexAdditionsForRow($applicable_indexes, $row);
 			}
 
 			if ($changes_found) {
