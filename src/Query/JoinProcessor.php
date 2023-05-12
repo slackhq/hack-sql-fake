@@ -14,15 +14,16 @@ abstract final class JoinProcessor {
 
 	public static function process(
 		AsyncMysqlConnection $conn,
-		dataset $left_dataset,
-		dataset $right_dataset,
+		table_data $left_dataset,
+		table_data $right_dataset,
 		string $right_table_name,
 		JoinType $join_type,
 		?JoinOperator $_ref_type,
 		?Expression $ref_clause,
 		?TableSchema $right_schema,
-	): dataset {
-
+		vec<Index> $left_indexes,
+		vec<Index> $right_indexes,
+	): table_data {
 		// MySQL supports JOIN (inner), LEFT OUTER JOIN, RIGHT OUTER JOIN, and implicitly CROSS JOIN (which uses commas), NATURAL
 		// conditions can be specified with ON <expression> or with USING (<columnlist>)
 		// does not support FULL OUTER JOIN
@@ -36,8 +37,8 @@ abstract final class JoinProcessor {
 		// instead of evaluating the same expressions over and over again in nested loops, we can optimize this for a more efficient algorithm
 		// this is somewhat experimental and different merge strategies could be applied in more situations in the future
 		if (
-			C\count($left_dataset) > 5 &&
-			C\count($right_dataset) > 5 &&
+			C\count($left_dataset[0]) > 5 &&
+			C\count($right_dataset[0]) > 5 &&
 			$filter is BinaryOperatorExpression &&
 			$filter->left is ColumnExpression &&
 			$filter->right is ColumnExpression &&
@@ -53,19 +54,29 @@ abstract final class JoinProcessor {
 				$_ref_type,
 				$filter,
 				$right_schema,
+				$left_indexes,
+				$right_indexes,
 			);
 		}
+
+		$left_mappings = dict[];
+		$right_mappings = dict[];
 
 		switch ($join_type) {
 			case JoinType::JOIN:
 			case JoinType::STRAIGHT:
 				// straight join is just a query planner optimization of INNER JOIN,
 				// and it is actually what we are doing here anyway
-				foreach ($left_dataset as $row) {
-					foreach ($right_dataset as $r) {
+				foreach ($left_dataset[0] as $left_row_id => $row) {
+					foreach ($right_dataset[0] as $right_row_id => $r) {
 						$candidate_row = Dict\merge($row, $r);
 						if ((bool)$filter->evaluate($candidate_row, $conn)) {
 							$out[] = $candidate_row;
+							$insert_id = C\count($out) - 1;
+							$left_mappings[$left_row_id] ??= keyset[];
+							$left_mappings[$left_row_id][] = $insert_id;
+							$right_mappings[$right_row_id] ??= keyset[];
+							$right_mappings[$right_row_id][] = $insert_id;
 						}
 					}
 				}
@@ -81,12 +92,17 @@ abstract final class JoinProcessor {
 					}
 				}
 
-				foreach ($left_dataset as $row) {
+				foreach ($left_dataset[0] as $left_row_id => $row) {
 					$any_match = false;
-					foreach ($right_dataset as $r) {
+					foreach ($right_dataset[0] as $right_row_id => $r) {
 						$candidate_row = Dict\merge($row, $r);
 						if ((bool)$filter->evaluate($candidate_row, $conn)) {
 							$out[] = $candidate_row;
+							$insert_id = C\count($out) - 1;
+							$left_mappings[$left_row_id] ??= keyset[];
+							$left_mappings[$left_row_id][] = $insert_id;
+							$right_mappings[$right_row_id] ??= keyset[];
+							$right_mappings[$right_row_id][] = $insert_id;
 							$any_match = true;
 						}
 					}
@@ -114,13 +130,18 @@ abstract final class JoinProcessor {
 					}
 				}
 
-				foreach ($right_dataset as $raw) {
+				foreach ($right_dataset[0] as $left_row_id => $raw) {
 					$any_match = false;
-					foreach ($left_dataset as $row) {
+					foreach ($left_dataset[0] as $right_row_id => $row) {
 						$candidate_row = Dict\merge($row, $raw);
 						if ((bool)$filter->evaluate($candidate_row, $conn)) {
 							$out[] = $candidate_row;
 							$any_match = true;
+							$insert_id = C\count($out) - 1;
+							$left_mappings[$left_row_id] ??= keyset[];
+							$left_mappings[$left_row_id][] = $insert_id;
+							$right_mappings[$right_row_id] ??= keyset[];
+							$right_mappings[$right_row_id][] = $insert_id;
 						}
 					}
 
@@ -131,30 +152,49 @@ abstract final class JoinProcessor {
 				}
 				break;
 			case JoinType::CROSS:
-				foreach ($left_dataset as $row) {
-					foreach ($right_dataset as $r) {
+				foreach ($left_dataset[0] as $left_row_id => $row) {
+					foreach ($right_dataset[0] as $right_row_id => $r) {
 						$out[] = Dict\merge($row, $r);
+						$insert_id = C\count($out) - 1;
+						$left_mappings[$left_row_id] ??= keyset[];
+						$left_mappings[$left_row_id][] = $insert_id;
+						$right_mappings[$right_row_id] ??= keyset[];
+						$right_mappings[$right_row_id][] = $insert_id;
 					}
 				}
 				break;
 			case JoinType::NATURAL:
 				// unlike other join filters this one has to be built at runtime, using the list of columns that exists between the two tables
 				// for each column in the target table, see if there is a matching column in the rest of the data set. if so, make a filter that they must be equal.
-				$filter = self::buildNaturalJoinFilter($left_dataset, $right_dataset);
+				$filter = self::buildNaturalJoinFilter($left_dataset[0], $right_dataset[0]);
 
 				// now basically just do a regular join
-				foreach ($left_dataset as $row) {
-					foreach ($right_dataset as $r) {
+				foreach ($left_dataset[0] as $left_row_id => $row) {
+					foreach ($right_dataset[0] as $right_row_id => $r) {
 						$candidate_row = Dict\merge($row, $r);
 						if ((bool)$filter->evaluate($candidate_row, $conn)) {
 							$out[] = $candidate_row;
+							$insert_id = C\count($out) - 1;
+							$left_mappings[$left_row_id] ??= keyset[];
+							$left_mappings[$left_row_id][] = $insert_id;
+							$right_mappings[$right_row_id] ??= keyset[];
+							$right_mappings[$right_row_id][] = $insert_id;
 						}
 					}
 				}
 				break;
 		}
 
-		return dict($out);
+		$index_refs = self::getIndexRefsFromMappings(
+			$left_dataset,
+			$right_dataset,
+			$left_mappings,
+			$right_mappings,
+			$left_indexes,
+			$right_indexes,
+		);
+
+		return tuple(dict($out), dict[], $index_refs);
 	}
 
 	/**
@@ -180,7 +220,9 @@ abstract final class JoinProcessor {
 
 		// MySQL actually doesn't throw if there's no matching columns, but I think we can take the liberty to assume it's not what you meant to do and throw here
 		if ($filter === null) {
-			throw new SQLFakeParseException('NATURAL join keyword was used with tables that do not share any column names');
+			throw new SQLFakeParseException(
+				'NATURAL join keyword was used with tables that do not share any column names',
+			);
 		}
 
 		return $filter;
@@ -195,10 +237,12 @@ abstract final class JoinProcessor {
 		string $right_column,
 	): BinaryOperatorExpression {
 
-		$left =
-			new ColumnExpression(shape('type' => TokenType::IDENTIFIER, 'value' => $left_column, 'raw' => $left_column));
-		$right =
-			new ColumnExpression(shape('type' => TokenType::IDENTIFIER, 'value' => $right_column, 'raw' => $right_column));
+		$left = new ColumnExpression(
+			shape('type' => TokenType::IDENTIFIER, 'value' => $left_column, 'raw' => $left_column),
+		);
+		$right = new ColumnExpression(
+			shape('type' => TokenType::IDENTIFIER, 'value' => $right_column, 'raw' => $right_column),
+		);
 
 		// making a binary expression ensuring those two tokens are equal
 		$expr = new BinaryOperatorExpression($left, /* $negated */ false, Operator::EQUALS, $right);
@@ -229,17 +273,19 @@ abstract final class JoinProcessor {
 	 */
 	private static function processHashJoin(
 		AsyncMysqlConnection $conn,
-		dataset $left_dataset,
-		dataset $right_dataset,
+		table_data $left_dataset,
+		table_data $right_dataset,
 		string $right_table_name,
 		JoinType $join_type,
 		?JoinOperator $_ref_type,
 		BinaryOperatorExpression $filter,
 		?TableSchema $right_schema,
-	): dataset {
+		vec<Index> $left_indexes,
+		vec<Index> $right_indexes,
+	): table_data {
 		$left = $filter->left as ColumnExpression;
 		$right = $filter->right as ColumnExpression;
-		if ($left->tableName() === $right_table_name) {
+		if ($left->tableName === $right_table_name) {
 			// filter order may not match table order
 			// if the left filter is for the right table, swap the filters
 			list($left, $right) = vec[$right, $left];
@@ -249,21 +295,29 @@ abstract final class JoinProcessor {
 		// evaluate the column expression once per row in the right dataset first, building up a temporary table that groups all rows together for each value
 		// multiple rows may have the same value. their ids in the original dataset are stored in a keyset
 		$right_temp_table = dict[];
-		foreach ($right_dataset as $k => $r) {
+		foreach ($right_dataset[0] as $k => $r) {
 			$value = $right->evaluate($r, $conn);
 			$value = self::coerceToArrayKey($value);
 			$right_temp_table[$value] ??= keyset[];
 			$right_temp_table[$value][] = $k;
 		}
 
+		$left_mappings = dict[];
+		$right_mappings = dict[];
+
 		switch ($join_type) {
 			case JoinType::JOIN:
 			case JoinType::STRAIGHT:
-				foreach ($left_dataset as $row) {
+				foreach ($left_dataset[0] as $left_row_id => $row) {
 					$value = $left->evaluate($row, $conn) |> static::coerceToArrayKey($$);
 					// find all rows matching this value in the right temp table and get their full rows
 					foreach ($right_temp_table[$value] ?? keyset[] as $k) {
-						$out[] = Dict\merge($row, $right_dataset[$k]);
+						$out[] = Dict\merge($row, $right_dataset[0][$k]);
+						$insert_id = C\count($out) - 1;
+						$left_mappings[$left_row_id] ??= keyset[];
+						$left_mappings[$left_row_id][] = $insert_id;
+						$right_mappings[$k] ??= keyset[];
+						$right_mappings[$k][] = $insert_id;
 					}
 				}
 				break;
@@ -278,12 +332,17 @@ abstract final class JoinProcessor {
 					}
 				}
 
-				foreach ($left_dataset as $row) {
+				foreach ($left_dataset[0] as $left_row_id => $row) {
 					$any_match = false;
 					$value = $left->evaluate($row, $conn) |> static::coerceToArrayKey($$);
-					foreach ($right_dataset as $r) {
+					foreach ($right_dataset[0] as $r) {
 						foreach ($right_temp_table[$value] ?? keyset[] as $k) {
-							$out[] = Dict\merge($row, $right_dataset[$k]);
+							$out[] = Dict\merge($row, $right_dataset[0][$k]);
+							$insert_id = C\count($out) - 1;
+							$left_mappings[$left_row_id] ??= keyset[];
+							$left_mappings[$left_row_id][] = $insert_id;
+							$right_mappings[$k] ??= keyset[];
+							$right_mappings[$k][] = $insert_id;
 							$any_match = true;
 						}
 					}
@@ -297,12 +356,97 @@ abstract final class JoinProcessor {
 						} else {
 							$out[] = $row;
 						}
+
+						$insert_id = C\count($out) - 1;
+						$left_mappings[$left_row_id] ??= keyset[];
+						$left_mappings[$left_row_id][] = $insert_id;
 					}
 				}
 				break;
 			default:
 				invariant_violation('unreachable');
 		}
-		return dict($out);
+
+		$index_refs = self::getIndexRefsFromMappings(
+			$left_dataset,
+			$right_dataset,
+			$left_mappings,
+			$right_mappings,
+			$left_indexes,
+			$right_indexes,
+		);
+
+		return tuple(dict($out), dict[], $index_refs);
+	}
+
+	private static function getIndexRefsFromMappings(
+		table_data $left_dataset,
+		table_data $right_dataset,
+		dict<arraykey, keyset<int>> $left_mappings,
+		dict<arraykey, keyset<int>> $right_mappings,
+		vec<Index> $left_indexes,
+		vec<Index> $right_indexes,
+	): index_refs {
+		$index_refs = dict[];
+
+		foreach ($left_mappings as $left_row_id => $new_pks) {
+			foreach ($left_indexes as $left_index) {
+				if (Str\ends_with($left_index->name, '.PRIMARY')) {
+					$index_refs[$left_index->name] ??= dict[];
+					$index_refs[$left_index->name][$left_row_id] = $new_pks;
+				}
+			}
+		}
+
+		foreach ($right_mappings as $right_row_id => $new_pks) {
+			foreach ($right_indexes as $right_index) {
+				if (Str\ends_with($right_index->name, '.PRIMARY')) {
+					$index_refs[$right_index->name] ??= dict[];
+					$index_refs[$right_index->name][$right_row_id] = $new_pks;
+				}
+			}
+		}
+
+		foreach ($left_dataset[1] as $left_index_name => $left_index_refs) {
+			foreach ($left_index_refs as $left_index_key => $left_index_pk) {
+				if (isset($left_mappings[$left_index_pk])) {
+					$index_refs[$left_index_name] ??= dict[];
+					$index_refs[$left_index_name][$left_index_key] = $left_mappings[$left_index_pk];
+				}
+			}
+		}
+
+		foreach ($left_dataset[2] as $left_index_name => $left_index_refs) {
+			foreach ($left_index_refs as $left_index_key => $left_index_pks) {
+				foreach ($left_index_pks as $left_index_pk) {
+					if (isset($left_mappings[$left_index_pk])) {
+						$index_refs[$left_index_name] ??= dict[];
+						$index_refs[$left_index_name][$left_index_key] = $left_mappings[$left_index_pk];
+					}
+				}
+			}
+		}
+
+		foreach ($right_dataset[1] as $right_index_name => $right_index_refs) {
+			foreach ($right_index_refs as $right_index_key => $right_index_pk) {
+				if (isset($right_mappings[$right_index_pk])) {
+					$index_refs[$right_index_name] ??= dict[];
+					$index_refs[$right_index_name][$right_index_key] = $right_mappings[$right_index_pk];
+				}
+			}
+		}
+
+		foreach ($right_dataset[2] as $right_index_name => $right_index_refs) {
+			foreach ($right_index_refs as $right_index_key => $right_index_pks) {
+				foreach ($right_index_pks as $right_index_pk) {
+					if (isset($right_mappings[$right_index_pk])) {
+						$index_refs[$right_index_name] ??= dict[];
+						$index_refs[$right_index_name][$right_index_key] = $right_mappings[$right_index_pk];
+					}
+				}
+			}
+		}
+
+		return $index_refs;
 	}
 }

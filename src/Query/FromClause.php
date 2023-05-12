@@ -2,7 +2,7 @@
 
 namespace Slack\SQLFake;
 
-use namespace HH\Lib\{C, Vec};
+use namespace HH\Lib\{C, Dict, Keyset, Vec};
 
 /**
  * Represents the entire FROM clause of a query,
@@ -37,16 +37,21 @@ final class FromClause {
 	public function process(
 		AsyncMysqlConnection $conn,
 		string $sql,
-	): (dataset, unique_index_refs, index_refs, vec<Index>) {
+	): (dataset, unique_index_refs, index_refs, vec<Index>, dict<string, Column>) {
 
 		$data = dict[];
 		$is_first_table = true;
 		$unique_index_refs = dict[];
 		$index_refs = dict[];
 		$indexes = vec[];
+		$columns = dict[];
 
 		foreach ($this->tables as $table) {
 			$schema = null;
+			$new_unique_index_refs = dict[];
+			$new_index_refs = dict[];
+			$new_indexes = vec[];
+
 			if (Shapes::keyExists($table, 'subquery')) {
 				$res = $table['subquery']->evaluate(dict[], $conn);
 				invariant($res is KeyedContainer<_, _>, 'evaluated result of SubqueryExpression must be dataset');
@@ -60,14 +65,48 @@ final class FromClause {
 				$name = $table['alias'] ?? $table_name;
 				$schema = QueryContext::getSchema($database, $table_name);
 				if ($schema === null && QueryContext::$strictSchemaMode) {
-					throw new SQLFakeRuntimeException("Table $table_name not found in schema and strict mode is enabled");
+					throw new SQLFakeRuntimeException(
+						"Table $table_name not found in schema and strict mode is enabled",
+					);
 				}
 
-				list($res, $unique_index_refs, $index_refs) =
+				list($res, $new_unique_index_refs, $new_index_refs) =
 					$conn->getServer()->getTableData($database, $table_name) ?: tuple(dict[], dict[], dict[]);
-				if ($schema is nonnull) {
-					$indexes = Vec\concat($indexes, $schema->indexes);
+
+				if (C\count($this->tables) > 1) {
+					$new_unique_index_refs = Dict\map_keys($new_unique_index_refs, $k ==> $name.'.'.$k);
+					$new_index_refs = Dict\map_keys($new_index_refs, $k ==> $name.'.'.$k);
 				}
+
+				if ($schema is nonnull) {
+					if (C\count($this->tables) > 1) {
+						$new_indexes = Vec\map(
+							$schema->indexes,
+							$index ==> new Index(
+								$name.'.'.$index->name,
+								'INDEX',
+								Keyset\map($index->fields, $k ==> $name.'.'.$k),
+							),
+						);
+					} else {
+						$new_indexes = $schema->indexes;
+					}
+
+					$new_columns = dict[];
+
+					foreach ($schema->fields as $field) {
+						if (C\count($this->tables) > 1) {
+							$new_columns[$name.'.'.$field->name] = $field;
+						} else {
+							$new_columns[$field->name] = $field;
+						}
+					}
+
+					$columns = Dict\merge($columns, $new_columns);
+				}
+
+				$unique_index_refs = Dict\merge($unique_index_refs, $new_unique_index_refs);
+				$index_refs = Dict\merge($index_refs, $new_index_refs);
 			}
 
 			$new_dataset = dict[];
@@ -113,19 +152,23 @@ final class FromClause {
 
 			if ($data || !$is_first_table) {
 				// do the join here. based on join type, pass in $data and $res to filter. and aliases
-				$data = JoinProcessor::process(
+				list($data, $unique_index_refs, $index_refs) = JoinProcessor::process(
 					$conn,
-					$data,
-					$new_dataset,
+					tuple($data, $unique_index_refs, $index_refs),
+					tuple($new_dataset, $new_unique_index_refs, $new_index_refs),
 					$name,
 					$table['join_type'],
 					$table['join_operator'] ?? null,
 					$table['join_expression'] ?? null,
 					$schema,
+					$indexes,
+					$new_indexes,
 				);
 			} else {
 				$data = $new_dataset;
 			}
+
+			$indexes = Vec\concat($indexes, $new_indexes);
 
 			if ($is_first_table) {
 				Metrics::trackQuery(QueryType::SELECT, $conn->getServer()->name, $name, $sql);
@@ -133,6 +176,6 @@ final class FromClause {
 			}
 		}
 
-		return tuple($data, $unique_index_refs, $index_refs, $indexes);
+		return tuple($data, $unique_index_refs, $index_refs, $indexes, $columns);
 	}
 }

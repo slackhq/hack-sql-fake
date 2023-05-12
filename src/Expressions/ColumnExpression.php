@@ -8,7 +8,7 @@ use namespace HH\Lib\{C, Str};
 final class ColumnExpression extends Expression {
 	private string $columnExpression;
 	private string $columnName;
-	private ?string $tableName;
+	public ?string $tableName;
 	private ?string $databaseName;
 	private bool $allowFallthrough = false;
 
@@ -88,10 +88,6 @@ final class ColumnExpression extends Expression {
 	<<__Override>>
 	public function isWellFormed(): bool {
 		return true;
-	}
-
-	public function tableName(): ?string {
-		return $this->tableName;
 	}
 
 	public function prefixColumnExpression(string $prefix): void {

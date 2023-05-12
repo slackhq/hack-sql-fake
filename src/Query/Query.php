@@ -48,7 +48,7 @@ abstract class Query {
 		// allow all column expressions to fall through to the full row
 		foreach ($order_by as $rule) {
 			$expr = $rule['expression'];
-			if ($expr is ColumnExpression && $expr->tableName() === null) {
+			if ($expr is ColumnExpression && $expr->tableName === null) {
 				$expr->allowFallthrough();
 			}
 		}
