@@ -26,6 +26,10 @@ abstract class Query {
 	protected function applyWhere(
 		AsyncMysqlConnection $conn,
 		dataset $data,
+		unique_index_refs $unique_index_refs,
+		index_refs $index_refs,
+		?dict<string, Column> $columns,
+		?vec<Index> $indexes,
 	): dataset {
 		$where = $this->whereClause;
 		if ($where === null) {
@@ -33,7 +37,101 @@ abstract class Query {
 			return $data;
 		}
 
+		if ($columns is nonnull && $indexes) {
+			$candidates = $where->getIndexCandidates($columns);
+			if ($candidates) {
+				$candidate_keys = Keyset\keys($candidates);
+				$matched_fields = 0;
+				$matched_index = null;
+				foreach ($indexes as $index) {
+					if ($index->fields === $candidate_keys) {
+						$matched_index = $index;
+						$matched_fields = C\count($index->fields);
+						break;
+					}
+
+					if (Keyset\intersect($candidate_keys, $index->fields) === $index->fields) {
+						$index_field_count = C\count($index->fields);
+						if ($index_field_count > $matched_fields) {
+							$matched_fields = $index_field_count;
+							$matched_index = $index;
+						}
+					}
+				}
+
+				if ($matched_index) {
+					if ($matched_fields === 1) {
+						$matched_field = vec($matched_index->fields)[0];
+						$candidate_key = $candidates[$matched_field] as arraykey;
+					} else {
+						$candidate_key = '';
+						foreach ($matched_index->fields as $matched_field) {
+							$candidate_key .= ($candidates[$matched_field] as arraykey).'||';
+						}
+					}
+
+					$data = self::filterDataWithMatchedIndex(
+						$data,
+						$unique_index_refs,
+						$index_refs,
+						$matched_index,
+						$candidate_key,
+					);
+				}
+			}
+		}
+
 		return Dict\filter($data, $row ==> (bool)$where->evaluate($row, $conn));
+	}
+
+	private static function filterDataWithMatchedIndex(
+		dataset $data,
+		unique_index_refs $unique_index_refs,
+		index_refs $index_refs,
+		Index $matched_index,
+		arraykey $candidate_key,
+	): dataset {
+		if ($matched_index->type === 'PRIMARY') {
+			if (C\contains_key($data, $candidate_key)) {
+				return dict[
+					$candidate_key => $data[$candidate_key],
+				];
+			}
+
+			return dict[];
+		}
+
+		if ($matched_index->type === 'UNIQUE') {
+			if (C\contains_key($unique_index_refs, $matched_index->name)) {
+				$matched_index_refs = $unique_index_refs[$matched_index->name];
+
+				if (C\contains_key($matched_index_refs, $candidate_key)) {
+					$ref = $matched_index_refs[$candidate_key];
+					if (C\contains_key($data, $ref)) {
+						return dict[
+							$ref => $data[$ref],
+						];
+					}
+				}
+			}
+
+			return dict[];
+		}
+
+		if ($matched_index->type === 'INDEX') {
+			$matched_index_refs = $index_refs[$matched_index->name] ?? null;
+
+			if ($matched_index_refs is nonnull) {
+				$refs = $matched_index_refs[$candidate_key] ?? null;
+				if ($refs is nonnull) {
+					return Dict\filter_with_key($data, ($row_id, $_) ==> C\contains_key($refs, $row_id));
+				}
+			}
+
+			return dict[];
+		}
+
+		throw new \Exception('Unrecognised index');
 	}
 
 	/**

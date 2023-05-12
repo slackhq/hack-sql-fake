@@ -68,6 +68,11 @@ final class FunctionExpression extends BaseFunctionExpression {
 		}
 	}
 
+	<<__Override>>
+	public function getIndexCandidates(dict<string, Column> $_columns): ?dict<string, mixed> {
+		return null;
+	}
+
 	public function isAggregate(): bool {
 		return C\contains_key(keyset['COUNT', 'SUM', 'MIN', 'MAX', 'AVG'], $this->functionName);
 	}
