@@ -13,8 +13,17 @@ final class UpdateQuery extends Query {
 		Metrics::trackQuery(QueryType::UPDATE, $conn->getServer()->name, $tableName, $this->sql);
 		$schema = QueryContext::getSchema($database, $tableName);
 
+		$columns = null;
+
+		if ($schema?->fields is nonnull) {
+			$columns = dict[];
+			foreach ($schema?->fields as $field) {
+				$columns[$field->name] = $field;
+			}
+		}
+
 		list($rows_affected, $_, $_, $_) =
-			$this->applyWhere($conn, $data)
+			$this->applyWhere($conn, $data, $unique_index_refs, $index_refs, $columns, $schema?->indexes)
 			|> $this->applyOrderBy($conn, $$)
 			|> $this->applyLimit($$)
 			|> $this->applySet(

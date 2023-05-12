@@ -51,6 +51,11 @@ final class BetweenOperatorExpression extends Expression {
 	}
 
 	<<__Override>>
+	public function getIndexCandidates(dict<string, Column> $_columns): ?dict<string, mixed> {
+		return null;
+	}
+
+	<<__Override>>
 	public function negate(): void {
 		$this->negated = true;
 	}

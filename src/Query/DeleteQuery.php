@@ -17,7 +17,16 @@ final class DeleteQuery extends Query {
 
 		Metrics::trackQuery(QueryType::DELETE, $conn->getServer()->name, $table_name, $this->sql);
 
-		return $this->applyWhere($conn, $data[0])
+		$columns = null;
+
+		if ($schema?->fields is nonnull) {
+			$columns = dict[];
+			foreach ($schema?->fields as $field) {
+				$columns[$field->name] = $field;
+			}
+		}
+
+		return $this->applyWhere($conn, $data[0], $data[1], $data[2], $columns, $schema?->indexes)
 			|> $this->applyOrderBy($conn, $$)
 			|> $this->applyLimit($$)
 			|> $this->applyDelete($conn, $database, $table_name, $$, $data[0], $data[1], $data[2], $schema);
@@ -37,19 +46,14 @@ final class DeleteQuery extends Query {
 		?TableSchema $table_schema,
 	): int {
 		$rows_to_delete = Keyset\keys($filtered_rows);
-		$remaining_rows = Dict\filter_with_key(
-			$original_table,
-			($row_num, $_) ==> !C\contains_key($rows_to_delete, $row_num),
-		);
+		$remaining_rows =
+			Dict\filter_with_key($original_table, ($row_num, $_) ==> !C\contains_key($rows_to_delete, $row_num));
 		$rows_affected = C\count($original_table) - C\count($remaining_rows);
 
 		if ($table_schema is nonnull) {
 			foreach ($filtered_rows as $row_id => $row_to_delete) {
-				list($unique_index_ref_deletes, $index_ref_deletes) = self::getIndexRemovalsForRow(
-					$table_schema->indexes,
-					$row_id,
-					$row_to_delete,
-				);
+				list($unique_index_ref_deletes, $index_ref_deletes) =
+					self::getIndexRemovalsForRow($table_schema->indexes, $row_id, $row_to_delete);
 
 				foreach ($unique_index_ref_deletes as list($index_name, $index_key)) {
 					unset($unique_index_refs[$index_name][$index_key]);
