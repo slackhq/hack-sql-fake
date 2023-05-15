@@ -421,7 +421,11 @@ abstract final class JoinProcessor {
 				foreach ($left_index_pks as $left_index_pk) {
 					if (isset($left_mappings[$left_index_pk])) {
 						$index_refs[$left_index_name] ??= dict[];
-						$index_refs[$left_index_name][$left_index_key] = $left_mappings[$left_index_pk];
+						$index_refs[$left_index_name][$left_index_key] ??= keyset[];
+						$index_refs[$left_index_name][$left_index_key] = Keyset\union(
+							$index_refs[$left_index_name][$left_index_key],
+							$left_mappings[$left_index_pk],
+						);
 					}
 				}
 			}
@@ -441,7 +445,11 @@ abstract final class JoinProcessor {
 				foreach ($right_index_pks as $right_index_pk) {
 					if (isset($right_mappings[$right_index_pk])) {
 						$index_refs[$right_index_name] ??= dict[];
-						$index_refs[$right_index_name][$right_index_key] = $right_mappings[$right_index_pk];
+						$index_refs[$right_index_name][$right_index_key] ??= keyset[];
+						$index_refs[$right_index_name][$right_index_key] = Keyset\union(
+							$index_refs[$right_index_name][$right_index_key],
+							$right_mappings[$right_index_pk],
+						);
 					}
 				}
 			}
