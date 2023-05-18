@@ -10,9 +10,8 @@ namespace Slack\SQLFake;
 type row = dict<string, mixed>;
 // vec of rows can be a stored table, a query result set, or an intermediate state for either of those
 type dataset = dict<arraykey, row>;
-type unique_index_refs = dict<string, dict<arraykey, arraykey>>;
-type index_refs = dict<string, dict<arraykey, keyset<arraykey>>>;
-type table_data = (dataset, unique_index_refs, index_refs);
+type index_refs = dict<string, dict<arraykey, mixed>>;
+type table_data = (dataset, index_refs);
 // a database is a collection of named tables
 type database = dict<string, table_data>;
 

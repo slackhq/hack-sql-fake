@@ -4,7 +4,7 @@
 
 namespace Slack\SQLFake;
 
-use namespace HH\Lib\{C, Dict, Regex, Str, Vec};
+use namespace HH\Lib\{C, Regex, Str, Vec};
 
 /**
  * any operator that takes arguments on the left and right side, like +, -, *, AND, OR...
@@ -166,8 +166,9 @@ final class BinaryOperatorExpression extends Expression {
 				}
 			case Operator::GREATER_THAN:
 				if ($as_string) {
-					return
-						(bool)((((Str\compare((string)$l_value, (string)$r_value)) > 0) ? 1 : 0) ^ $this->negatedInt);
+					return (bool)(
+						(((Str\compare((string)$l_value, (string)$r_value)) > 0) ? 1 : 0) ^ $this->negatedInt
+					);
 				} else {
 					return (bool)(((float)$l_value > (float)$r_value) ? 1 : 0 ^ $this->negatedInt);
 				}
@@ -180,8 +181,9 @@ final class BinaryOperatorExpression extends Expression {
 				}
 			case Operator::LESS_THAN:
 				if ($as_string) {
-					return
-						(bool)((((Str\compare((string)$l_value, (string)$r_value)) < 0) ? 1 : 0) ^ $this->negatedInt);
+					return (bool)(
+						(((Str\compare((string)$l_value, (string)$r_value)) < 0) ? 1 : 0) ^ $this->negatedInt
+					);
 				} else {
 					return (bool)(((float)$l_value < (float)$r_value) ? 1 : 0 ^ $this->negatedInt);
 				}
@@ -307,57 +309,6 @@ final class BinaryOperatorExpression extends Expression {
 			default:
 				throw new SQLFakeRuntimeException('Operator '.(string)$this->operator.' not implemented in SQLFake');
 		}
-	}
-
-	<<__Override>>
-	public function getIndexCandidates(dict<string, Column> $columns): ?dict<string, mixed> {
-		$op = $this->operator;
-		if ($op === null) {
-			// an operator should only be in this state in the middle of parsing, never when evaluating
-			throw new SQLFakeRuntimeException('Attempted to evaluate BinaryOperatorExpression with empty operator');
-		}
-
-		if ($this->negated) {
-			return null;
-		}
-
-		return self::getColumnNamesFromBinop($this, $columns);
-	}
-
-	private static function getColumnNamesFromBinop(
-		BinaryOperatorExpression $expr,
-		dict<string, Column> $columns,
-	): dict<string, mixed> {
-		$column_names = dict[];
-
-		if ($expr->operator === Operator::EQUALS) {
-			if ($expr->left is ColumnExpression && $expr->left->name !== '*' && $expr->right is ConstantExpression) {
-				$table_name = $expr->left->tableName;
-				$column_name = $expr->left->name;
-				if ($table_name is nonnull) {
-					$column_name = $table_name.'.'.$column_name;
-				}
-				$value = $expr->right->value;
-				if (isset($columns[$column_name])) {
-					if ($columns[$column_name]->hack_type === 'int') {
-						$value = (int)$value;
-					}
-				}
-				$column_names[$column_name] = $value;
-			}
-		}
-
-		if ($expr->operator === Operator::AND) {
-			if ($expr->left is BinaryOperatorExpression) {
-				$column_names = self::getColumnNamesFromBinop($expr->left, $columns);
-			}
-
-			if ($expr->right is BinaryOperatorExpression) {
-				$column_names = Dict\merge($column_names, self::getColumnNamesFromBinop($expr->right, $columns));
-			}
-		}
-
-		return $column_names;
 	}
 
 	/**

@@ -120,7 +120,6 @@ final class Server {
 		string $dbname,
 		string $name,
 		dataset $rows,
-		unique_index_refs $unique_index_refs,
 		index_refs $index_refs,
 	): void {
 		// create table if not exists
@@ -129,6 +128,6 @@ final class Server {
 		}
 
 		// save rows
-		$this->databases[$dbname][$name] = tuple($rows, $unique_index_refs, $index_refs);
+		$this->databases[$dbname][$name] = tuple($rows, $index_refs);
 	}
 }
