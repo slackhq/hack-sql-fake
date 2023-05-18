@@ -4,7 +4,7 @@
 
 namespace Slack\SQLFake;
 
-use namespace HH\Lib\{C, Dict, Regex, Str, Vec};
+use namespace HH\Lib\{C, Regex, Str, Vec};
 
 /**
  * any operator that takes arguments on the left and right side, like +, -, *, AND, OR...

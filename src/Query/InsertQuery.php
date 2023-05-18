@@ -55,7 +55,6 @@ final class InsertQuery extends Query {
 				$primary_key = C\count($table);
 			}
 
-			$unique_index_ref_additions = vec[];
 			$index_ref_additions = vec[];
 
 			$applicable_indexes = $table_schema->indexes;

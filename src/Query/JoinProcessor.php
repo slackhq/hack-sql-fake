@@ -2,7 +2,7 @@
 
 namespace Slack\SQLFake;
 
-use namespace HH\Lib\{C, Dict, Keyset, Str, Vec};
+use namespace HH\Lib\{C, Dict, Keyset, Str};
 
 /**
  * Join two data sets using a specified join type and join conditions

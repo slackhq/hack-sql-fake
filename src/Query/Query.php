@@ -38,7 +38,7 @@ abstract class Query {
 
 		if ($columns is nonnull && $indexes) {
 			$all_matched = false;
-			$data = self::filterWithIndexes($conn, $data, $index_refs, $columns, $indexes, $where, inout $all_matched);
+			$data = self::filterWithIndexes($data, $index_refs, $columns, $indexes, $where, inout $all_matched);
 
 			if ($all_matched) {
 				return $data;
@@ -49,7 +49,6 @@ abstract class Query {
 	}
 
 	private static function filterWithIndexes(
-		AsyncMysqlConnection $conn,
 		dataset $data,
 		index_refs $index_refs,
 		dict<string, Column> $columns,
@@ -211,12 +210,8 @@ abstract class Query {
 			if (C\count($left_ored_exprs) > 1 || C\count($right_ored_exprs) > 1) {
 				foreach ($left_ored_exprs as $left_ored_expr) {
 					foreach ($right_ored_exprs as $right_ored_expr) {
-						$all_ored_exprs[] = new BinaryOperatorExpression(
-							$left_ored_expr,
-							false,
-							Operator::AND,
-							$right_ored_expr,
-						);
+						$all_ored_exprs[] =
+							new BinaryOperatorExpression($left_ored_expr, false, Operator::AND, $right_ored_expr);
 					}
 				}
 			} else {
@@ -270,7 +265,7 @@ abstract class Query {
 
 				if ($table_name is null) {
 					$dot_column_name = '.'.$column_name;
-					foreach ($columns as $key => $col) {
+					foreach ($columns as $key => $_) {
 						if (Str\ends_with($key, $dot_column_name)) {
 							$table_name = Str\slice($key, 0, Str\length($key) - Str\length($dot_column_name));
 						}
@@ -337,7 +332,7 @@ abstract class Query {
 
 				if ($table_name is null) {
 					$dot_column_name = '.'.$column_name;
-					foreach ($columns as $key => $col) {
+					foreach ($columns as $key => $_) {
 						if (Str\ends_with($key, $dot_column_name)) {
 							$table_name = Str\slice($key, 0, Str\length($key) - Str\length($dot_column_name));
 						}
@@ -441,9 +436,8 @@ abstract class Query {
 				}
 
 				// we have a partial index lookup, which means we need to filter on those keys then collapse the result
-				return self::collapseRefs(
-					Dict\filter_keys($matched_index_refs, $ref_k ==> C\contains_key($keys, $ref_k)),
-				);
+				return
+					self::collapseRefs(Dict\filter_keys($matched_index_refs, $ref_k ==> C\contains_key($keys, $ref_k)));
 			}
 
 			$matched_keys = keyset[];
@@ -498,9 +492,8 @@ abstract class Query {
 				}
 
 				// we have a partial index lookup, which means we need to filter on those keys then collapse the result
-				return self::collapseRefs(
-					Dict\filter_keys($matched_index_refs, $ref_k ==> C\contains_key($keys, $ref_k)),
-				);
+				return
+					self::collapseRefs(Dict\filter_keys($matched_index_refs, $ref_k ==> C\contains_key($keys, $ref_k)));
 			}
 
 			$matched_keys = keyset[];
@@ -769,7 +762,6 @@ abstract class Query {
 			}
 
 			$new_row_id = $row_id;
-			$unique_index_ref_additions = vec[];
 			$index_ref_additions = vec[];
 
 			if ($changes_found) {
