@@ -24,10 +24,8 @@ final class SharedSetup {
 					'name2' => 2,
 					'name3' => 3,
 					'name4' => 4,
-					'name6' => 6,
+					'name5' => 6,
 				],
-			],
-			dict[
 				'group_id' => dict[
 					12345 => keyset[1, 2, 3],
 					6 => keyset[4, 6],
@@ -43,7 +41,6 @@ final class SharedSetup {
 				1003 => dict['id' => 1003, 'group_id' => 7, 'description' => 'desc1'],
 				1004 => dict['id' => 1004, 'group_id' => 7, 'description' => 'desc2'],
 			],
-			dict[],
 			dict[
 				'group_id' => dict[
 					12345 => keyset[1000, 1001, 1002],
@@ -60,7 +57,6 @@ final class SharedSetup {
 				1003 => dict['id' => 1003, 'test_type' => 0x2, 'description' => 'desc3'],
 				1004 => dict['id' => 1004, 'test_type' => 0x1, 'description' => 'desc4'],
 			],
-			dict[],
 			dict[
 				'test_type' => dict[
 					0x0 => keyset[1000],
@@ -72,32 +68,50 @@ final class SharedSetup {
 
 		$association_table_data = tuple(
 			dict[
-				'1||1000||' => dict[
+				0 => dict[
 					'table_3_id' => 1,
 					'table_4_id' => 1000,
 					'group_id' => 12345,
 					'description' => 'association 1',
 				],
-				'1||1001||' => dict[
+				1 => dict[
 					'table_3_id' => 1,
 					'table_4_id' => 1001,
 					'group_id' => 12345,
 					'description' => 'association 2',
 				],
-				'2||1000||' => dict[
+				2 => dict[
 					'table_3_id' => 2,
 					'table_4_id' => 1000,
 					'group_id' => 12345,
 					'description' => 'association 3',
+
 				],
-				'3||1003||' => dict['table_3_id' => 3, 'table_4_id' => 1003, 'group_id' => 0, 'description' => 'association 4'],
+				3 => dict[
+					'table_3_id' => 3,
+					'table_4_id' => 1003,
+					'group_id' => 0,
+					'description' => 'association 4',
+
+				],
 			],
-			dict[],
 			dict[
+				'PRIMARY' => dict[
+					1 => dict[
+						1000 => 0,
+						1001 => 1,
+					],
+					2 => dict[
+						1000 => 2,
+					],
+					3 => dict[
+						1003 => 3,
+					],
+				],
 				'table_4_id' => dict[
-					1000 => keyset['1||1000||', '2||1000||'],
-					1001 => keyset['1||1001||'],
-					1003 => keyset['3||1003||'],
+					1000 => keyset[0, 2],
+					1001 => keyset[1],
+					1003 => keyset[3],
 				],
 			],
 		);
@@ -110,7 +124,6 @@ final class SharedSetup {
 				1003 => dict['id' => 1003, 'position' => '625'],
 				1004 => dict['id' => 1004, 'position' => '25'],
 			],
-			dict[],
 			dict[],
 		);
 
@@ -145,7 +158,6 @@ final class SharedSetup {
 					4 => dict['id' => 4, 'name' => 'Benjamin Ampersand'],
 				],
 				dict[],
-				dict[],
 			),
 			'vt_table2' => tuple(
 				dict[
@@ -154,7 +166,6 @@ final class SharedSetup {
 					13 => dict['id' => 13, 'vt_table1_id' => 3, 'description' => 'no'],
 					14 => dict['id' => 14, 'vt_table1_id' => 4, 'description' => 'no'],
 				],
-				dict[],
 				dict[],
 			),
 		];

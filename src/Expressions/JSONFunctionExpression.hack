@@ -45,11 +45,6 @@ final class JSONFunctionExpression extends BaseFunctionExpression {
 		throw new SQLFakeRuntimeException('Function '.$this->functionName.' not implemented yet');
 	}
 
-	<<__Override>>
-	public function getIndexCandidates(dict<string, Column> $_columns): ?dict<string, mixed> {
-		return null;
-	}
-
 	private function sqlJSONValid(row $row, AsyncMysqlConnection $conn): ?bool {
 		$row = $this->maybeUnrollGroupedDataset($row);
 		$args = $this->args;
@@ -336,8 +331,9 @@ final class JSONFunctionExpression extends BaseFunctionExpression {
 
 		$argCount = C\count($args);
 		if ($argCount !== 1) {
-			throw
-				new SQLFakeRuntimeException('MySQL JSON_DEPTH() function must be called with 1 JSON document argument');
+			throw new SQLFakeRuntimeException(
+				'MySQL JSON_DEPTH() function must be called with 1 JSON document argument',
+			);
 		}
 
 		$json = $args[0]->evaluate($row, $conn);

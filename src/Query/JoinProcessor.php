@@ -2,7 +2,7 @@
 
 namespace Slack\SQLFake;
 
-use namespace HH\Lib\{C, Dict, Str};
+use namespace HH\Lib\{C, Dict, Keyset, Str, Vec};
 
 /**
  * Join two data sets using a specified join type and join conditions
@@ -194,7 +194,7 @@ abstract final class JoinProcessor {
 			$right_indexes,
 		);
 
-		return tuple(dict($out), dict[], $index_refs);
+		return tuple(dict($out), $index_refs);
 	}
 
 	/**
@@ -376,7 +376,7 @@ abstract final class JoinProcessor {
 			$right_indexes,
 		);
 
-		return tuple(dict($out), dict[], $index_refs);
+		return tuple(dict($out), $index_refs);
 	}
 
 	private static function getIndexRefsFromMappings(
@@ -391,7 +391,7 @@ abstract final class JoinProcessor {
 
 		foreach ($left_mappings as $left_row_id => $new_pks) {
 			foreach ($left_indexes as $left_index) {
-				if (Str\ends_with($left_index->name, '.PRIMARY')) {
+				if (Str\ends_with($left_index->name, '.PRIMARY') && C\count($left_index->fields) === 1) {
 					$index_refs[$left_index->name] ??= dict[];
 					$index_refs[$left_index->name][$left_row_id] = $new_pks;
 				}
@@ -400,7 +400,7 @@ abstract final class JoinProcessor {
 
 		foreach ($right_mappings as $right_row_id => $new_pks) {
 			foreach ($right_indexes as $right_index) {
-				if (Str\ends_with($right_index->name, '.PRIMARY')) {
+				if (Str\ends_with($right_index->name, '.PRIMARY') && C\count($right_index->fields) === 1) {
 					$index_refs[$right_index->name] ??= dict[];
 					$index_refs[$right_index->name][$right_row_id] = $new_pks;
 				}
@@ -408,53 +408,55 @@ abstract final class JoinProcessor {
 		}
 
 		foreach ($left_dataset[1] as $left_index_name => $left_index_refs) {
-			foreach ($left_index_refs as $left_index_key => $left_index_pk) {
-				if (isset($left_mappings[$left_index_pk])) {
-					$index_refs[$left_index_name] ??= dict[];
-					$index_refs[$left_index_name][$left_index_key] = $left_mappings[$left_index_pk];
-				}
-			}
-		}
-
-		foreach ($left_dataset[2] as $left_index_name => $left_index_refs) {
-			foreach ($left_index_refs as $left_index_key => $left_index_pks) {
-				foreach ($left_index_pks as $left_index_pk) {
-					if (isset($left_mappings[$left_index_pk])) {
-						$index_refs[$left_index_name] ??= dict[];
-						$index_refs[$left_index_name][$left_index_key] ??= keyset[];
-						$index_refs[$left_index_name][$left_index_key] = Keyset\union(
-							$index_refs[$left_index_name][$left_index_key],
-							$left_mappings[$left_index_pk],
-						);
-					}
-				}
+			$new_index_refs = $index_refs[$left_index_name] ?? dict[];
+			self::updateRefs($left_index_refs, inout $new_index_refs, $left_mappings);
+			if ($new_index_refs) {
+				$index_refs[$left_index_name] = $new_index_refs;
 			}
 		}
 
 		foreach ($right_dataset[1] as $right_index_name => $right_index_refs) {
-			foreach ($right_index_refs as $right_index_key => $right_index_pk) {
-				if (isset($right_mappings[$right_index_pk])) {
-					$index_refs[$right_index_name] ??= dict[];
-					$index_refs[$right_index_name][$right_index_key] = $right_mappings[$right_index_pk];
-				}
-			}
-		}
-
-		foreach ($right_dataset[2] as $right_index_name => $right_index_refs) {
-			foreach ($right_index_refs as $right_index_key => $right_index_pks) {
-				foreach ($right_index_pks as $right_index_pk) {
-					if (isset($right_mappings[$right_index_pk])) {
-						$index_refs[$right_index_name] ??= dict[];
-						$index_refs[$right_index_name][$right_index_key] ??= keyset[];
-						$index_refs[$right_index_name][$right_index_key] = Keyset\union(
-							$index_refs[$right_index_name][$right_index_key],
-							$right_mappings[$right_index_pk],
-						);
-					}
-				}
+			$new_index_refs = $index_refs[$right_index_name] ?? dict[];
+			self::updateRefs($right_index_refs, inout $new_index_refs, $right_mappings);
+			if ($new_index_refs) {
+				$index_refs[$right_index_name] = $new_index_refs;
 			}
 		}
 
 		return $index_refs;
+	}
+
+	private static function updateRefs(
+		dict<arraykey, mixed> $new_index_refs,
+		inout dict<arraykey, mixed> $index_refs,
+		dict<arraykey, keyset<int>> $new_mappings,
+	): void {
+		foreach ($new_index_refs as $new_index_key => $new_index_pks) {
+			if ($new_index_pks is arraykey) {
+				if (isset($new_mappings[$new_index_pks])) {
+					$index_refs[$new_index_key] = $new_mappings[$new_index_pks];
+				}
+			} else {
+				if ($new_index_pks is keyset<_>) {
+					foreach ($new_index_pks as $new_index_pk) {
+						if (isset($new_mappings[$new_index_pk])) {
+							$index_refs[$new_index_key] ??= keyset[];
+							$index_refs[$new_index_key] =
+								Keyset\union($index_refs[$new_index_key] as keyset<_>, $new_mappings[$new_index_pk]);
+						}
+					}
+				} else if ($new_index_pks is dict<_, _>) {
+					$nested_index_refs = $index_refs[$new_index_key] ?? dict[];
+
+					$nested_index_refs as dict<_, _>;
+
+					self::updateRefs($new_index_pks, inout $nested_index_refs, $new_mappings);
+
+					if ($nested_index_refs) {
+						$index_refs[$new_index_key] = $nested_index_refs;
+					}
+				}
+			}
+		}
 	}
 }

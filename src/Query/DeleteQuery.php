@@ -12,24 +12,24 @@ final class DeleteQuery extends Query {
 	public function execute(AsyncMysqlConnection $conn): int {
 		$this->fromClause as nonnull;
 		list($database, $table_name) = Query::parseTableName($conn, $this->fromClause['name']);
-		$data = $conn->getServer()->getTableData($database, $table_name) ?? tuple(dict[], dict[], dict[]);
+		$data = $conn->getServer()->getTableData($database, $table_name) ?? tuple(dict[], dict[]);
 		$schema = QueryContext::getSchema($database, $table_name);
 
 		Metrics::trackQuery(QueryType::DELETE, $conn->getServer()->name, $table_name, $this->sql);
 
 		$columns = null;
 
-		if ($schema?->fields is nonnull) {
+		if ($schema is nonnull) {
 			$columns = dict[];
-			foreach ($schema?->fields as $field) {
+			foreach ($schema->fields as $field) {
 				$columns[$field->name] = $field;
 			}
 		}
 
-		return $this->applyWhere($conn, $data[0], $data[1], $data[2], $columns, $schema?->indexes)
+		return $this->applyWhere($conn, $data[0], $data[1], $columns, $schema?->indexes)
 			|> $this->applyOrderBy($conn, $$)
 			|> $this->applyLimit($$)
-			|> $this->applyDelete($conn, $database, $table_name, $$, $data[0], $data[1], $data[2], $schema);
+			|> $this->applyDelete($conn, $database, $table_name, $$, $data[0], $data[1], $schema);
 	}
 
 	/**
@@ -41,7 +41,6 @@ final class DeleteQuery extends Query {
 		string $table_name,
 		dataset $filtered_rows,
 		dataset $original_table,
-		unique_index_refs $unique_index_refs,
 		index_refs $index_refs,
 		?TableSchema $table_schema,
 	): int {
@@ -51,22 +50,31 @@ final class DeleteQuery extends Query {
 		$rows_affected = C\count($original_table) - C\count($remaining_rows);
 
 		if ($table_schema is nonnull) {
+			$applicable_indexes = $table_schema->indexes;
+
+			if ($table_schema->vitess_sharding) {
+				$applicable_indexes[] = new Index(
+					$table_schema->vitess_sharding->keyspace,
+					'INDEX',
+					keyset[$table_schema->vitess_sharding->sharding_key],
+				);
+			}
+
 			foreach ($filtered_rows as $row_id => $row_to_delete) {
-				list($unique_index_ref_deletes, $index_ref_deletes) =
-					self::getIndexRemovalsForRow($table_schema->indexes, $row_id, $row_to_delete);
+				$index_ref_deletes = self::getIndexModificationsForRow($applicable_indexes, $row_to_delete);
 
-				foreach ($unique_index_ref_deletes as list($index_name, $index_key)) {
-					unset($unique_index_refs[$index_name][$index_key]);
-				}
-
-				foreach ($index_ref_deletes as list($index_name, $index_key, $_)) {
-					unset($index_refs[$index_name][$index_key][$row_id]);
+				foreach ($index_ref_deletes as list($index_name, $index_keys, $store_as_unique)) {
+					$specific_index_refs = $index_refs[$index_name] ?? null;
+					if ($specific_index_refs is nonnull) {
+						self::removeFromIndexes(inout $specific_index_refs, $index_keys, $store_as_unique, $row_id);
+						$index_refs[$index_name] = $specific_index_refs;
+					}
 				}
 			}
 		}
 
 		// write it back to the database
-		$conn->getServer()->saveTable($database, $table_name, $remaining_rows, $unique_index_refs, $index_refs);
+		$conn->getServer()->saveTable($database, $table_name, $remaining_rows, $index_refs);
 		return $rows_affected;
 	}
 }

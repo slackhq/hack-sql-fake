@@ -26,7 +26,6 @@ abstract class Query {
 	protected function applyWhere(
 		AsyncMysqlConnection $conn,
 		dataset $data,
-		unique_index_refs $unique_index_refs,
 		index_refs $index_refs,
 		?dict<string, Column> $columns,
 		?vec<Index> $indexes,
@@ -38,100 +37,520 @@ abstract class Query {
 		}
 
 		if ($columns is nonnull && $indexes) {
-			$candidates = $where->getIndexCandidates($columns);
-			if ($candidates) {
-				$candidate_keys = Keyset\keys($candidates);
-				$matched_fields = 0;
-				$matched_index = null;
-				foreach ($indexes as $index) {
-					if ($index->fields === $candidate_keys) {
-						$matched_index = $index;
-						$matched_fields = C\count($index->fields);
-						break;
-					}
+			$all_matched = false;
+			$data = self::filterWithIndexes($conn, $data, $index_refs, $columns, $indexes, $where, inout $all_matched);
 
-					if (Keyset\intersect($candidate_keys, $index->fields) === $index->fields) {
-						$index_field_count = C\count($index->fields);
-						if ($index_field_count > $matched_fields) {
-							$matched_fields = $index_field_count;
-							$matched_index = $index;
-						}
-					}
-				}
-
-				if ($matched_index) {
-					if ($matched_fields === 1) {
-						$matched_field = vec($matched_index->fields)[0];
-						$candidate_key = $candidates[$matched_field] as arraykey;
-					} else {
-						$candidate_key = '';
-						foreach ($matched_index->fields as $matched_field) {
-							$candidate_key .= ($candidates[$matched_field] as arraykey).'||';
-						}
-					}
-
-					$data = self::filterDataWithMatchedIndex(
-						$data,
-						$unique_index_refs,
-						$index_refs,
-						$matched_index,
-						$candidate_key,
-					);
-				}
+			if ($all_matched) {
+				return $data;
 			}
 		}
 
 		return Dict\filter($data, $row ==> (bool)$where->evaluate($row, $conn));
 	}
 
-	private static function filterDataWithMatchedIndex(
+	private static function filterWithIndexes(
+		AsyncMysqlConnection $conn,
 		dataset $data,
-		unique_index_refs $unique_index_refs,
 		index_refs $index_refs,
-		Index $matched_index,
-		arraykey $candidate_key,
+		dict<string, Column> $columns,
+		vec<Index> $indexes,
+		Expression $where,
+		inout bool $all_matched,
 	): dataset {
-		if ($matched_index->type === 'PRIMARY') {
-			if (C\contains_key($data, $candidate_key)) {
-				return dict[
-					$candidate_key => $data[$candidate_key],
-				];
+		$ored_wheres = self::getOredExpressions($where);
+
+		$data_keys = Keyset\keys($data);
+
+		if (C\count($ored_wheres) === 1) {
+			$matched_all_expressions = true;
+			$candidates = self::getIndexCandidates($where, $columns, inout $matched_all_expressions);
+			if ($candidates) {
+				$filtered_keys = self::getKeysForConditional($data_keys, $index_refs, $indexes, $candidates);
+
+				if ($filtered_keys is nonnull) {
+					$data = Dict\filter_keys($data, $row_pk ==> C\contains_key($filtered_keys, $row_pk));
+					if ($matched_all_expressions) {
+						$all_matched = true;
+						return $data;
+					}
+				}
+			}
+		} else {
+			// calculating merged index
+
+			$all_filtered_keys = keyset[];
+
+			$can_filter = true;
+
+			foreach ($ored_wheres as $ored_where) {
+				$matched_all_expressions = true;
+				$candidates = self::getIndexCandidates($ored_where, $columns, inout $matched_all_expressions);
+
+				if ($candidates) {
+					$filtered_keys = self::getKeysForConditional($data_keys, $index_refs, $indexes, $candidates);
+
+					if ($filtered_keys is nonnull) {
+						$all_filtered_keys = Keyset\union($all_filtered_keys, $filtered_keys);
+					} else {
+						$can_filter = false;
+						break;
+					}
+				} else {
+					$can_filter = false;
+					break;
+				}
 			}
 
-			return dict[];
+			if ($can_filter) {
+				return Dict\filter_keys($data, $row_pk ==> C\contains_key($all_filtered_keys, $row_pk));
+			}
 		}
 
-		if ($matched_index->type === 'UNIQUE') {
-			if (C\contains_key($unique_index_refs, $matched_index->name)) {
-				$matched_index_refs = $unique_index_refs[$matched_index->name];
+		return $data;
+	}
 
-				if (C\contains_key($matched_index_refs, $candidate_key)) {
-					$ref = $matched_index_refs[$candidate_key];
-					if (C\contains_key($data, $ref)) {
-						return dict[
-							$ref => $data[$ref],
-						];
+	private static function getKeysForConditional(
+		keyset<arraykey> $data_keys,
+		index_refs $index_refs,
+		vec<Index> $indexes,
+		dict<string, vec<mixed>> $candidates,
+	): ?keyset<arraykey> {
+		$candidate_keys = Keyset\keys($candidates);
+		$matched_fields = 0;
+		$matched_index = null;
+		$has_multiple_fields = false;
+
+		foreach ($indexes as $index) {
+			$index_field_count = C\count($index->fields);
+
+			if ($index->fields === $candidate_keys) {
+				$matched_index = $index;
+				$matched_fields = C\count($index->fields);
+				break;
+			}
+
+			if (C\count(Keyset\intersect($candidate_keys, $index->fields)) === $index_field_count) {
+				if ($index_field_count > $matched_fields) {
+					$matched_fields = $index_field_count;
+					$matched_index = $index;
+				}
+			}
+
+			if ($index_field_count > 1) {
+				$has_multiple_fields = true;
+			}
+		}
+
+		if ($matched_index) {
+			return self::filterDataWithMatchedIndex(
+				$data_keys,
+				$index_refs,
+				$matched_index,
+				$matched_fields,
+				$candidates,
+				true,
+			);
+		} else {
+			if ($has_multiple_fields) {
+				foreach ($indexes as $index) {
+					if (C\count($index->fields) > 1) {
+						$partial_index_candidate_fields = keyset[];
+
+						foreach ($index->fields as $field) {
+							if (C\contains_key($candidate_keys, $field)) {
+								$partial_index_candidate_fields[] = $field;
+							} else {
+								break;
+							}
+						}
+
+						if ($partial_index_candidate_fields) {
+							if (C\count($partial_index_candidate_fields) >= $matched_fields) {
+								$matched_fields = C\count($partial_index_candidate_fields);
+								$matched_index = new Index($index->name, $index->type, $partial_index_candidate_fields);
+							}
+						}
 					}
 				}
 			}
 
+			if ($matched_index) {
+				return self::filterDataWithMatchedIndex(
+					$data_keys,
+					$index_refs,
+					$matched_index,
+					$matched_fields,
+					$candidates,
+					false,
+				);
+			} else if (!QueryContext::$relaxUniqueConstraints) {
+				//throw new \Exception('Query without index');
+			}
+
+			return null;
+		}
+	}
+
+	private static function getOredExpressions(Expression $expr): vec<Expression> {
+		if (!self::containsOrs($expr)) {
+			return vec[$expr];
+		}
+
+		$expr as BinaryOperatorExpression;
+
+		if ($expr->negated) {
+			return vec[$expr];
+		}
+
+		if ($expr->operator === Operator::AND) {
+			$left_ored_exprs = self::getOredExpressions($expr->left);
+			$right_ored_exprs = self::getOredExpressions($expr->right as nonnull);
+
+			$all_ored_exprs = vec[];
+
+			if (C\count($left_ored_exprs) > 1 || C\count($right_ored_exprs) > 1) {
+				foreach ($left_ored_exprs as $left_ored_expr) {
+					foreach ($right_ored_exprs as $right_ored_expr) {
+						$all_ored_exprs[] = new BinaryOperatorExpression(
+							$left_ored_expr,
+							false,
+							Operator::AND,
+							$right_ored_expr,
+						);
+					}
+				}
+			} else {
+				$all_ored_exprs[] = $expr;
+			}
+
+			return $all_ored_exprs;
+		}
+
+		if ($expr->operator === Operator::OR) {
+			$left_ored_exprs = self::getOredExpressions($expr->left);
+			$right_ored_exprs = self::getOredExpressions($expr->right as nonnull);
+
+			return Vec\concat($left_ored_exprs, $right_ored_exprs);
+		}
+
+		return vec[];
+	}
+
+	private static function containsOrs(Expression $expr): bool {
+		if (!$expr is BinaryOperatorExpression) {
+			return false;
+		}
+
+		if ($expr->operator === Operator::OR) {
+			return true;
+		}
+
+		if ($expr->operator === Operator::AND) {
+			return self::containsOrs($expr->left) || self::containsOrs($expr->right as nonnull);
+		}
+
+		return false;
+	}
+
+	private static function getIndexCandidates(
+		Expression $expr,
+		dict<string, Column> $columns,
+		inout bool $matched_all_expressions,
+	): dict<string, vec<mixed>> {
+		if ($expr is BinaryOperatorExpression) {
+			return self::getIndexCandidatesFromBinop($expr, $columns, inout $matched_all_expressions);
+		}
+
+		if ($expr is InOperatorExpression && !$expr->negated) {
+			if ($expr->left is ColumnExpression) {
+				$column_names = dict[];
+
+				$table_name = $expr->left->tableName;
+				$column_name = $expr->left->name;
+
+				if ($table_name is null) {
+					$dot_column_name = '.'.$column_name;
+					foreach ($columns as $key => $col) {
+						if (Str\ends_with($key, $dot_column_name)) {
+							$table_name = Str\slice($key, 0, Str\length($key) - Str\length($dot_column_name));
+						}
+					}
+				}
+
+				if ($table_name is nonnull) {
+					$column_name = $table_name.'.'.$column_name;
+				}
+
+				$values = vec[];
+
+				foreach (($expr->inList as nonnull) as $in_expr) {
+					// found it? return the opposite of "negated". so if negated is false, return true.
+					// if it's a subquery, we have to iterate over the results and extract the field from each row
+					if ($in_expr is ConstantExpression) {
+						$value = $in_expr->value;
+						if (isset($columns[$column_name])) {
+							if ($columns[$column_name]->hack_type === 'int') {
+								$value = (int)$value;
+							}
+						}
+						$values[] = $value;
+					} else {
+						$values = vec[];
+						break;
+					}
+				}
+
+				if ($values) {
+					$column_names[$column_name] = $values;
+
+					return $column_names;
+				}
+			}
+		}
+
+		$matched_all_expressions = false;
+
+		return dict[];
+	}
+
+	private static function getIndexCandidatesFromBinop(
+		BinaryOperatorExpression $expr,
+		dict<string, Column> $columns,
+		inout bool $matched_all_expressions,
+	): dict<string, vec<mixed>> {
+		$column_names = dict[];
+
+		if ($expr->operator === null) {
+			// an operator should only be in this state in the middle of parsing, never when evaluating
+			throw new SQLFakeRuntimeException('Attempted to evaluate BinaryOperatorExpression with empty operator');
+		}
+
+		if ($expr->negated) {
+			$matched_all_expressions = false;
 			return dict[];
+		}
+
+		if ($expr->operator === Operator::EQUALS) {
+			if ($expr->left is ColumnExpression && $expr->left->name !== '*' && $expr->right is ConstantExpression) {
+				$table_name = $expr->left->tableName;
+				$column_name = $expr->left->name;
+
+				if ($table_name is null) {
+					$dot_column_name = '.'.$column_name;
+					foreach ($columns as $key => $col) {
+						if (Str\ends_with($key, $dot_column_name)) {
+							$table_name = Str\slice($key, 0, Str\length($key) - Str\length($dot_column_name));
+						}
+					}
+				}
+
+				if ($table_name is nonnull) {
+					$column_name = $table_name.'.'.$column_name;
+				}
+
+				$value = $expr->right->value;
+				if (isset($columns[$column_name])) {
+					if ($columns[$column_name]->hack_type === 'int') {
+						$value = (int)$value;
+					}
+				}
+				$column_names[$column_name] = vec[$value];
+			}
+
+			$matched_all_expressions = false;
+
+			return $column_names;
+		}
+
+		if ($expr->operator === Operator::AND) {
+			$column_names = self::getIndexCandidates($expr->left, $columns, inout $matched_all_expressions);
+			$column_names = Dict\merge(
+				$column_names,
+				self::getIndexCandidates($expr->right as nonnull, $columns, inout $matched_all_expressions),
+			);
+
+			return $column_names;
+		}
+
+		$matched_all_expressions = false;
+
+		return $column_names;
+	}
+
+	private static function filterDataWithMatchedIndex(
+		keyset<arraykey> $data_keys,
+		index_refs $index_refs,
+		Index $matched_index,
+		int $matched_fields,
+		dict<string, vec<mixed>> $candidates,
+		bool $full_index,
+	): keyset<arraykey> {
+		if ($matched_fields === 1) {
+			$keys = keyset[];
+
+			$matched_field = C\firstx($matched_index->fields);
+			foreach ($candidates[$matched_field] as $candidate_value) {
+				$keys[] = $candidate_value as arraykey;
+			}
+		} else {
+			$keys = vec[];
+
+			foreach ($matched_index->fields as $matched_field) {
+				if ($keys === vec[]) {
+					foreach ($candidates[$matched_field] as $candidate_value) {
+						$keys[] = vec[$candidate_value as arraykey];
+					}
+				} else {
+					$new_keys = vec[];
+
+					foreach ($keys as $key_parts) {
+						foreach ($candidates[$matched_field] as $candidate_value) {
+							$new_keys[] = Vec\concat($key_parts, vec[$candidate_value as arraykey]);
+						}
+					}
+
+					$keys = $new_keys;
+				}
+			}
+		}
+
+		if ($matched_index->type === 'PRIMARY' && $keys is keyset<_> && $full_index) {
+			// this is the happiest path - a simple primary key lookup on an index with a single column
+			return Keyset\intersect($data_keys, $keys);
+		}
+
+		// for unique indexes and primary keys with more than one field we store indexes
+		// as nested dicts based on their fields
+		if ($matched_index->type === 'UNIQUE' || $matched_index->type === 'PRIMARY') {
+			$matched_index_refs = $index_refs[$matched_index->name] ?? null;
+
+			if ($matched_index_refs is null) {
+				return keyset[];
+			}
+
+			if ($keys is keyset<_>) {
+				if ($full_index) {
+					// this is the second-happiest-path — a unique index with a single column
+					return keyset<arraykey>(
+						Dict\filter_keys(
+						/* HH_FIXME[4110] */
+						$matched_index_refs,
+							$ref_k ==> C\contains_key($keys, $ref_k),
+						),
+					);
+				}
+
+				// we have a partial index lookup, which means we need to filter on those keys then collapse the result
+				return self::collapseRefs(
+					Dict\filter_keys($matched_index_refs, $ref_k ==> C\contains_key($keys, $ref_k)),
+				);
+			}
+
+			$matched_keys = keyset[];
+
+			// this is a full or partial index lookup with multiple fields
+			foreach ($keys as $key_parts) {
+				$key_matched_index_refs = $matched_index_refs;
+
+				foreach ($key_parts as $i => $key_part) {
+					$next = $key_matched_index_refs[$key_part] ?? null;
+
+					if ($next is null) {
+						break;
+					}
+
+					if ($i + 1 === $matched_fields) {
+						if (!$full_index) {
+							$matched_keys = Keyset\union($matched_keys, self::collapseRefs($next as dict<_, _>));
+						} else {
+							// for unique indexes this is always an arraykey
+							$matched_keys[] = $next as arraykey;
+						}
+						break;
+					}
+
+					$key_matched_index_refs = $next as dict<_, _>;
+				}
+			}
+
+			return $matched_keys;
 		}
 
 		if ($matched_index->type === 'INDEX') {
 			$matched_index_refs = $index_refs[$matched_index->name] ?? null;
 
-			if ($matched_index_refs is nonnull) {
-				$refs = $matched_index_refs[$candidate_key] ?? null;
-				if ($refs is nonnull) {
-					return Dict\filter_with_key($data, ($row_id, $_) ==> C\contains_key($refs, $row_id));
+			if ($matched_index_refs is null) {
+				return keyset[];
+			}
+
+			if ($keys is keyset<_>) {
+				if ($full_index) {
+					// a non-unique index with a single column
+					return keyset<arraykey>(
+						Dict\flatten(
+							Dict\filter_keys(
+								/* HH_FIXME[4110] */
+								$matched_index_refs,
+								$ref_k ==> C\contains_key($keys, $ref_k),
+							),
+						),
+					);
+				}
+
+				// we have a partial index lookup, which means we need to filter on those keys then collapse the result
+				return self::collapseRefs(
+					Dict\filter_keys($matched_index_refs, $ref_k ==> C\contains_key($keys, $ref_k)),
+				);
+			}
+
+			$matched_keys = keyset[];
+
+			// this is a full or partial index lookup with multiple fields
+			foreach ($keys as $key_parts) {
+				$key_matched_index_refs = $matched_index_refs;
+				foreach ($key_parts as $i => $key_part) {
+					$next = $key_matched_index_refs[$key_part] ?? null;
+
+					if ($next is null) {
+						break;
+					}
+
+					if ($i + 1 === $matched_fields) {
+						if (!$full_index) {
+							$matched_keys = Keyset\union($matched_keys, self::collapseRefs($next as dict<_, _>));
+						} else {
+							// for non-unique indexes this is always a keyset
+							$matched_keys = Keyset\union($matched_keys, $next as keyset<_>);
+						}
+						break;
+					}
+
+					$key_matched_index_refs = $next as dict<_, _>;
 				}
 			}
 
-			return dict[];
+			return $matched_keys;
+
+			return keyset[];
 		}
 
 		throw new \Exception('Unrecognised index');
+	}
+
+	private static function collapseRefs(dict<arraykey, mixed> $refs): keyset<arraykey> {
+		$out = keyset[];
+
+		foreach ($refs as $value) {
+			if ($value is dict<_, _>) {
+				$out = Keyset\union($out, self::collapseRefs($value));
+			} else if ($value is keyset<_>) {
+				$out = Keyset\union($out, $value);
+			} else if ($value is arraykey) {
+				$out[] = $value;
+			}
+		}
+
+		return $out;
 	}
 
 	/**
@@ -262,13 +681,12 @@ abstract class Query {
 		string $table_name,
 		dataset $filtered_rows,
 		dataset $original_table,
-		unique_index_refs $unique_index_refs,
 		index_refs $index_refs,
 		vec<BinaryOperatorExpression> $set_clause,
 		?TableSchema $table_schema,
 		/* for dupe inserts only */
 		?row $values = null,
-	): (int, dataset, unique_index_refs, index_refs) {
+	): (int, dataset, index_refs) {
 		$valid_fields = null;
 		if ($table_schema !== null) {
 			$valid_fields = Keyset\map($table_schema->fields, $field ==> $field->name);
@@ -310,6 +728,14 @@ abstract class Query {
 					$applicable_indexes[] = $index;
 				}
 			}
+
+			if ($table_schema->vitess_sharding) {
+				$applicable_indexes[] = new Index(
+					$table_schema->vitess_sharding->keyspace,
+					'INDEX',
+					keyset[$table_schema->vitess_sharding->sharding_key],
+				);
+			}
 		}
 
 		$update_count = 0;
@@ -329,8 +755,7 @@ abstract class Query {
 				}
 			}
 
-			list($unique_index_ref_deletes, $index_ref_deletes) =
-				self::getIndexRemovalsForRow($applicable_indexes, $row_id, $row);
+			$index_ref_deletes = self::getIndexModificationsForRow($applicable_indexes, $row);
 
 			foreach ($set_clauses as $clause) {
 				$existing_value = $row[$clause['column']] ?? null;
@@ -354,22 +779,13 @@ abstract class Query {
 				}
 
 				foreach ($applicable_indexes as $index) {
-					if ($index->type === 'PRIMARY') {
-						if (C\count($index->fields) === 1) {
-							$index_key = $row[C\firstx($index->fields)] as arraykey;
-						} else {
-							$index_key = '';
-							foreach ($index->fields as $field) {
-								$index_key .= $row[$field] as arraykey.'||';
-							}
-						}
-
-						$new_row_id = $index_key;
+					if ($index->type === 'PRIMARY' && C\count($index->fields) === 1) {
+						$new_row_id = $row[C\firstx($index->fields)] as arraykey;
+						break;
 					}
 				}
 
-				list($unique_index_ref_additions, $index_ref_additions) =
-					self::getIndexAdditionsForRow($applicable_indexes, $row);
+				$index_ref_additions = self::getIndexModificationsForRow($applicable_indexes, $row);
 			}
 
 			if ($changes_found) {
@@ -379,13 +795,22 @@ abstract class Query {
 					if (C\contains_key($original_table, $new_row_id)) {
 						$key_violation = true;
 					} else {
-						foreach ($unique_index_ref_deletes as list($index_name, $index_key)) {
-							if (
-								isset($unique_index_refs[$index_name][$index_key]) &&
-								$unique_index_refs[$index_name][$index_key] !== $row_id
-							) {
-								$key_violation = true;
-								break;
+						foreach ($index_ref_deletes as list($index_name, $index_keys, $store_as_unique)) {
+							if ($store_as_unique) {
+								$leaf = $index_refs[$index_name] ?? null;
+
+								foreach ($index_keys as $index_key) {
+									$leaf = $leaf[$index_key] ?? null;
+
+									if ($leaf is null) {
+										break;
+									}
+
+									if ($leaf is arraykey && $leaf !== $row_id) {
+										$key_violation = true;
+										break;
+									}
+								}
 							}
 						}
 					}
@@ -405,29 +830,18 @@ abstract class Query {
 					}
 				}
 
-				foreach ($unique_index_ref_deletes as list($table, $key)) {
-					unset($unique_index_refs[$table][$key]);
+				foreach ($index_ref_deletes as list($index_name, $index_keys, $store_as_unique)) {
+					$specific_index_refs = $index_refs[$index_name] ?? null;
+					if ($specific_index_refs is nonnull) {
+						self::removeFromIndexes(inout $specific_index_refs, $index_keys, $store_as_unique, $row_id);
+						$index_refs[$index_name] = $specific_index_refs;
+					}
 				}
 
-				foreach ($index_ref_deletes as list($table, $key, $index_row)) {
-					unset($index_refs[$table][$key][$index_row]);
-				}
-
-				foreach ($unique_index_ref_additions as list($index_name, $index_key)) {
-					if (!C\contains_key($unique_index_refs, $index_name)) {
-						$unique_index_refs[$index_name] = dict[];
-					}
-					$unique_index_refs[$index_name][$index_key] = $new_row_id;
-				}
-
-				foreach ($index_ref_additions as list($index_name, $index_key)) {
-					if (!C\contains_key($index_refs, $index_name)) {
-						$index_refs[$index_name] = dict[];
-					}
-					if (!C\contains_key($index_refs[$index_name], $index_key)) {
-						$index_refs[$index_name][$index_key] = keyset[];
-					}
-					$index_refs[$index_name][$index_key][] = $new_row_id;
+				foreach ($index_ref_additions as list($index_name, $index_keys, $store_as_unique)) {
+					$specific_index_refs = $index_refs[$index_name] ?? dict[];
+					self::addToIndexes(inout $specific_index_refs, $index_keys, $store_as_unique, $row_id);
+					$index_refs[$index_name] = $specific_index_refs;
 				}
 
 				if ($new_row_id !== $row_id) {
@@ -446,96 +860,124 @@ abstract class Query {
 		}
 
 		// write it back to the database
-		$conn->getServer()->saveTable($database, $table_name, $original_table, $unique_index_refs, $index_refs);
-		return tuple($update_count, $original_table, $unique_index_refs, $index_refs);
+		$conn->getServer()->saveTable($database, $table_name, $original_table, $index_refs);
+		return tuple($update_count, $original_table, $index_refs);
 	}
 
-	public static function getIndexRemovalsForRow(
+	public static function getIndexModificationsForRow(
 		vec<Index> $applicable_indexes,
-		arraykey $row_id,
 		row $row,
-	): (vec<(string, arraykey)>, vec<(string, arraykey, arraykey)>) {
-		$unique_index_ref_deletes = vec[];
+	): vec<(string, vec<arraykey>, bool)> {
 		$index_ref_deletes = vec[];
 
 		foreach ($applicable_indexes as $index) {
+			if ($index->type === 'PRIMARY' && C\count($index->fields) === 1) {
+				continue;
+			}
+
+			$store_as_unique = $index->type === 'UNIQUE' || $index->type === 'PRIMARY';
+
 			if (C\count($index->fields) === 1) {
-				$index_key = $row[C\firstx($index->fields)] as ?arraykey;
+				$index_part = $row[C\firstx($index->fields)] as ?arraykey;
+
+				if ($index_part is null) {
+					continue;
+				}
+
+				$index_key = vec[$index_part];
 			} else {
-				$index_key = '';
-				$saw_null = false;
+				$index_key = vec[];
+
+				$inc = 0;
 
 				foreach ($index->fields as $field) {
 					$index_part = $row[$field] as ?arraykey;
 
 					if ($index_part is null) {
-						$saw_null = true;
-						break;
+						$index_part = '__NULL__';
+
+						if ($index->type === 'UNIQUE' && $inc > 0) {
+							$store_as_unique = false;
+							break;
+						}
 					}
 
-					$index_key .= $row[$field] as arraykey.'||';
-				}
+					$index_key[] = $index_part;
 
-				if ($saw_null) {
-					$index_key = null;
+					$inc++;
 				}
 			}
 
-			if ($index_key is null) {
-				continue;
-			}
-
-			if ($index->type === 'UNIQUE') {
-				$unique_index_ref_deletes[] = tuple($index->name, $index_key);
-			} else if ($index->type === 'INDEX') {
-				$index_ref_deletes[] = tuple($index->name, $index_key, $row_id);
-			}
+			$index_ref_deletes[] = tuple($index->name, $index_key, $store_as_unique);
 		}
 
-		return tuple($unique_index_ref_deletes, $index_ref_deletes);
+		return $index_ref_deletes;
 	}
 
-	public static function getIndexAdditionsForRow(
-		vec<Index> $applicable_indexes,
-		row $row,
-	): (vec<(string, arraykey)>, vec<(string, arraykey)>) {
-		$unique_index_ref_additions = vec[];
-		$index_ref_additions = vec[];
+	/**
+	 * This is an ugly, ugly method — but I believe it's the only way to achieve this in Hack
+	 */
+	public static function removeFromIndexes(
+		inout dict<arraykey, mixed> $index_refs,
+		vec<arraykey> $index_keys,
+		bool $store_as_unique,
+		arraykey $row_id,
+	): void {
+		$key_length = C\count($index_keys);
 
-		foreach ($applicable_indexes as $index) {
-			if (C\count($index->fields) === 1) {
-				$index_key = $row[C\firstx($index->fields)] as ?arraykey;
+		if ($key_length === 1) {
+			if ($store_as_unique) {
+				unset($index_refs[$index_keys[0]]);
 			} else {
-				$index_key = '';
-				$saw_null = false;
+				/* HH_FIXME[4135] */
+				unset(
+					/* HH_FIXME[4063] */
+					$index_refs[$index_keys[0]][$row_id]
+				);
+			}
+		} else {
+			$nested_indexes = $index_refs[$index_keys[0]] ?? null;
 
-				foreach ($index->fields as $field) {
-					$index_part = $row[$field] as ?arraykey;
+			if ($nested_indexes is dict<_, _>) {
+				self::removeFromIndexes(inout $nested_indexes, Vec\drop($index_keys, 1), $store_as_unique, $row_id);
 
-					if ($index_part is null) {
-						$saw_null = true;
-						break;
-					}
-
-					$index_key .= $row[$field] as arraykey.'||';
-				}
-
-				if ($saw_null) {
-					$index_key = null;
+				if ($nested_indexes) {
+					$index_refs[$index_keys[0]] = $nested_indexes;
+				} else {
+					unset($index_refs[$index_keys[0]]);
 				}
 			}
 
-			if ($index_key is null) {
-				continue;
-			}
+		}
+	}
 
-			if ($index->type === 'UNIQUE') {
-				$unique_index_ref_additions[] = tuple($index->name, $index_key);
-			} else if ($index->type === 'INDEX') {
-				$index_ref_additions[] = tuple($index->name, $index_key);
+	/**
+	 * This is an ugly, ugly method — but I believe it's the only way to achieve this in Hack
+	 */
+	public static function addToIndexes(
+		inout dict<arraykey, mixed> $index_refs,
+		vec<arraykey> $index_keys,
+		bool $store_as_unique,
+		arraykey $row_id,
+	): void {
+		$key_length = C\count($index_keys);
+
+		if ($key_length === 1) {
+			if ($store_as_unique) {
+				$index_refs[$index_keys[0]] = $row_id;
+			} else {
+				$index_refs[$index_keys[0]] ??= keyset[];
+				/* HH_FIXME[4006] */
+				$index_refs[$index_keys[0]][] = $row_id;
+			}
+		} else if ($key_length > 1) {
+			$nested_indexes = $index_refs[$index_keys[0]] ?? dict[];
+
+			if ($nested_indexes is dict<_, _>) {
+				self::addToIndexes(inout $nested_indexes, Vec\drop($index_keys, 1), $store_as_unique, $row_id);
+
+				$index_refs[$index_keys[0]] = $nested_indexes;
 			}
 		}
-
-		return tuple($unique_index_ref_additions, $index_ref_additions);
 	}
 }

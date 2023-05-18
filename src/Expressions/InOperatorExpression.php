@@ -9,9 +9,9 @@ use namespace HH\Lib\{C, Str};
  */
 final class InOperatorExpression extends Expression {
 
-	private ?vec<Expression> $inList = null;
+	public ?vec<Expression> $inList = null;
 
-	public function __construct(private Expression $left, public bool $negated = false) {
+	public function __construct(public Expression $left, public bool $negated = false) {
 		$op = Operator::IN;
 		$this->name = '';
 		$this->precedence = ExpressionParser::OPERATOR_PRECEDENCE[operator_to_string($op)];
@@ -67,11 +67,6 @@ final class InOperatorExpression extends Expression {
 		}
 
 		return $this->negated;
-	}
-
-	<<__Override>>
-	public function getIndexCandidates(dict<string, Column> $_columns): ?dict<string, mixed> {
-		return null;
 	}
 
 	<<__Override>>
