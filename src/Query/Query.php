@@ -423,7 +423,11 @@ abstract class Query {
 			foreach ($matched_index->fields as $matched_field) {
 				if ($keys === vec[]) {
 					foreach ($candidates[$matched_field] as $candidate_value) {
-						$keys[] = vec[$candidate_value as arraykey];
+						if (!$candidate_value is arraykey) {
+							continue;
+						}
+
+						$keys[] = vec[$candidate_value];
 					}
 				} else {
 					$new_keys = vec[];
