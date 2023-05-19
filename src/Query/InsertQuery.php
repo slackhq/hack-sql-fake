@@ -52,7 +52,8 @@ final class InsertQuery extends Query {
 			} else {
 				// for primary key columns that span multiple columns, we store the
 				// index separately and reference an integer count
-				$primary_key = C\count($table);
+				$last_key = C\last_key($table);
+				$primary_key = $last_key is null ? 0 : ($last_key as int) + 1;
 			}
 
 			$index_ref_additions = vec[];

@@ -210,8 +210,12 @@ abstract class Query {
 			if (C\count($left_ored_exprs) > 1 || C\count($right_ored_exprs) > 1) {
 				foreach ($left_ored_exprs as $left_ored_expr) {
 					foreach ($right_ored_exprs as $right_ored_expr) {
-						$all_ored_exprs[] =
-							new BinaryOperatorExpression($left_ored_expr, false, Operator::AND, $right_ored_expr);
+						$all_ored_exprs[] = new BinaryOperatorExpression(
+							$left_ored_expr,
+							false,
+							Operator::AND,
+							$right_ored_expr,
+						);
 					}
 				}
 			} else {
@@ -436,8 +440,9 @@ abstract class Query {
 				}
 
 				// we have a partial index lookup, which means we need to filter on those keys then collapse the result
-				return
-					self::collapseRefs(Dict\filter_keys($matched_index_refs, $ref_k ==> C\contains_key($keys, $ref_k)));
+				return self::collapseRefs(
+					Dict\filter_keys($matched_index_refs, $ref_k ==> C\contains_key($keys, $ref_k)),
+				);
 			}
 
 			$matched_keys = keyset[];
@@ -492,8 +497,9 @@ abstract class Query {
 				}
 
 				// we have a partial index lookup, which means we need to filter on those keys then collapse the result
-				return
-					self::collapseRefs(Dict\filter_keys($matched_index_refs, $ref_k ==> C\contains_key($keys, $ref_k)));
+				return self::collapseRefs(
+					Dict\filter_keys($matched_index_refs, $ref_k ==> C\contains_key($keys, $ref_k)),
+				);
 			}
 
 			$matched_keys = keyset[];
@@ -832,7 +838,7 @@ abstract class Query {
 
 				foreach ($index_ref_additions as list($index_name, $index_keys, $store_as_unique)) {
 					$specific_index_refs = $index_refs[$index_name] ?? dict[];
-					self::addToIndexes(inout $specific_index_refs, $index_keys, $store_as_unique, $row_id);
+					self::addToIndexes(inout $specific_index_refs, $index_keys, $store_as_unique, $new_row_id);
 					$index_refs[$index_name] = $specific_index_refs;
 				}
 

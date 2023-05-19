@@ -116,6 +116,10 @@ abstract final class JoinProcessor {
 						} else {
 							$out[] = $row;
 						}
+
+						$insert_id = C\count($out) - 1;
+						$left_mappings[$left_row_id] ??= keyset[];
+						$left_mappings[$left_row_id][] = $insert_id;
 					}
 				}
 				break;
@@ -441,8 +445,10 @@ abstract final class JoinProcessor {
 					foreach ($new_index_pks as $new_index_pk) {
 						if (isset($new_mappings[$new_index_pk])) {
 							$index_refs[$new_index_key] ??= keyset[];
-							$index_refs[$new_index_key] =
-								Keyset\union($index_refs[$new_index_key] as keyset<_>, $new_mappings[$new_index_pk]);
+							$index_refs[$new_index_key] = Keyset\union(
+								$index_refs[$new_index_key] as keyset<_>,
+								$new_mappings[$new_index_pk],
+							);
 						}
 					}
 				} else if ($new_index_pks is dict<_, _>) {
