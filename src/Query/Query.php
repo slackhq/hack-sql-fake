@@ -64,12 +64,22 @@ abstract class Query {
 			$matched_all_expressions = true;
 			$candidates = self::getIndexCandidates($where, $columns, inout $matched_all_expressions);
 			if ($candidates) {
-				$filtered_keys = self::getKeysForConditional($data_keys, $index_refs, $indexes, $candidates);
+				$all_expressions_indexed = true;
+				$filtered_keys = self::getKeysForConditional(
+					$data_keys,
+					$index_refs,
+					$indexes,
+					$candidates,
+					inout $all_expressions_indexed,
+				);
 
 				if ($filtered_keys is nonnull) {
 					$data = Dict\filter_keys($data, $row_pk ==> C\contains_key($filtered_keys, $row_pk));
 					if ($matched_all_expressions) {
-						$all_matched = true;
+						if ($all_expressions_indexed) {
+							$all_matched = true;
+						}
+
 						return $data;
 					}
 				}
@@ -86,7 +96,13 @@ abstract class Query {
 				$candidates = self::getIndexCandidates($ored_where, $columns, inout $matched_all_expressions);
 
 				if ($candidates) {
-					$filtered_keys = self::getKeysForConditional($data_keys, $index_refs, $indexes, $candidates);
+					$filtered_keys = self::getKeysForConditional(
+						$data_keys,
+						$index_refs,
+						$indexes,
+						$candidates,
+						inout $matched_all_expressions,
+					);
 
 					if ($filtered_keys is nonnull) {
 						$all_filtered_keys = Keyset\union($all_filtered_keys, $filtered_keys);
@@ -113,6 +129,7 @@ abstract class Query {
 		index_refs $index_refs,
 		vec<Index> $indexes,
 		dict<string, vec<mixed>> $candidates,
+		inout bool $all_expressions_indexed,
 	): ?keyset<arraykey> {
 		$candidate_keys = Keyset\keys($candidates);
 		$matched_fields = 0;
@@ -141,6 +158,10 @@ abstract class Query {
 		}
 
 		if ($matched_index) {
+			if (C\count($candidates) > $matched_fields) {
+				$all_expressions_indexed = false;
+			}
+
 			return self::filterDataWithMatchedIndex(
 				$data_keys,
 				$index_refs,
@@ -150,6 +171,8 @@ abstract class Query {
 				true,
 			);
 		} else {
+			$all_expressions_indexed = false;
+
 			if ($has_multiple_fields) {
 				foreach ($indexes as $index) {
 					if (C\count($index->fields) > 1) {
@@ -288,7 +311,7 @@ abstract class Query {
 					if ($in_expr is ConstantExpression) {
 						$value = $in_expr->value;
 						if (isset($columns[$column_name])) {
-							if ($columns[$column_name]->hack_type === 'int') {
+							if ($columns[$column_name]->hack_type === 'int' && $value is string) {
 								$value = (int)$value;
 							}
 						}
@@ -389,6 +412,9 @@ abstract class Query {
 
 			$matched_field = C\firstx($matched_index->fields);
 			foreach ($candidates[$matched_field] as $candidate_value) {
+				if ($candidate_value is null) {
+					$candidate_value = '__NULL__';
+				}
 				$keys[] = $candidate_value as arraykey;
 			}
 		} else {
@@ -404,6 +430,9 @@ abstract class Query {
 
 					foreach ($keys as $key_parts) {
 						foreach ($candidates[$matched_field] as $candidate_value) {
+							if ($candidate_value is null) {
+								$candidate_value = '__NULL__';
+							}
 							$new_keys[] = Vec\concat($key_parts, vec[$candidate_value as arraykey]);
 						}
 					}
@@ -875,11 +904,13 @@ abstract class Query {
 
 			$store_as_unique = $index->type === 'UNIQUE' || $index->type === 'PRIMARY';
 
-			if (C\count($index->fields) === 1) {
+			$index_field_count = C\count($index->fields);
+
+			if ($index_field_count === 1) {
 				$index_part = $row[C\firstx($index->fields)] as ?arraykey;
 
 				if ($index_part is null) {
-					continue;
+					$index_part = '__NULL__';
 				}
 
 				$index_key = vec[$index_part];
@@ -894,8 +925,12 @@ abstract class Query {
 					if ($index_part is null) {
 						$index_part = '__NULL__';
 
-						if ($index->type === 'UNIQUE' && $inc > 0) {
-							$store_as_unique = false;
+						// don't store unique indexes with null
+						if ($index->type === 'UNIQUE' && $inc < $index_field_count - 1) {
+							if ($inc > 0) {
+								$store_as_unique = false;
+							}
+
 							break;
 						}
 					}
@@ -903,6 +938,12 @@ abstract class Query {
 					$index_key[] = $index_part;
 
 					$inc++;
+				}
+
+				// this happens if the first index column contains a null value — in which case
+				// we don't store anything
+				if ($index_key === vec[]) {
+					continue;
 				}
 			}
 
