@@ -25,6 +25,11 @@ abstract final class QueryContext {
 	public static bool $relaxUniqueConstraints = false;
 
 	/**
+	 * Require that at least one index is used in every WHERE clause
+	 */
+	public static bool $requireIndexes = false;
+
+	/**
 	 * 1: quiet, print nothing
 	 * 2: verbose, print every query as it executes
 	 * 3: very verbose, print query results as well
@@ -36,6 +41,8 @@ abstract final class QueryContext {
 	 * work on vitess
 	 */
 	public static bool $skipVitessValidation = false;
+
+	public static ?string $query = null;
 
 	/**
 	 * Representation of database schema
