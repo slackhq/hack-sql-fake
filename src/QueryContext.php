@@ -30,6 +30,22 @@ abstract final class QueryContext {
 	public static bool $requireIndexes = false;
 
 	/**
+	 * Require the presence of the table's Vitess sharding key
+	 */
+	public static bool $requireVitessShardingKey = false;
+
+	/**
+	 * Whether or not to use a replica
+	 */
+	public static bool $useReplica = false;
+
+	/**
+	 * Whether or not we're currently simulating a web request.
+	 * This controls replica behaviour.
+	 */
+	public static bool $inRequest = false;
+
+	/**
 	 * 1: quiet, print nothing
 	 * 2: verbose, print every query as it executes
 	 * 3: very verbose, print query results as well
@@ -41,6 +57,12 @@ abstract final class QueryContext {
 	 * work on vitess
 	 */
 	public static bool $skipVitessValidation = false;
+
+	/**
+	 * If true hack-sql-fake will attempt to detect references to updated rows
+	 * after they've been written in the same synthetic request.
+	 */
+	public static bool $preventReplicaReadsAfterWrites = false;
 
 	public static ?string $query = null;
 
@@ -56,5 +78,14 @@ abstract final class QueryContext {
 
 	public static function getSchema(string $database, string $table): ?TableSchema {
 		return self::$schema[$database][$table] ?? null;
+	}
+
+	public static function startRequest(): void {
+		self::$inRequest = true;
+	}
+
+	public static function endRequest(): void {
+		self::$inRequest = false;
+		Server::cleanDirtyTables();
 	}
 }

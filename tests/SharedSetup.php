@@ -31,6 +31,7 @@ final class SharedSetup {
 					6 => keyset[4, 6],
 				],
 			],
+			keyset[],
 		);
 
 		$table4_data = tuple(
@@ -47,6 +48,7 @@ final class SharedSetup {
 					7 => keyset[1003, 1004],
 				],
 			],
+			keyset[],
 		);
 
 		$table5_data = tuple(
@@ -64,6 +66,7 @@ final class SharedSetup {
 					0x2 => keyset[1003],
 				],
 			],
+			keyset[],
 		);
 
 		$association_table_data = tuple(
@@ -114,6 +117,7 @@ final class SharedSetup {
 					1003 => keyset[3],
 				],
 			],
+			keyset[],
 		);
 
 		$table6_data = tuple(
@@ -125,6 +129,7 @@ final class SharedSetup {
 				1004 => dict['id' => 1004, 'position' => '25'],
 			],
 			dict[],
+			keyset[],
 		);
 
 		// populate database state
@@ -158,6 +163,7 @@ final class SharedSetup {
 					4 => dict['id' => 4, 'name' => 'Benjamin Ampersand'],
 				],
 				dict[],
+				keyset[],
 			),
 			'vt_table2' => tuple(
 				dict[
@@ -167,6 +173,7 @@ final class SharedSetup {
 					14 => dict['id' => 14, 'vt_table1_id' => 4, 'description' => 'no'],
 				],
 				dict[],
+				keyset[],
 			),
 		];
 

@@ -121,6 +121,7 @@ final class Server {
 		string $name,
 		dataset $rows,
 		index_refs $index_refs,
+		keyset<arraykey> $dirty_pks,
 	): void {
 		// create table if not exists
 		if (!C\contains_key($this->databases, $dbname)) {
@@ -128,6 +129,21 @@ final class Server {
 		}
 
 		// save rows
-		$this->databases[$dbname][$name] = tuple($rows, $index_refs);
+		$this->databases[$dbname][$name] = tuple($rows, $index_refs, $dirty_pks);
+	}
+
+	/**
+	 * Remove records of primary keys that have been updated in this simulated request
+	 */
+	public static function cleanDirtyTables(): void {
+		foreach (self::$instances as $instance) {
+			foreach ($instance->databases as $database_name => $database) {
+				foreach ($database as $table_name => $table_data) {
+					if (isset($table_data[2])) {
+						$instance->databases[$database_name][$table_name][2] = keyset[];
+					}
+				}
+			}
+		}
 	}
 }

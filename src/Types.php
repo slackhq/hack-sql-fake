@@ -11,7 +11,7 @@ type row = dict<string, mixed>;
 // vec of rows can be a stored table, a query result set, or an intermediate state for either of those
 type dataset = dict<arraykey, row>;
 type index_refs = dict<string, dict<arraykey, mixed>>;
-type table_data = (dataset, index_refs);
+type table_data = (dataset, index_refs, keyset<arraykey>);
 // a database is a collection of named tables
 type database = dict<string, table_data>;
 

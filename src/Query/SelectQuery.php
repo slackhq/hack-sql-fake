@@ -55,7 +55,7 @@ final class SelectQuery extends Query {
 			// FROM clause handling - builds a data set including extracting rows from tables, applying joins
 			$this->applyFrom($conn)
 			// WHERE caluse - filter out any rows that don't match it
-			|> $this->applyWhere($conn, $$[0], $$[1], $$[3], $$[2])
+			|> $this->applyWhere($conn, $$[0], $$[1], $$[2], $$[4], $$[3])
 			// GROUP BY clause - may group the rows if necessary. all clauses after this need to know how to handled both grouped and ungrouped inputs
 			|> $this->applyGroupBy($conn, $$)
 			// HAVING clause, filter out any rows not matching it
@@ -76,12 +76,14 @@ final class SelectQuery extends Query {
 	 * The FROM clause of the query gets processed first, retrieving data from tables, executing subqueries, and handling joins
 	 * This is also where we build up the $columns list which is commonly used throughout the entire library to map column references to index_refs in this dataset
 	 */
-	protected function applyFrom(AsyncMysqlConnection $conn): (dataset, index_refs, vec<Index>, dict<string, Column>) {
+	protected function applyFrom(
+		AsyncMysqlConnection $conn,
+	): (dataset, index_refs, keyset<arraykey>, vec<Index>, dict<string, Column>) {
 
 		$from = $this->fromClause;
 		if ($from === null) {
 			// we put one empty row when there is no FROM so that queries like "SELECT 1" will return a row
-			return tuple(dict[0 => dict[]], dict[], vec[], dict[]);
+			return tuple(dict[0 => dict[]], dict[], keyset[], vec[], dict[]);
 		}
 
 		return $from->process($conn, $this->sql);

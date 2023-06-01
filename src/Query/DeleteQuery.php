@@ -12,7 +12,7 @@ final class DeleteQuery extends Query {
 	public function execute(AsyncMysqlConnection $conn): int {
 		$this->fromClause as nonnull;
 		list($database, $table_name) = Query::parseTableName($conn, $this->fromClause['name']);
-		$data = $conn->getServer()->getTableData($database, $table_name) ?? tuple(dict[], dict[]);
+		$table_data = $conn->getServer()->getTableData($database, $table_name) ?? tuple(dict[], dict[], keyset[]);
 		$schema = QueryContext::getSchema($database, $table_name);
 
 		Metrics::trackQuery(QueryType::DELETE, $conn->getServer()->name, $table_name, $this->sql);
@@ -26,10 +26,26 @@ final class DeleteQuery extends Query {
 			}
 		}
 
-		return $this->applyWhere($conn, $data[0], $data[1], $columns, $schema?->indexes)
+		return $this->applyWhere(
+			$conn,
+			$table_data[0],
+			$table_data[1],
+			$table_data[2] ?? keyset[],
+			$columns,
+			$schema?->indexes,
+		)
 			|> $this->applyOrderBy($conn, $$)
 			|> $this->applyLimit($$)
-			|> $this->applyDelete($conn, $database, $table_name, $$, $data[0], $data[1], $schema);
+			|> $this->applyDelete(
+				$conn,
+				$database,
+				$table_name,
+				$$,
+				$table_data[0],
+				$table_data[1],
+				$table_data[2] ?? keyset[],
+				$schema,
+			);
 	}
 
 	/**
@@ -42,11 +58,14 @@ final class DeleteQuery extends Query {
 		dataset $filtered_rows,
 		dataset $original_table,
 		index_refs $index_refs,
+		keyset<arraykey> $dirty_pks,
 		?TableSchema $table_schema,
 	): int {
 		$rows_to_delete = Keyset\keys($filtered_rows);
-		$remaining_rows =
-			Dict\filter_with_key($original_table, ($row_num, $_) ==> !C\contains_key($rows_to_delete, $row_num));
+		$remaining_rows = Dict\filter_with_key(
+			$original_table,
+			($row_num, $_) ==> !C\contains_key($rows_to_delete, $row_num),
+		);
 		$rows_affected = C\count($original_table) - C\count($remaining_rows);
 
 		if ($table_schema is nonnull) {
@@ -57,6 +76,7 @@ final class DeleteQuery extends Query {
 					$table_schema->vitess_sharding->keyspace,
 					'INDEX',
 					keyset[$table_schema->vitess_sharding->sharding_key],
+					true,
 				);
 			}
 
@@ -70,11 +90,13 @@ final class DeleteQuery extends Query {
 						$index_refs[$index_name] = $specific_index_refs;
 					}
 				}
+
+				unset($dirty_pks[$row_id]);
 			}
 		}
 
 		// write it back to the database
-		$conn->getServer()->saveTable($database, $table_name, $remaining_rows, $index_refs);
+		$conn->getServer()->saveTable($database, $table_name, $remaining_rows, $index_refs, $dirty_pks);
 		return $rows_affected;
 	}
 }

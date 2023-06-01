@@ -62,6 +62,8 @@ abstract final class JoinProcessor {
 		$left_mappings = dict[];
 		$right_mappings = dict[];
 
+		$dirty_pks = keyset[];
+
 		switch ($join_type) {
 			case JoinType::JOIN:
 			case JoinType::STRAIGHT:
@@ -77,6 +79,9 @@ abstract final class JoinProcessor {
 							$left_mappings[$left_row_id][] = $insert_id;
 							$right_mappings[$right_row_id] ??= keyset[];
 							$right_mappings[$right_row_id][] = $insert_id;
+							if (isset($left_dataset[2][$left_row_id]) || isset($right_dataset[2][$right_row_id])) {
+								$dirty_pks[] = $insert_id;
+							}
 						}
 					}
 				}
@@ -104,6 +109,9 @@ abstract final class JoinProcessor {
 							$right_mappings[$right_row_id] ??= keyset[];
 							$right_mappings[$right_row_id][] = $insert_id;
 							$any_match = true;
+							if (isset($left_dataset[2][$left_row_id]) || isset($right_dataset[2][$right_row_id])) {
+								$dirty_pks[] = $insert_id;
+							}
 						}
 					}
 
@@ -120,6 +128,10 @@ abstract final class JoinProcessor {
 						$insert_id = C\count($out) - 1;
 						$left_mappings[$left_row_id] ??= keyset[];
 						$left_mappings[$left_row_id][] = $insert_id;
+
+						if (isset($left_dataset[2][$left_row_id])) {
+							$dirty_pks[] = $insert_id;
+						}
 					}
 				}
 				break;
@@ -146,6 +158,9 @@ abstract final class JoinProcessor {
 							$left_mappings[$left_row_id][] = $insert_id;
 							$right_mappings[$right_row_id] ??= keyset[];
 							$right_mappings[$right_row_id][] = $insert_id;
+							if (isset($left_dataset[2][$left_row_id]) || isset($right_dataset[2][$right_row_id])) {
+								$dirty_pks[] = $insert_id;
+							}
 						}
 					}
 
@@ -164,6 +179,9 @@ abstract final class JoinProcessor {
 						$left_mappings[$left_row_id][] = $insert_id;
 						$right_mappings[$right_row_id] ??= keyset[];
 						$right_mappings[$right_row_id][] = $insert_id;
+						if (isset($left_dataset[2][$left_row_id]) || isset($right_dataset[2][$right_row_id])) {
+							$dirty_pks[] = $insert_id;
+						}
 					}
 				}
 				break;
@@ -183,6 +201,9 @@ abstract final class JoinProcessor {
 							$left_mappings[$left_row_id][] = $insert_id;
 							$right_mappings[$right_row_id] ??= keyset[];
 							$right_mappings[$right_row_id][] = $insert_id;
+							if (isset($left_dataset[2][$left_row_id]) || isset($right_dataset[2][$right_row_id])) {
+								$dirty_pks[] = $insert_id;
+							}
 						}
 					}
 				}
@@ -198,7 +219,7 @@ abstract final class JoinProcessor {
 			$right_indexes,
 		);
 
-		return tuple(dict($out), $index_refs);
+		return tuple(dict($out), $index_refs, $dirty_pks);
 	}
 
 	/**
@@ -308,6 +329,7 @@ abstract final class JoinProcessor {
 
 		$left_mappings = dict[];
 		$right_mappings = dict[];
+		$dirty_pks = keyset[];
 
 		switch ($join_type) {
 			case JoinType::JOIN:
@@ -322,6 +344,9 @@ abstract final class JoinProcessor {
 						$left_mappings[$left_row_id][] = $insert_id;
 						$right_mappings[$k] ??= keyset[];
 						$right_mappings[$k][] = $insert_id;
+						if (isset($left_dataset[2][$left_row_id]) || isset($right_dataset[2][$k])) {
+							$dirty_pks[] = $insert_id;
+						}
 					}
 				}
 				break;
@@ -348,6 +373,9 @@ abstract final class JoinProcessor {
 							$right_mappings[$k] ??= keyset[];
 							$right_mappings[$k][] = $insert_id;
 							$any_match = true;
+							if (isset($left_dataset[2][$left_row_id]) || isset($right_dataset[2][$k])) {
+								$dirty_pks[] = $insert_id;
+							}
 						}
 					}
 
@@ -364,6 +392,9 @@ abstract final class JoinProcessor {
 						$insert_id = C\count($out) - 1;
 						$left_mappings[$left_row_id] ??= keyset[];
 						$left_mappings[$left_row_id][] = $insert_id;
+						if (isset($left_dataset[2][$left_row_id])) {
+							$dirty_pks[] = $insert_id;
+						}
 					}
 				}
 				break;
@@ -380,7 +411,7 @@ abstract final class JoinProcessor {
 			$right_indexes,
 		);
 
-		return tuple(dict($out), $index_refs);
+		return tuple(dict($out), $index_refs, $dirty_pks);
 	}
 
 	private static function getIndexRefsFromMappings(

@@ -37,17 +37,20 @@ final class FromClause {
 	public function process(
 		AsyncMysqlConnection $conn,
 		string $sql,
-	): (dataset, index_refs, vec<Index>, dict<string, Column>) {
+	): (dataset, index_refs, keyset<arraykey>, vec<Index>, dict<string, Column>) {
 
 		$data = dict[];
 		$is_first_table = true;
 		$index_refs = dict[];
+		$dirty_pks = keyset[];
+
 		$indexes = vec[];
 		$columns = dict[];
 
 		foreach ($this->tables as $table) {
 			$schema = null;
 			$new_index_refs = dict[];
+			$new_dirty_pks = keyset[];
 			$new_indexes = vec[];
 
 			if (Shapes::keyExists($table, 'subquery')) {
@@ -63,12 +66,17 @@ final class FromClause {
 				$name = $table['alias'] ?? $table_name;
 				$schema = QueryContext::getSchema($database, $table_name);
 				if ($schema === null && QueryContext::$strictSchemaMode) {
-					throw
-						new SQLFakeRuntimeException("Table $table_name not found in schema and strict mode is enabled");
+					throw new SQLFakeRuntimeException(
+						"Table $table_name not found in schema and strict mode is enabled",
+					);
 				}
 
-				list($res, $new_index_refs) =
-					$conn->getServer()->getTableData($database, $table_name) ?: tuple(dict[], dict[]);
+				$table_data = $conn->getServer()->getTableData($database, $table_name) ?:
+					tuple(dict[], dict[], keyset[]);
+
+				$res = $table_data[0];
+				$new_index_refs = $table_data[1];
+				$new_dirty_pks = $table_data[2] ?? keyset[];
 
 				if (C\count($this->tables) > 1) {
 					$new_index_refs = Dict\map_keys($new_index_refs, $k ==> $name.'.'.$k);
@@ -94,6 +102,7 @@ final class FromClause {
 							$prefix.$schema->vitess_sharding->keyspace,
 							'INDEX',
 							keyset[$prefix.$schema->vitess_sharding->sharding_key],
+							true,
 						);
 					}
 
@@ -111,6 +120,7 @@ final class FromClause {
 				}
 
 				$index_refs = Dict\merge($index_refs, $new_index_refs);
+				$dirty_pks = Keyset\union($dirty_pks, $new_dirty_pks);
 			}
 
 			$new_dataset = dict[];
@@ -156,10 +166,10 @@ final class FromClause {
 
 			if ($data || !$is_first_table) {
 				// do the join here. based on join type, pass in $data and $res to filter. and aliases
-				list($data, $index_refs) = JoinProcessor::process(
+				list($data, $index_refs, $dirty_pks) = JoinProcessor::process(
 					$conn,
-					tuple($data, $index_refs),
-					tuple($new_dataset, $new_index_refs),
+					tuple($data, $index_refs, keyset[]),
+					tuple($new_dataset, $new_index_refs, $new_dirty_pks),
 					$name,
 					$table['join_type'],
 					$table['join_operator'] ?? null,
@@ -180,6 +190,6 @@ final class FromClause {
 			}
 		}
 
-		return tuple($data, $index_refs, $indexes, $columns);
+		return tuple($data, $index_refs, $dirty_pks, $indexes, $columns);
 	}
 }

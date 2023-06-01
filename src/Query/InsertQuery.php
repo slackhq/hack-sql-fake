@@ -18,7 +18,11 @@ final class InsertQuery extends Query {
 	 */
 	public function execute(AsyncMysqlConnection $conn): int {
 		list($database, $table_name) = Query::parseTableName($conn, $this->table);
-		list($table, $index_refs) = $conn->getServer()->getTableData($database, $table_name) ?? tuple(dict[], dict[]);
+		$data = $conn->getServer()->getTableData($database, $table_name) ?? tuple(dict[], dict[], keyset[]);
+
+		$table = $data[0];
+		$index_refs = $data[1];
+		$dirty_pks = $data[2] ?? keyset[];
 
 		Metrics::trackQuery(QueryType::INSERT, $conn->getServer()->name, $table_name, $this->sql);
 
@@ -65,6 +69,7 @@ final class InsertQuery extends Query {
 					$table_schema->vitess_sharding->keyspace,
 					'INDEX',
 					keyset[$table_schema->vitess_sharding->sharding_key],
+					true,
 				);
 			}
 
@@ -113,6 +118,7 @@ final class InsertQuery extends Query {
 						dict[$row_id => $existing_row],
 						$table,
 						$index_refs,
+						$dirty_pks,
 						$this->updateExpressions,
 						$table_schema,
 						$row,
@@ -135,12 +141,16 @@ final class InsertQuery extends Query {
 				$index_refs[$index_name] = $specific_index_refs;
 			}
 
+			if (QueryContext::$inRequest) {
+				$dirty_pks[] = $primary_key;
+			}
+
 			$table[$primary_key] = $row;
 			$rows_affected++;
 		}
 
 		// write it back to the database
-		$conn->getServer()->saveTable($database, $table_name, $table, $index_refs);
+		$conn->getServer()->saveTable($database, $table_name, $table, $index_refs, $dirty_pks);
 		return $rows_affected;
 	}
 }

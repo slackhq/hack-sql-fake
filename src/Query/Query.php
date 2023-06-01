@@ -27,6 +27,7 @@ abstract class Query {
 		AsyncMysqlConnection $conn,
 		dataset $data,
 		index_refs $index_refs,
+		keyset<arraykey> $dirty_pks,
 		?dict<string, Column> $columns,
 		?vec<Index> $indexes,
 	): dataset {
@@ -36,16 +37,25 @@ abstract class Query {
 			return $data;
 		}
 
-		if ($columns is nonnull && $indexes) {
-			$all_matched = false;
-			$data = QueryPlanner::filterWithIndexes($data, $index_refs, $columns, $indexes, $where, inout $all_matched);
+		$all_matched = false;
 
-			if ($all_matched) {
-				return $data;
+		if ($columns is nonnull && $indexes) {
+			$data = QueryPlanner::filterWithIndexes($data, $index_refs, $columns, $indexes, $where, inout $all_matched);
+		}
+
+		if (!$all_matched) {
+			$data = Dict\filter($data, $row ==> (bool)$where->evaluate($row, $conn));
+		}
+
+		if (QueryContext::$useReplica && QueryContext::$inRequest && QueryContext::$preventReplicaReadsAfterWrites) {
+			$intersection = Keyset\intersect(Keyset\keys($data), $dirty_pks);
+
+			if ($intersection !== keyset[]) {
+				throw new \Exception('Replica read after write: '.(QueryContext::$query ?? ''));
 			}
 		}
 
-		return Dict\filter($data, $row ==> (bool)$where->evaluate($row, $conn));
+		return $data;
 	}
 
 	/**
@@ -177,6 +187,7 @@ abstract class Query {
 		dataset $filtered_rows,
 		dataset $original_table,
 		index_refs $index_refs,
+		keyset<arraykey> $dirty_pks,
 		vec<BinaryOperatorExpression> $set_clause,
 		?TableSchema $table_schema,
 		/* for dupe inserts only */
@@ -229,6 +240,7 @@ abstract class Query {
 					$table_schema->vitess_sharding->keyspace,
 					'INDEX',
 					keyset[$table_schema->vitess_sharding->sharding_key],
+					true,
 				);
 			}
 		}
@@ -338,6 +350,10 @@ abstract class Query {
 					$index_refs[$index_name] = $specific_index_refs;
 				}
 
+				if (QueryContext::$inRequest) {
+					$dirty_pks[] = $new_row_id;
+				}
+
 				if ($new_row_id !== $row_id) {
 					// Remap keys to preserve insertion order when primary key has changed
 					$original_table = Dict\pull_with_key(
@@ -354,7 +370,7 @@ abstract class Query {
 		}
 
 		// write it back to the database
-		$conn->getServer()->saveTable($database, $table_name, $original_table, $index_refs);
+		$conn->getServer()->saveTable($database, $table_name, $original_table, $index_refs, $dirty_pks);
 		return tuple($update_count, $original_table, $index_refs);
 	}
 
