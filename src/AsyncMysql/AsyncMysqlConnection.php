@@ -43,6 +43,7 @@ final class AsyncMysqlConnection extends \AsyncMysqlConnection {
 		dict<string, string> $_query_attributes = dict[],
 	): Awaitable<AsyncMysqlQueryResult> {
 		Logger::log(Verbosity::QUERIES, "SQLFake [verbose]: $query");
+		QueryContext::$query = $query;
 
 		$config = $this->server->config;
 		$strict_sql_before = QueryContext::$strictSQLMode;
@@ -62,11 +63,13 @@ final class AsyncMysqlConnection extends \AsyncMysqlConnection {
 		try {
 			list($results, $rows_affected) = SQLCommandProcessor::execute($query, $this);
 		} catch (\Exception $e) {
-			// this makes debugging a failing unit test easier, show the actual query that failed parsing along with the parser error
 			QueryContext::$strictSQLMode = $strict_sql_before;
 			QueryContext::$strictSchemaMode = $strict_schema_before;
+			// Make debugging a failing unit test locally easier,
+			// by showing the actual query that failed parsing along with the parser error
 			$msg = $e->getMessage();
 			$type = \get_class($e);
+			Logger::log(Verbosity::QUIET, $e->getFile().' '.$e->getLine());
 			Logger::log(Verbosity::QUIET, "SQL Fake $type: $msg in SQL query: $query");
 			throw $e;
 		}
@@ -82,7 +85,10 @@ final class AsyncMysqlConnection extends \AsyncMysqlConnection {
 	}
 
 	<<__Override>>
-	public function queryf(\HH\FormatString<\HH\SQLFormatter> $query, mixed ...$args): Awaitable<AsyncMysqlQueryResult> {
+	public function queryf(
+		\HH\FormatString<\HH\SQLFormatter> $query,
+		mixed ...$args
+	): Awaitable<AsyncMysqlQueryResult> {
 		invariant($query is string, '\\HH\\FormatString<_> is opaque, but we need it to be a string here.');
 		return $this->query($this->queryStringifier->formatString($query, vec($args)));
 	}

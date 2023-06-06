@@ -30,6 +30,12 @@ abstract final class QueryContext {
 	public static bool $requireIndexes = false;
 
 	/**
+	 * Allow violations of the must-use-index policy when the stack trace matches any of these
+	 * class-function pairs.
+	 */
+	public static vec<shape(?'class' => string, 'function' => string)> $allowed_index_violation_traces = vec[];
+
+	/**
 	 * Require the presence of the table's Vitess sharding key
 	 */
 	public static bool $requireVitessShardingKey = false;

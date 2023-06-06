@@ -161,7 +161,26 @@ abstract class QueryPlanner {
 					false,
 				);
 			} else if (QueryContext::$requireIndexes) {
-				throw new \Exception('Query without index: '.(QueryContext::$query ?? ''));
+				$stack = \debug_backtrace(\DEBUG_BACKTRACE_IGNORE_ARGS);
+				C\pop_front(inout $stack);
+
+				$grandfathered = false;
+				foreach ($stack as $stack_frame) {
+					$class = $stack_frame['class'] ?? null;
+					$function = $stack_frame['function'];
+
+					foreach (QueryContext::$allowed_index_violation_traces as $allowed_trace) {
+						$allowed_trace_class = $allowed_trace['class'] ?? null;
+
+						if ($class === $allowed_trace_class && $allowed_trace['function'] === $function) {
+							$grandfathered = true;
+						}
+					}
+				}
+
+				if (!$grandfathered) {
+					throw new \Exception('Query without index: '.(QueryContext::$query ?? ''));
+				}
 			}
 
 			return null;
