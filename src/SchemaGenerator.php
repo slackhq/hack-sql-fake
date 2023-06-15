@@ -85,6 +85,9 @@ final class SchemaGenerator {
 			case 'VARBINARY':
 			case 'DATE':
 			case 'DATETIME':
+			// These are represented in SQL as strings, however they're stored in a binary format, and
+			// storing anything other than JSON should be a runtime error.
+			case 'JSON':
 			// MySQL driver represents these as strings since they are fixed precision
 			case 'DECIMAL':
 				$type = 'string';
