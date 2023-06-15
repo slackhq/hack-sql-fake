@@ -607,5 +607,6 @@ final class SQLParser {
 		'DELAYED',
 		'LOW_PRIORITY',
 		'HIGH_PRIORITY',
+		'RANK',
 	];
 }
