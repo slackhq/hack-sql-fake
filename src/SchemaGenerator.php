@@ -85,6 +85,7 @@ final class SchemaGenerator {
 			case 'VARBINARY':
 			case 'DATE':
 			case 'DATETIME':
+			case 'TIMESTAMP':
 			// These are represented in SQL as strings, however they're stored in a binary format, and
 			// storing anything other than JSON should be a runtime error.
 			case 'JSON':
