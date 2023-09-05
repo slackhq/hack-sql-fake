@@ -158,14 +158,10 @@ final class SelectExpressionTest extends HackTest {
 			'adding a column reference still parses',
 		);
 
-		$results = await $conn->query('SELECT id FROM table4 WHERE id IN (1000 + 2)');
-		expect($results->rows())->toBeSame(
-			vec[
-				dict['id' => 1002],
-			],
-		);
-
 		$results = await $conn->query('SELECT id FROM table4 WHERE id IN (NULL)');
+		expect($results->rows())->toBeEmpty();
+
+		$results = await $conn->query('SELECT id FROM table4 WHERE id IN (NULL=NULL)');
 		expect($results->rows())->toBeEmpty();
 	}
 
