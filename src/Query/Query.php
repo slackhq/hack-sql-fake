@@ -40,7 +40,15 @@ abstract class Query {
 		$all_matched = false;
 
 		if ($columns is nonnull && $indexes) {
-			$data = QueryPlanner::filterWithIndexes($data, $index_refs, $columns, $indexes, $where, inout $all_matched);
+			$data = QueryPlanner::filterWithIndexes(
+				$conn,
+				$data,
+				$index_refs,
+				$columns,
+				$indexes,
+				$where,
+				inout $all_matched,
+			);
 		}
 
 		if (!$all_matched) {

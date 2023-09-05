@@ -4,6 +4,7 @@ use namespace HH\Lib\{C, Dict, Keyset, Str, Vec};
 
 abstract class QueryPlanner {
 	public static function filterWithIndexes(
+		AsyncMysqlConnection $conn,
 		dataset $data,
 		index_refs $index_refs,
 		dict<string, Column> $columns,
@@ -17,7 +18,7 @@ abstract class QueryPlanner {
 
 		if (C\count($ored_wheres) === 1) {
 			$matched_all_expressions = true;
-			$candidates = self::getIndexCandidates($where, $columns, inout $matched_all_expressions);
+			$candidates = self::getIndexCandidates($conn, $where, $columns, inout $matched_all_expressions);
 			if ($candidates) {
 				$all_expressions_indexed = true;
 				$filtered_keys = self::getKeysForConditional(
@@ -48,7 +49,7 @@ abstract class QueryPlanner {
 
 			foreach ($ored_wheres as $ored_where) {
 				$matched_all_expressions = true;
-				$candidates = self::getIndexCandidates($ored_where, $columns, inout $matched_all_expressions);
+				$candidates = self::getIndexCandidates($conn, $ored_where, $columns, inout $matched_all_expressions);
 
 				if ($candidates) {
 					$filtered_keys = self::getKeysForConditional(
@@ -249,12 +250,13 @@ abstract class QueryPlanner {
 	}
 
 	private static function getIndexCandidates(
+		AsyncMysqlConnection $conn,
 		Expression $expr,
 		dict<string, Column> $columns,
 		inout bool $matched_all_expressions,
 	): dict<string, vec<mixed>> {
 		if ($expr is BinaryOperatorExpression) {
-			return self::getIndexCandidatesFromBinop($expr, $columns, inout $matched_all_expressions);
+			return self::getIndexCandidatesFromBinop($conn, $expr, $columns, inout $matched_all_expressions);
 		}
 
 		if ($expr is InOperatorExpression && !$expr->negated) {
@@ -282,8 +284,8 @@ abstract class QueryPlanner {
 				foreach (($expr->inList as nonnull) as $in_expr) {
 					// found it? return the opposite of "negated". so if negated is false, return true.
 					// if it's a subquery, we have to iterate over the results and extract the field from each row
-					if ($in_expr is ConstantExpression) {
-						$value = $in_expr->value;
+					if ($in_expr is ConstantExpression || $in_expr is BinaryOperatorExpression) {
+						$value = $in_expr->evaluateImpl(dict[], $conn);
 						if (isset($columns[$column_name])) {
 							if ($columns[$column_name]->hack_type === 'int' && $value is string) {
 								$value = (int)$value;
@@ -310,6 +312,7 @@ abstract class QueryPlanner {
 	}
 
 	private static function getIndexCandidatesFromBinop(
+		AsyncMysqlConnection $conn,
 		BinaryOperatorExpression $expr,
 		dict<string, Column> $columns,
 		inout bool $matched_all_expressions,
@@ -359,10 +362,10 @@ abstract class QueryPlanner {
 		}
 
 		if ($expr->operator === Operator::AND) {
-			$column_names = self::getIndexCandidates($expr->left, $columns, inout $matched_all_expressions);
+			$column_names = self::getIndexCandidates($conn, $expr->left, $columns, inout $matched_all_expressions);
 			$column_names = Dict\merge(
 				$column_names,
-				self::getIndexCandidates($expr->right as nonnull, $columns, inout $matched_all_expressions),
+				self::getIndexCandidates($conn, $expr->right as nonnull, $columns, inout $matched_all_expressions),
 			);
 
 			return $column_names;
