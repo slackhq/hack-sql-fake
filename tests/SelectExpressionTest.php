@@ -46,8 +46,9 @@ final class SelectExpressionTest extends HackTest {
 
 	public async function testSelectExpressions(): Awaitable<void> {
 		$conn = static::$conn as nonnull;
-		$results =
-			await $conn->query('SELECT id, group_id as my_fav_group_id, id*1000 as math FROM table3 WHERE group_id=6');
+		$results = await $conn->query(
+			'SELECT id, group_id as my_fav_group_id, id*1000 as math FROM table3 WHERE group_id=6',
+		);
 		expect($results->rows())->toBeSame(
 			vec[
 				dict['id' => 4, 'my_fav_group_id' => 6, 'math' => 4000],
@@ -156,6 +157,12 @@ final class SelectExpressionTest extends HackTest {
 			],
 			'adding a column reference still parses',
 		);
+
+		$results = await $conn->query('SELECT id FROM table4 WHERE id IN (NULL)');
+		expect($results->rows())->toBeEmpty();
+
+		$results = await $conn->query('SELECT id FROM table4 WHERE id IN (NULL=NULL)');
+		expect($results->rows())->toBeEmpty();
 	}
 
 	public async function testNotIn(): Awaitable<void> {
@@ -199,7 +206,9 @@ final class SelectExpressionTest extends HackTest {
 
 		// weird this is even valid SQL, and possibly pedantic, but this demonstrates a lot of how
 		// case statements are implemented such that it doesn't blow up on the second THEN or second CASE
-		$results = await $conn->query("SELECT CASE WHEN 4 = CASE WHEN 1 = 2 THEN 3 ELSE 4 END THEN 'yes' ELSE 'no' END");
+		$results = await $conn->query(
+			"SELECT CASE WHEN 4 = CASE WHEN 1 = 2 THEN 3 ELSE 4 END THEN 'yes' ELSE 'no' END",
+		);
 		expect($results->rows())->toBeSame(
 			vec[
 				dict["CASE WHEN 4 = CASE WHEN 1 = 2 THEN 3 ELSE 4 END THEN 'yes' ELSE 'no' END" => 'yes'],
@@ -321,6 +330,21 @@ final class SelectExpressionTest extends HackTest {
 		]);
 	}
 
+	public async function testEqualsNull(): Awaitable<void> {
+		$conn = static::$conn as nonnull;
+		$results = await $conn->query('SELECT id FROM table3 WHERE NULL=NULL');
+		expect($results->rows())->toBeEmpty();
+
+		$results = await $conn->query('SELECT id FROM table3 WHERE NULL!=NULL');
+		expect($results->rows())->toBeEmpty();
+
+		$results = await $conn->query('SELECT id FROM table3 WHERE table_3_id=NULL');
+		expect($results->rows())->toBeEmpty();
+
+		$results = await $conn->query('SELECT id FROM table3 WHERE table_3_id!=NULL');
+		expect($results->rows())->toBeEmpty();
+	}
+
 	public async function testIsNotNull(): Awaitable<void> {
 		$conn = static::$conn as nonnull;
 		$results = await $conn->query(
@@ -338,7 +362,9 @@ final class SelectExpressionTest extends HackTest {
 
 	public async function testNotParens(): Awaitable<void> {
 		$conn = static::$conn as nonnull;
-		$results = await $conn->query("SELECT id FROM table3 WHERE group_id=12345 AND NOT (name='name1' OR name='name3')");
+		$results = await $conn->query(
+			"SELECT id FROM table3 WHERE group_id=12345 AND NOT (name='name1' OR name='name3')",
+		);
 		expect($results->rows())->toBeSame(vec[
 			dict['id' => 2],
 		]);

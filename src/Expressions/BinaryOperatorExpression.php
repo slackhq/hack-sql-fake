@@ -154,6 +154,12 @@ final class BinaryOperatorExpression extends Expression {
 			case Operator::OR:
 				invariant(false, 'impossible to arrive here');
 			case Operator::EQUALS:
+				// foo = NULL is always NULL, no matter what the value of foo
+				// (specifically, if foo is also NULL!). Negation of NULL is always
+				// NULL, so we ignore that.
+				if ($l_value is null || $r_value is null) {
+					return null;
+				}
 				// maybe do some stuff with data types here
 				// comparing strings: gotta think about collation and case sensitivity!
 				return (bool)(\HH\Lib\Legacy_FIXME\eq($l_value, $r_value) ? 1 : 0 ^ $this->negatedInt);
