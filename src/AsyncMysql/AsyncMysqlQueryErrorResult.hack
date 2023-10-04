@@ -1,7 +1,5 @@
 namespace Slack\SQLFake;
 
-use namespace HH\Lib\C;
-
 <<__MockClass>>
 final class AsyncMysqlQueryErrorResult extends \AsyncMysqlQueryErrorResult {
 
