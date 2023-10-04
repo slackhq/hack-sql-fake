@@ -1,3 +1,5 @@
+<?hh // strict
+
 namespace Slack\SQLFake;
 
 use namespace HH\Lib\C;
