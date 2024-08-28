@@ -30,9 +30,17 @@ final class UnaryExpression extends Expression {
 		invariant($op is nonnull, 'This case was not considered. The operator is null.');
 		switch ($op) {
 			case Operator::UNARY_MINUS:
-				return -1 * (float)$val;
+				// Keeping this cast around for backwards compat
+				if (!($val is num)) {
+					$val = (float)$val;
+				}
+				return -1 * $val;
 			case Operator::UNARY_PLUS:
-				return (float)$val;
+				// Keeping this cast around for backwards compat
+				if (!($val is num)) {
+					$val = (float)$val;
+				}
+				return $val;
 			case Operator::TILDE:
 				return ~(int)$val;
 			default:
